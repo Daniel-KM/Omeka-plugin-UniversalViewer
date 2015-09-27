@@ -1,0 +1,22 @@
+{
+    "@context": [
+        {
+            "ixif": "http://wellcomelibrary.org/ixif/0#",
+            "oad": "http://filteredpush.org/ontologies/oa/oad#",
+            "mediaSequences": {
+                "@type":"@id",
+                "@id":"ixif:hasMediaSequences",
+                "@container":"@list"
+            },
+            "elements": {
+                "@type":"@id",
+                "@id":"ixif:hasMediaElements",
+                "@container":"@list"
+            },
+            "compatibilityHint": {
+                "@id":"ixif:compatibilityHint",
+                "@type":"@id"
+            }
+        }
+    ]
+}
