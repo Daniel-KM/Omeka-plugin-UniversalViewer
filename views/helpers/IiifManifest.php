@@ -368,46 +368,100 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * Create an IIIF image object from an Omeka file.
      *
      * @param File $file
+     * @param integer $index Used to set the standard name of the image.
+     * @param string $canvasUrl Used to set the value for "on".
+     * @param integer $width If not set, will be calculated.
+     * @param integer $height If not set, will be calculated.
      * @return Standard object|null
      */
-    protected function _iiifImage($file)
+    protected function _iiifImage($file, $index, $canvasUrl, $width = null, $height = null)
     {
         if (empty($file)) {
             return;
         }
 
-        // There is only one image (parallel is not managed).
-        $imageResource = array();
-        $imageResource['@id'] = $file->getWebPath('original');
-        $imageResource['@type'] = 'dctypes:Image';
-        $imageResource['format'] = $file->mime_type;
-        $imageResource['width'] = $width;
-        $imageResource['height'] = $height;
-
-        $imageUrl = absolute_url(array(
-                'id' => $file->id,
-            ), 'universalviewer_image');
-
-        $imageResourceService = array();
-        $imageResourceService['@context'] = 'http://iiif.io/api/image/2/context.json';
-        $imageResourceService['@id'] = $imageUrl;
-        $imageResourceService['profile'] = 'http://iiif.io/api/image/2/level2.json';
-        $imageResourceService = (object) $imageResourceService;
-
-        $imageResource['service'] = $imageResourceService;
-        $imageResource = (object) $imageResource;
+        if (empty($width) || empty($height)) {
+            $imagePath = $this->_getImagePath($file, 'original');
+            list($width, $height) = $this->_getWidthAndHeight($imagePath);
+        }
 
         $image = array();
         $image['@id'] = $this->_baseUrl . '/annotation/p' . sprintf('%04d', $index) . '-image';
         $image['@type'] = 'oa:Annotation';
         $image['motivation'] = "sc:painting";
+
+        // There is only one image (parallel is not managed currently).
+        $imageResource = array();
+        if (plugin_is_active('OpenLayersZoom')
+                && $this->view->openLayersZoom()->isZoomed($file)
+            ) {
+            $imagePath  = $this->_getImagePath($file, 'fullsize');
+            list($widthFullsize, $heightFullsize) = $this->_getWidthAndHeight($imagePath);
+            $imageUrl = absolute_url(array(
+                    'id' => $file->id,
+                    'region' => 'full',
+                    'size' => $width . ',' . $height,
+                    'rotation' => 0,
+                    'quality' => 'default',
+                    'format' => 'jpg',
+                ), 'universalviewer_image_url');
+            $imageResource['@id'] = $imageUrl;
+            $imageResource['@type'] = 'dctypes:Image';
+            $imageResource['format'] = $file->mime_type;
+            $imageResource['width'] = $widthFullsize;
+            $imageResource['height'] = $heightFullsize;
+
+            $imageResourceService = array();
+            $imageResourceService['@context'] = 'http://iiif.io/api/image/2/context.json';
+
+            $imageUrl = absolute_url(array(
+                    'id' => $file->id,
+                ), 'universalviewer_image');
+            $imageResourceService['@id'] = $imageUrl;
+            $imageResourceService['profile'] = 'http://iiif.io/api/image/2/level2.json';
+            $imageResourceService['width'] = $width;
+            $imageResourceService['height'] = $height;
+
+            $tile = $this->_iiifTile($file);
+            if ($tile) {
+                $tiles = array();
+                $tiles[] = $tile;
+                $imageResourceService['tiles'] = $tiles;
+            }
+            $imageResourceService = (object) $imageResourceService;
+
+            $imageResource['service'] = $imageResourceService;
+            $imageResource = (object) $imageResource;
+        }
+
+        // Simple light image.
+        else {
+            $imageResource['@id'] = $file->getWebPath('original');
+            $imageResource['@type'] = 'dctypes:Image';
+            $imageResource['format'] = $file->mime_type;
+            $imageResource['width'] = $width;
+            $imageResource['height'] = $height;
+
+            $imageResourceService = array();
+            $imageResourceService['@context'] = 'http://iiif.io/api/image/2/context.json';
+
+            $imageUrl = absolute_url(array(
+                    'id' => $file->id,
+                ), 'universalviewer_image');
+            $imageResourceService['@id'] = $imageUrl;
+            $imageResourceService['profile'] = 'http://iiif.io/api/image/2/level2.json';
+            $imageResourceService = (object) $imageResourceService;
+
+            $imageResource['service'] = $imageResourceService;
+            $imageResource = (object) $imageResource;
+        }
+
         $image['resource'] = $imageResource;
         $image['on'] = $canvasUrl;
         $image = (object) $image;
 
-        $images = array($image);
-
-
+        return $image;
+    }
 
     /**
      * Create an IIIF canvas object for an image.
@@ -437,7 +491,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $canvas['width'] = $width;
         $canvas['height'] = $height;
 
-        $image = $this->_iiifImage($file, $canvasUrl, $width, $height);
+        $image = $this->_iiifImage($file, $index, $canvasUrl, $width, $height);
 
         $images = array();
         $images[] = $image;
@@ -490,6 +544,71 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $canvas = (object) $canvas;
 
         return $canvas;
+    }
+
+    /**
+     * Create an IIIF tile object for a place holder.
+     *
+     * @internal The method uses the Zoomify format of OpenLayersZoom.
+     *
+     * @param File $file
+     * @return Standard object or null if no tile.
+     * @see UniversalViewer_View_Helper_IiifInfo::_iiifTile()
+     */
+    protected function _iiifTile($file)
+    {
+        $tile = array();
+
+        $tileProperties = $this->_getTileProperties($file);
+        if (empty($tileProperties)) {
+            return;
+        }
+
+        $squaleFactors = array();
+        $maxSize = max($tileProperties['source']['width'], $tileProperties['source']['height']);
+        $tileSize = $tileProperties['size'];
+        $total = (integer) ceil($maxSize / $tileSize);
+        $factor = 1;
+        while ($factor / 2 <= $total) {
+            $squaleFactors[] = $factor;
+            $factor = $factor * 2;
+        }
+        if (count($squaleFactors) <= 1) {
+            return;
+        }
+
+        $tile['width'] = $tileSize;
+        $tile['scaleFactors'] = $squaleFactors;
+        $tile = (object) $tile;
+        return $tile;
+    }
+
+    /**
+     * Return the properties of a tiled file.
+     *
+     * @return array|null
+     * @see UniversalViewer_ImageController::_getTileProperties()
+     */
+    protected function _getTileProperties($file)
+    {
+        $olz = new OpenLayersZoom_Creator();
+        $dirpath = $olz->useIIPImageServer()
+            ? $olz->getZDataWeb($file)
+            : $olz->getZDataDir($file);
+        $properties = simplexml_load_file($dirpath . '/ImageProperties.xml');
+        if ($properties === false) {
+            return;
+        }
+        $properties = $properties->attributes();
+        $properties = reset($properties);
+
+        // Standardize the properties.
+        $result = array();
+        $result['size'] = (integer) $properties['TILESIZE'];
+        $result['total'] = (integer) $properties['NUMTILES'];
+        $result['source']['width'] = (integer) $properties['WIDTH'];
+        $result['source']['height'] = (integer) $properties['HEIGHT'];
+        return $result;
     }
 
     /**

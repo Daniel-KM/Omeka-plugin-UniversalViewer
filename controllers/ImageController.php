@@ -2,6 +2,8 @@
 /**
  * The Image controller class.
  *
+ * @todo Move all OpenLayersZoom stuff in OpenLayersZoom.
+ *
  * @package UniversalViewer
  */
 class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionController
@@ -362,10 +364,62 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             $isTempFile = false;
             $imagePath = $transform['source']['filepath'];
         }
-        // The image needs to be transformed.
+
         else {
+            // Quick check if an Omeka derivative is appropriate.
+            if ($pretiled = $this->_useOmekaDerivative($file, $transform)) {
+                $imagePath = $pretiled;
+                // Check if a light transformation is needed.
+                if ($transform['size']['feature'] != 'full'
+                        || $transform['rotation']['feature'] != 'noRotation'
+                        || $transform['quality']['feature'] != 'default'
+                        || $transform['format']['feature'] != 'image/jpeg'
+                    ) {
+                    list($tileWidth, $tileHeight) = $this-> _getWidthAndHeight($imagePath);
+                    $args = $transform;
+                    $args['source']['filepath'] = $imagePath;
+                    $args['source']['width'] = $tileWidth;
+                    $args['source']['height'] = $tileHeight;
+                    $args['region']['feature'] = 'full';
+                    $args['region']['x'] = 0;
+                    $args['region']['y'] = 0;
+                    $args['region']['width'] = $tileWidth;
+                    $args['region']['height'] = $tileHeight;
+                    $imagePath = $this->_transformImage($args);
+                }
+            }
+
+            // Check if the image is pre-tiled.
+            elseif ($pretiled = $this->_usePreTiled($file, $transform)) {
+                $imagePath = $pretiled;
+
+                // Check if a light transformation is needed (all except
+                // extraction of the region).
+                if ($transform['rotation']['feature'] != 'noRotation'
+                        || $transform['quality']['feature'] != 'default'
+                        || $transform['format']['feature'] != 'image/jpeg'
+                    ) {
+                    list($tileWidth, $tileHeight) = $this-> _getWidthAndHeight($imagePath);
+                    $args = $transform;
+                    $args['source']['filepath'] = $imagePath;
+                    $args['source']['width'] = $tileWidth;
+                    $args['source']['height'] = $tileHeight;
+                    $args['region']['feature'] = 'full';
+                    $args['region']['x'] = 0;
+                    $args['region']['y'] = 0;
+                    $args['region']['width'] = $tileWidth;
+                    $args['region']['height'] = $tileHeight;
+                    $args['size']['feature'] = 'full';
+                    $imagePath = $this->_transformImage($args);
+                }
+            }
+
+            // The image needs to be transformed dynamically.
+            else {
+                $imagePath = $this->_transformImage($transform);
+            }
+
             $isTempFile = true;
-            $imagePath = $this->_transformImage($transform);
             if (empty($imagePath)) {
                 $response->setHttpResponseCode(500);
                 $this->view->message = __('The IIIF server encountered an unexpected error that prevented it from fulfilling the request: the resulting file is not found or empty.');
@@ -466,6 +520,470 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             return array($width, $height);
         }
         return array(0, 0);
+    }
+
+    /**
+     * Get a pre tiled image from Omeka derivatives.
+     *
+     * Omeka derivative are light and basic pretiled files, that can be used for
+     * a request of a full region as a thumbnail or a fullsize.
+     *
+     * @param File $file
+     * @param array $transform
+     * @return string|null The path to the image if any.
+     */
+    protected function _useOmekaDerivative($file, $transform)
+    {
+        // Some requirements to get tiles.
+        if ($transform['region']['feature'] != 'full') {
+            return;
+        }
+
+        // Check size. Here, the "full" is already checked.
+        $useDerivativePath = null;
+        switch ($transform['size']['feature']) {
+            case 'sizeByW':
+            case 'sizeByH':
+                $constraint = $transform['size']['feature'] == 'sizeByW'
+                    ? $transform['size']['width']
+                    : $transform['size']['height'];
+
+                // Check if width is lower than fulllsize or thumbnail.
+                $filepath = $this->_getImagePath($file, 'fullsize');
+                list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
+                // Omeka and IIIF doesn't use the same type of constraint, so
+                // a double check is done.
+                // TODO Can be improved.
+                if ($constraint <= $derivativeWidth || $constraint <= $derivativeHeight) {
+                    $useDerivativePath = $filepath;
+                    $filepath = $this->_getImagePath($file, 'thumbnail');
+                    list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
+                    if ($constraint <= $derivativeWidth || $constraint <= $derivativeHeight) {
+                        $useDerivativePath = $filepath;
+                    }
+                }
+                break;
+
+            case 'sizeByWh':
+            case 'sizeByWhListed':
+                $constraintW = $transform['size']['width'];
+                $constraintH = $transform['size']['height'];
+
+                // Check if width is lower than fulllsize or thumbnail.
+                $filepath = $this->_getImagePath($file, 'fullsize');
+                list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
+                if ($constraintW <= $derivativeWidth && $constraintH <= $derivativeHeight) {
+                    $useDerivativePath = $filepath;
+                    $filepath = $this->_getImagePath($file, 'thumbnail');
+                    list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
+                    if ($constraintW <= $derivativeWidth && $constraintH <= $derivativeHeight) {
+                        $useDerivativePath = $filepath;
+                    }
+                }
+                break;
+
+            case 'full':
+                // Not possible to use a derivative, because the region is full.
+            default:
+                return;
+        }
+
+        if ($useDerivativePath) {
+            // A temp file is needed to simplify unlinking in case of a light
+            // transformation.
+            $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
+            $result = copy($useDerivativePath, $tempPath);
+            if (!$result) {
+                return;
+            }
+            $imagePath = $tempPath;
+
+            return $imagePath;
+        }
+    }
+
+    /**
+     * Get a pre tiled image.
+     *
+     * @todo Prebuild tiles directly with the IIIF standard (same type of url).
+     *
+     * @internal Because the position of the requested region may be anything
+     * (it depends of the client), until four images may be needed to build the
+     * resulting image. It's always quicker to reassemble them rather than
+     * extracting the part from the full image, specially with big ones.
+     * Nevertheless, OpenSeaDragon tries to ask 0-based tiles, so only this case
+     * is managed currently.
+     * @todo For non standard requests, the tiled images may be used to rebuild
+     * a fullsize image that is larger the Omeka derivatives. In that case,
+     * multiple tiles should be joined.
+     *
+     * @todo If OpenLayersZoom uses an IIPImage server, it simpler to link it
+     * directly to Universal Viewer.
+     *
+     * @param File $file
+     * @param array $transform
+     * @return string|null The temp path to the image if any.
+     */
+    protected function _usePreTiled($file, $transform)
+    {
+        // Some requirements to get tiles.
+        if (!in_array($transform['region']['feature'], array('regionByPx', 'full'))
+                || !in_array($transform['size']['feature'], array('sizeByW', 'sizeByH', 'sizeByWh', 'sizeByWhListed', 'full'))
+            ) {
+            return;
+        }
+
+        // Check if the file is pretiled with the OpenLayersZoom.
+        if (plugin_is_active('OpenLayersZoom')
+               && $this->view->openLayersZoom()->isZoomed($file)
+            ) {
+            // Get the level and position x and y of the tile.
+            $data = $this->_getLevelAndPosition($file, $transform['source'], $transform['region'], $transform['size']);
+            if (is_null($data)) {
+                return;
+            }
+            // Determine the tile group.
+            $tileGroup = $this->_getTileGroup(array(
+                    'width' => $transform['source']['width'],
+                    'height' => $transform['source']['height'],
+                ), $data);
+            if (is_null($tileGroup)) {
+                return;
+            }
+
+            // Set the image path.
+            $olz = new OpenLayersZoom_Creator();
+            $dirpath = $olz->useIIPImageServer()
+                ? $olz->getZDataWeb($file)
+                : $olz->getZDataDir($file);
+            $imagePath = $dirpath . sprintf('/TileGroup%d/%d-%d-%d.jpg',
+                $tileGroup, $data['level'], $data['x'] , $data['y']);
+            // Url on the IIPImage server.
+            if ($olz->useIIPImageServer()) {
+                $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
+                $imageContent = file_get_contents($imagePath);
+                $result = file_put_contents($imagePath, $imageContent);
+                if (!$result) {
+                    return;
+                }
+                $imagePath = $tempPath;
+            }
+
+            // Local path
+            else {
+                if (!file_exists($imagePath)) {
+                     return;
+                }
+                // A temp file is needed to simplify unlinking in case of a
+                // light transformation.
+                $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
+                $result = copy($imagePath, $tempPath);
+                if (!$result) {
+                    return;
+                }
+                $imagePath = $tempPath;
+            }
+
+            return $imagePath;
+        }
+    }
+
+    /**
+     * Get the level and the position of the cell from the source and region.
+     *
+     * @internal OpenLayersZoom uses Zoomify format, that uses square tiles.
+     * @return array|null
+     */
+    protected function _getLevelAndPosition($file, $source, $region, $size)
+    {
+        //Get the properties.
+        $tileProperties = $this->_getTileProperties($file);
+        if (empty($tileProperties)) {
+            return;
+        }
+
+        // Check if the tile may be cropped.
+        $isFirstColumn = $region['x'] == 0;
+        $isFirstRow = $region['y'] == 0;
+        $isFirstCell = $isFirstColumn && $isFirstRow;
+        $isLastColumn = $source['width'] == ($region['x'] + $region['width']);
+        $isLastRow = $source['height'] == ($region['y'] + $region['height']);
+        $isLastCell = $isLastColumn && $isLastRow;
+
+        // Cell size is 256 by default because it's hardcoded in OpenLayersZoom.
+        // TODO Use the true size, in particular for non standard requests.
+        // Furthermore, a bigger size can be requested directly, and, in that
+        // case, multiple tiles should be joined.
+        $cellSize = 256;
+
+        // Manage the base level.
+        if ($isFirstCell && $isLastCell) {
+            // Check if the tile size is the one requested.
+            $level = 0;
+            $cellX = 0;
+            $cellY = 0;
+        }
+
+        // Else normal region.
+        else {
+            // Determine the position of the cell from the source and the
+            // region.
+            switch ($size['feature']) {
+                case 'sizeByW':
+                    if ($isLastColumn) {
+                        // Normal row. The last cell is an exception.
+                        if (!$isLastCell) {
+                            // Use row, because Zoomify tiles are square.
+                            $count = (integer) ceil(max($source['width'], $source['height']) / $region['height']);
+                            $cellX = $region['x'] / $region['height'];
+                            $cellY = $region['y'] / $region['height'];
+                        }
+                    }
+                    // Normal column and normal region.
+                    else {
+                        $count = (integer) ceil(max($source['width'], $source['height']) / $region['width']);
+                        $cellX = $region['x'] / $region['width'];
+                        $cellY = $region['y'] / $region['width'];
+                    }
+                    break;
+
+                case 'sizeByH':
+                    if ($isLastRow) {
+                        // Normal column. The last cell is an exception.
+                        if (!$isLastCell) {
+                            // Use column, because Zoomify tiles are square.
+                            $count = (integer) ceil(max($source['width'], $source['height']) / $region['width']);
+                            $cellX = $region['x'] / $region['width'];
+                            $cellY = $region['y'] / $region['width'];
+                        }
+                    }
+                    // Normal row and normal region.
+                    else {
+                        $count = (integer) ceil(max($source['width'], $source['height']) / $region['height']);
+                        $cellX = $region['x'] / $region['height'];
+                        $cellY = $region['y'] / $region['height'];
+                    }
+                    break;
+
+                case 'sizeByWh':
+                case 'sizeByWhListed':
+                    // TODO To improve.
+                    if ($isLastColumn) {
+                        // Normal row. The last cell is an exception.
+                        if (!$isLastCell) {
+                            // Use row, because Zoomify tiles are square.
+                            $count = (integer) ceil(max($source['width'], $source['height']) / $region['height']);
+                            $cellX = $region['x'] / $region['width'];
+                            $cellY = $region['y'] / $region['height'];
+                        }
+                    }
+                    // Normal column and normal region.
+                    else {
+                        $count = (integer) ceil(max($source['width'], $source['height']) / $region['width']);
+                        $cellX = $region['x'] / $region['width'];
+                        $cellY = $region['y'] / $region['height'];
+                    }
+                    break;
+
+                case 'full':
+                    // TODO To be checked.
+                    // Normalize the size, but they can be cropped.
+                    $size['width'] = $region['width'];
+                    $size['height'] = $region['height'];
+                    $count = (integer) ceil(max($source['width'], $source['height']) / $region['width']);
+                    $cellX = $region['x'] / $region['width'];
+                    $cellY = $region['y'] / $region['height'];
+                    break;
+
+                default:
+                    return;
+            }
+
+            // Get the list of squale factors.
+            $squaleFactors = array();
+            $maxSize = max($source['width'], $source['height']);
+            $total = (integer) ceil($maxSize / $tileProperties['size']);
+            $factor = 1;
+            // If level is set, count is not set and useless.
+            $level = isset($level) ? $level : 0;
+            $count = isset($count) ? $count : 0;
+            while ($factor / 2 <= $total) {
+                // This allows to determine the level for normal regions.
+                if ($factor < $count) {
+                    $level++;
+                }
+                $squaleFactors[] = $factor;
+                $factor = $factor * 2;
+            }
+
+            // Process the last cell, an exception because it may be cropped.
+            if ($isLastCell) {
+                // TODO Quick check if the last cell is a standard one (not cropped)?
+
+                // Because the default size of the region lacks, it is
+                // simpler to check if an image of the zoomed file is the
+                // same using the tile size from properties, for each
+                // possible factor.
+                $reversedSqualeFactors = array_reverse($squaleFactors);
+                $isLevelFound = false;
+                foreach ($reversedSqualeFactors as $level => $reversedFactor) {
+                    $tileFactor = $reversedFactor * $tileProperties['size'];
+                    $countX = (integer) ceil($source['width'] / $tileFactor);
+                    $countY = (integer) ceil($source['height'] / $tileFactor);
+                    $lastRegionWidth = $source['width'] - (($countX -1) * $tileFactor);
+                    $lastRegionHeight = $source['height'] - (($countY - 1) * $tileFactor);
+                    $lastRegionX = $source['width'] - $lastRegionWidth;
+                    $lastRegionY = $source['height'] - $lastRegionHeight;
+                    if ($region['x'] == $lastRegionX
+                            && $region['y'] == $lastRegionY
+                            && $region['width'] == $lastRegionWidth
+                            && $region['height'] == $lastRegionHeight
+                        ) {
+                        // Level is found.
+                        $isLevelFound = true;
+                        // Cells are 0-based.
+                        $cellX = $countX - 1;
+                        $cellY = $countY - 1;
+                        break;
+                    }
+                }
+                if (!$isLevelFound) {
+                    return;
+                }
+            }
+        }
+
+        // TODO Check the size requirement.
+        // Currently, this is not done, because the size is hardcoded in
+        // OpenLayersZoom.
+
+        $checkedTileSize = $this->_checkTileSize($file, $cellSize, $tileProperties['size']);
+        if ($checkedTileSize) {
+            return array(
+                'level' => $level,
+                'x' => $cellX,
+                'y' => $cellY,
+                'size' => $tileProperties['size'],
+            );
+        }
+    }
+
+    /**
+     * Return the tile group of a tile from level, position and size.
+     *
+     * @see https://github.com/openlayers/ol3/blob/master/src/ol/source/zoomifysource.js
+     *
+     * @param array $image
+     * @param array $tile
+     * @return integer|null
+     */
+    protected function _getTileGroup($image, $tile)
+    {
+        if (empty($image) || empty($tile)) {
+            return;
+        }
+
+        $tierSizeCalculation = 'default';
+        // $tierSizeCalculation = 'truncated';
+
+        $tierSizeInTiles = array();
+
+        switch ($tierSizeCalculation) {
+            case 'default':
+                $tileSize = $tile['size'];
+                while ($image['width'] > $tileSize || $image['height'] > $tileSize) {
+                    $tierSizeInTiles[] = array(
+                        ceil($image['width'] / $tileSize),
+                        ceil($image['height'] / $tileSize),
+                    );
+                    $tileSize += $tileSize;
+                }
+                break;
+
+            case 'truncated':
+                $width = $image['width'];
+                $height = $image['height'];
+                while ($width > $tile['size'] || $height > $tile['size']) {
+                    $tierSizeInTiles[] = array(
+                        ceil($width / $tile['size']),
+                        ceil($height / $tile['size']),
+                    );
+                    $width >>= 1;
+                    $height >>= 1;
+                }
+                break;
+
+            default:
+                return;
+        }
+
+        $tierSizeInTiles[] = array(1, 1);
+        $tierSizeInTiles = array_reverse($tierSizeInTiles);
+
+        $resolutions = array(1);
+        $tileCountUpToTier = array(0);
+        for ($i = 1, $ii = count($tierSizeInTiles); $i < $ii; $i++) {
+            $resolutions[] = 1 << $i;
+            $tileCountUpToTier[] =
+                $tierSizeInTiles[$i - 1][0] * $tierSizeInTiles[$i - 1][1]
+                + $tileCountUpToTier[$i - 1];
+        }
+
+        $tileIndex = $tile['x']
+            + $tile['y'] * $tierSizeInTiles[$tile['level']][0]
+            + $tileCountUpToTier[$tile['level']];
+        $tileGroup = ($tileIndex / $tile['size']) ?: 0;
+        return $tileGroup;
+    }
+
+    /**
+     * Return the properties of a tiled file.
+     *
+     * @return array|null
+     * @see UniversalViewer_View_Helper_IiifManifest::_getTileProperties()
+     */
+    protected function _getTileProperties($file)
+    {
+        $olz = new OpenLayersZoom_Creator();
+        $dirpath = $olz->useIIPImageServer()
+            ? $olz->getZDataWeb($file)
+            : $olz->getZDataDir($file);
+        $properties = simplexml_load_file($dirpath . '/ImageProperties.xml');
+        if ($properties === false) {
+            return;
+        }
+        $properties = $properties->attributes();
+        $properties = reset($properties);
+
+        // Standardize the properties.
+        $result = array();
+        $result['size'] = (integer) $properties['TILESIZE'];
+        $result['total'] = (integer) $properties['NUMTILES'];
+        $result['source']['width'] = (integer) $properties['WIDTH'];
+        $result['source']['height'] = (integer) $properties['HEIGHT'];
+        return $result;
+    }
+
+    /**
+     * Check if the size is the one requested.
+     *
+     * @internal The tile may be cropped.
+     * @param File $file
+     * @param integer $tileSize This is the standard size, not cropped.
+     * @param integer $tilePropertiesSize
+     * @return boolean
+     */
+    protected function _checkTileSize($file, $tileSize, $tilePropertiesSize = null)
+    {
+        if (is_null($tilePropertiesSize)) {
+            $tileProperties = $this->_getTileProperties($file);
+            if (empty($tileProperties)) {
+                return false;
+            }
+            $tilePropertiesSize = $tileProperties['size'];
+        }
+
+        return $tileSize == $tilePropertiesSize;
     }
 
     /**

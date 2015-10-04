@@ -2,10 +2,10 @@ Universal Viewer (plugin for Omeka)
 ===================================
 
 [Universal Viewer] is a plugin for [Omeka] that adds the [IIIF] specifications
-and the [UniversalViewer], a unified online player for any file. It can display
-books, images, maps, audio, movies, pdf and anything else as long as the
-appropriate extensions are installed. Rotation, zoom, inside search, etc. may be
-managed too.
+in order to serve images like an [IIPImage] server, and the [UniversalViewer], a
+unified online player for any file. It can display books, images, maps, audio,
+movies, pdf and anything else as long as the appropriate extension is installed.
+Rotation, zoom, inside search, etc. may be managed too.
 
 The full specification of the "International Image Interoperability Framework"
 standard is supported (level 2), so any other widget that supports it can use it.
@@ -29,6 +29,10 @@ Then uncompress and rename "uv" the last [official release] of the [UniversalVie
 in the subdirectory `views/shared/javascripts` of the plugin. "nodejs" and other
 packages are not needed, because only the viewer is used: the IIIF server is
 provided directly by the plugin itself.
+
+If your images are big (more than 1 to 5 MB, according to your server and your
+public), it's highly recommended to tile them with a plugin such [OpenLayersZoom].
+Then, tiles will be automatically displayed by Universal Viewer.
 
 Then install it like any other Omeka plugin.
 
@@ -93,6 +97,9 @@ Notes
 
 - A batch edit is provided to sort images before other files (pdf, xml...) that
 are associated to an item (Items > check box items > edit button).
+- The plugin works fine for a standard usage, but the images server may be
+improved for requests made outside of the Universal Viewer when OpenLayersZoom
+is used.
 
 
 Troubleshooting
@@ -154,6 +161,7 @@ Plugin Universal Viewer for Omeka:
 [Universal Viewer]: https://github.com/Daniel-KM/UniversalViewer4Omeka
 [Omeka]: https://omeka.org
 [IIIF]: http://iiif.io
+[IIPImage]: http://iipimage.sourceforge.net
 [UniversalViewer]: https://github.com/UniversalViewer/universalviewer
 [British Library]: http://bl.uk
 [National Library of Wales]: http://www.llgc.org.uk
@@ -165,6 +173,7 @@ Plugin Universal Viewer for Omeka:
 [Mines ParisTech]: http://mines-paristech.fr
 [example server]: http://universalviewer.azurewebsites.net
 [official release]: https://github.com/UniversalViewer/universalviewer/releases
+[OpenLayersZoom]: https://github.com/Daniel-KM/OpenLayersZoom
 [CollectionTree]: https://github.com/Daniel-KM/CollectionTree
 [plugin issues]: https://github.com/Daniel-KM/UniversalViewer4Omeka/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html

@@ -53,13 +53,15 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
                     'id' => $file->id,
                 ), 'universalviewer_image');
 
-            // TODO Use tiles of OpenLayersZoom if any (required for big files).
-            $tile = array();
-            $tile['width'] = 256;
-            $tile['scaleFactors'] = array(1, 2, 4, 8, 16, 32);
-            $tile = (object) $tile;
             $tiles = array();
-            $tiles[] = $tile;
+            if (plugin_is_active('OpenLayersZoom')
+                    && $this->view->openLayersZoom()->isZoomed($file)
+                ) {
+                $tile = $this->_iiifTile($file);
+                if ($tile) {
+                    $tiles[] = $tile;
+                }
+            }
 
             $profile = array();
             $profile[] = 'http://iiif.io/api/image/2/level2.json';
@@ -92,8 +94,9 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             $info['width'] = $width;
             $info['height'] = $height;
             $info['sizes'] = $sizes;
-            // Unavailable currently.
-            // $info['tiles'] = $tiles;
+            if ($tiles) {
+                $info['tiles'] = $tiles;
+            }
             $info['profile'] = $profile;
             // Useless currently.
             // $info['service'] = $service;
@@ -121,6 +124,71 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
         return $asJson
             ? json_encode($info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
             : $info;
+    }
+
+    /**
+     * Create an IIIF tile object for a place holder.
+     *
+     * @internal The method uses the Zoomify format of OpenLayersZoom.
+     *
+     * @param File $file
+     * @return Standard object or null if no tile.
+     * @see UniversalViewer_View_Helper_IiifManifest::_iiifTile()
+     */
+    protected function _iiifTile($file)
+    {
+        $tile = array();
+
+        $tileProperties = $this->_getTileProperties($file);
+        if (empty($tileProperties)) {
+            return;
+        }
+
+        $squaleFactors = array();
+        $maxSize = max($tileProperties['source']['width'], $tileProperties['source']['height']);
+        $tileSize = $tileProperties['size'];
+        $total = (integer) ceil($maxSize / $tileSize);
+        $factor = 1;
+        while ($factor / 2 <= $total) {
+            $squaleFactors[] = $factor;
+            $factor = $factor * 2;
+        }
+        if (count($squaleFactors) <= 1) {
+            return;
+        }
+
+        $tile['width'] = $tileSize;
+        $tile['scaleFactors'] = $squaleFactors;
+        $tile = (object) $tile;
+        return $tile;
+    }
+
+    /**
+     * Return the properties of a tiled file.
+     *
+     * @return array|null
+     * @see UniversalViewer_ImageController::_getTileProperties()
+     */
+    protected function _getTileProperties($file)
+    {
+        $olz = new OpenLayersZoom_Creator();
+        $dirpath = $olz->useIIPImageServer()
+            ? $olz->getZDataWeb($file)
+            : $olz->getZDataDir($file);
+        $properties = simplexml_load_file($dirpath . '/ImageProperties.xml');
+        if ($properties === false) {
+            return;
+        }
+        $properties = $properties->attributes();
+        $properties = reset($properties);
+
+        // Standardize the properties.
+        $result = array();
+        $result['size'] = (integer) $properties['TILESIZE'];
+        $result['total'] = (integer) $properties['NUMTILES'];
+        $result['source']['width'] = (integer) $properties['WIDTH'];
+        $result['source']['height'] = (integer) $properties['HEIGHT'];
+        return $result;
     }
 
     /**
