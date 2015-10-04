@@ -304,7 +304,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
             // A quick check to avoid a possible transformation.
             if (isset($transform['size']['width']) && empty($transform['size']['width'])
-                    || isset($transform['size']['width']) && empty($transform['size']['width'])
+                    || isset($transform['size']['height']) && empty($transform['size']['height'])
                 ) {
                 $response->setHttpResponseCode(400);
                 $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is not supported.', $size);
@@ -454,7 +454,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         // Recommanded by feature "profileLinkHeader".
         $response->setHeader('Link', '<http://iiif.io/api/image/2/level2.json>;rel="profile"');
         $response->setHeader('Content-Type', $transform['format']['feature']);
-        $response->clearBody ();
+        $response->clearBody();
         $response->setBody($output);
     }
 
@@ -487,7 +487,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
         // Header for CORS, required for access of IIIF.
         $response->setHeader('access-control-allow-origin', '*');
-        $response->clearBody ();
+        $response->clearBody();
         // $body = json_encode($data);
         $body = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $response->setBody($body);

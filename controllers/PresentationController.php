@@ -65,7 +65,7 @@ class UniversalViewer_PresentationController extends Omeka_Controller_AbstractAc
 
         // Header for CORS, required for access of IIIF.
         $response->setHeader('access-control-allow-origin', '*');
-        $response->clearBody ();
+        $response->clearBody();
         // $body = json_encode($data);
         $body = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $response->setBody($body);

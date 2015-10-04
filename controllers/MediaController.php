@@ -126,7 +126,7 @@ class UniversalViewer_MediaController extends Omeka_Controller_AbstractActionCon
         // Header for CORS, required for access of IXIF.
         $response->setHeader('access-control-allow-origin', '*');
         $response->setHeader('Content-Type', $file->mime_type);
-        $response->clearBody ();
+        $response->clearBody();
         $response->setBody($output);
     }
 
@@ -159,7 +159,7 @@ class UniversalViewer_MediaController extends Omeka_Controller_AbstractActionCon
 
         // Header for CORS, required for access of IIIF.
         $response->setHeader('access-control-allow-origin', '*');
-        $response->clearBody ();
+        $response->clearBody();
         // $body = json_encode($data);
         $body = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $response->setBody($body);

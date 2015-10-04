@@ -41,7 +41,7 @@ Options for the UniversalViewer player can be changed in the json file
 "config.json": copy and update it in a folder named "universal-viewer" in your
 theme.
 Options for the IIIF server can be changed in the helpers "IiifCollection.php",
-"IiiifManifest.php" and "IiifInfo.php" of the plugin.
+"IiifManifest.php" and "IiifInfo.php" of the plugin.
 
 
 Usage
@@ -54,22 +54,12 @@ This can be disabled in the config of the plugin.
 
 All routes for the player and the IIIF server are defined in the file "routes.ini".
 
-To embed the BookReader with more control, three mechanisms are provided. So,
-according to your needs, you may add this code in the `items/show.php` file of
-your theme or anywhere else, as long a record is defined (as variable or as
+To embed the Universal Viewer with more control, three mechanisms are provided.
+So, according to your needs, you may add this code in the `items/show.php` file
+of your theme or anywhere else, as long a record is defined (as variable or as
 current record'collection' or 'item').
 
-* Hook
-
-```
-    <?php
-    echo get_specific_plugin_hook_output('UniversalViewer', 'public_items_show', array(
-        'record' => $item,
-    ));
-    ?>
-```
-
-* Helper
+* Helper (recommended)
 
 ```
      echo $this->universalViewer();
@@ -84,9 +74,20 @@ current record'collection' or 'item').
     ?>
 ```
 
- All mechanisms share the same arguments and all of them are optional. For the
- selection of the record, the order of priority is: "id", "record" / "type",
- "item", "collection", current record.
+* Hook
+
+```
+    <?php
+    echo get_specific_plugin_hook_output('UniversalViewer', 'public_items_show', array(
+        'record' => $item,
+        'view' => $this,
+    ));
+    ?>
+```
+
+All mechanisms share the same arguments and all of them are optional. For the
+selection of the record, the order of priority is: "id", "record" / "type",
+"item", "collection", current record.
 
 If collections are organized hierarchically with the plugin [CollectionTree], it
 will be used to build manifests for collections.
