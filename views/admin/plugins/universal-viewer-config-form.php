@@ -23,6 +23,20 @@
                 array('checked' => (boolean) get_option('universalviewer_append_items_show'))); ?>
         </div>
     </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_max_dynamic_size',
+                __('Max dynamic size for images')); ?>
+        </div>
+        <div class='inputs five columns omega'>
+            <?php echo $this->formText('universalviewer_max_dynamic_size', get_option('universalviewer_max_dynamic_size'), null); ?>
+            <p class="explanation">
+                <?php echo __('Set the maximum size in bytes for the dynamic processing of images.'); ?>
+                 <?php echo __('Beyond this limit, the plugin will require a tiled image, for example made by OpenLayersZoom.'); ?>
+                 <?php echo __('Let empty to allow processing of any image.'); ?>
+            </p>
+        </div>
+    </div>
 </fieldset>
 <fieldset id="fieldset-universalviewer-info"><legend><?php echo __('Common infos'); ?></legend>
     <div class="field">

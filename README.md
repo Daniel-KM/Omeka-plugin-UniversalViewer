@@ -99,7 +99,9 @@ Notes
 are associated to an item (Items > check box items > edit button).
 - The plugin works fine for a standard usage, but the images server may be
 improved for requests made outside of the Universal Viewer when OpenLayersZoom
-is used.
+is used. Without it, a configurable limit should be set (10 MB by default).
+- If an item has no file, the viewer is not able to display it, so a check is
+automatically done.
 
 
 Troubleshooting

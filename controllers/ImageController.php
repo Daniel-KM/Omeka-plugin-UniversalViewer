@@ -416,6 +416,13 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
             // The image needs to be transformed dynamically.
             else {
+                $maxFileSize = get_option('universalviewer_max_dynamic_size');
+                if (!empty($maxFileSize) && $file->size > $maxFileSize) {
+                    $response->setHttpResponseCode(500);
+                    $this->view->message = __('The IIIF server encountered an unexpected error that prevented it from fulfilling the request: the file is not tiled for dynamic processing.');
+                    $this->renderScript('image/error.php');
+                    return;
+                }
                 $imagePath = $this->_transformImage($transform);
             }
 
@@ -526,7 +533,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
      * Get a pre tiled image from Omeka derivatives.
      *
      * Omeka derivative are light and basic pretiled files, that can be used for
-     * a request of a full region as a thumbnail or a fullsize.
+     * a request of a full region as a fullsize.
+     * @todo To be improved. Currently, thumbnails are not used.
      *
      * @param File $file
      * @param array $transform
@@ -553,14 +561,9 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
                 // Omeka and IIIF doesn't use the same type of constraint, so
                 // a double check is done.
-                // TODO Can be improved.
+                // TODO To be improved
                 if ($constraint <= $derivativeWidth || $constraint <= $derivativeHeight) {
                     $useDerivativePath = $filepath;
-                    $filepath = $this->_getImagePath($file, 'thumbnail');
-                    list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
-                    if ($constraint <= $derivativeWidth || $constraint <= $derivativeHeight) {
-                        $useDerivativePath = $filepath;
-                    }
                 }
                 break;
 
@@ -572,13 +575,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 // Check if width is lower than fulllsize or thumbnail.
                 $filepath = $this->_getImagePath($file, 'fullsize');
                 list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
-                if ($constraintW <= $derivativeWidth && $constraintH <= $derivativeHeight) {
+                if ($constraintW <= $derivativeWidth || $constraintH <= $derivativeHeight) {
                     $useDerivativePath = $filepath;
-                    $filepath = $this->_getImagePath($file, 'thumbnail');
-                    list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
-                    if ($constraintW <= $derivativeWidth && $constraintH <= $derivativeHeight) {
-                        $useDerivativePath = $filepath;
-                    }
                 }
                 break;
 
@@ -1115,9 +1113,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         }
 
         // Final generic checks for size.
-        if (empty($destinationWidth) || empty($destinationHeight)
-                || $destinationWidth > $sourceWidth || $destinationHeight > $sourceHeight
-            ) {
+        if (empty($destinationWidth) || empty($destinationHeight)) {
             imagedestroy($sourceGD);
             return;
         }

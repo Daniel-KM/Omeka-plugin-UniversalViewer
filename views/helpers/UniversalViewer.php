@@ -29,6 +29,21 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
             return '';
         }
 
+        // Some specific checks.
+        switch (get_class($record)) {
+            case 'Item':
+                // Currently, item without files is unprocessable.
+                if ($record->fileCount() == 0) {
+                    return __('This item has no files and is not displayable.');
+                }
+                break;
+            case 'Collection':
+                if ($record->totalItems() == 0) {
+                    return __('This collection has no item and is not displayable.');
+                }
+                break;
+        }
+
         $class = isset($args['class'])
             ? $args['class']
             : get_option('universalviewer_class');
