@@ -569,6 +569,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
             case 'sizeByWh':
             case 'sizeByWhListed':
+            case 'sizeByForcedWh':
                 $constraintW = $transform['size']['width'];
                 $constraintH = $transform['size']['height'];
 
@@ -576,6 +577,14 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 $filepath = $this->_getImagePath($file, 'fullsize');
                 list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
                 if ($constraintW <= $derivativeWidth || $constraintH <= $derivativeHeight) {
+                    $useDerivativePath = $filepath;
+                }
+                break;
+
+            case 'sizeByPct':
+                $filepath = $this->_getImagePath($file, 'fullsize');
+                list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
+                if ($transform['size']['percentage'] <= ($derivativeWidth * 100 / $args['source']['width'])) {
                     $useDerivativePath = $filepath;
                 }
                 break;
