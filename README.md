@@ -10,9 +10,9 @@ Rotation, zoom, inside search, etc. may be managed too.
 The full specification of the "International Image Interoperability Framework"
 standard is supported (level 2), so any other widget that supports it can use it.
 
-The Universal Viewer was firstly developed for the [Wellcome Library] of the
-[British Library] and the [National Library of Wales], then open sourced (unlike
-the viewer of [Gallica], the public digital library built by the [Bibliothèque Nationale de France],
+The Universal Viewer was firstly developed by [Digirati] for the [Wellcome Library]
+of the [British Library] and the [National Library of Wales], then open sourced
+(unlike the viewer of [Gallica], the public digital library built by the [Bibliothèque Nationale de France],
 which is sold to its partners).
 
 See a [demo] on the [Bibliothèque patrimoniale] of [Mines ParisTech], or you can
@@ -165,6 +165,7 @@ Plugin Universal Viewer for Omeka:
 [IIIF]: http://iiif.io
 [IIPImage]: http://iipimage.sourceforge.net
 [UniversalViewer]: https://github.com/UniversalViewer/universalviewer
+[Digirati]: http://digirati.co.uk
 [British Library]: http://bl.uk
 [National Library of Wales]: http://www.llgc.org.uk
 [Gallica]: http://gallica.bnf.fr
