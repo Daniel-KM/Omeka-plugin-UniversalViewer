@@ -23,7 +23,7 @@ class UniversalViewer_PlayerController extends Omeka_Controller_AbstractActionCo
             throw new Omeka_Controller_Exception_404;
         }
 
-        $recordType = $this->getParam('record');
+        $recordType = $this->getParam('recordtype');
         $record = get_record_by_id(Inflector::classify($recordType), $id);
         if (empty($record)) {
             throw new Omeka_Controller_Exception_404;

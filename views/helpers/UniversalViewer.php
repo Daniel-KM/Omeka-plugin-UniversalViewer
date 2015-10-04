@@ -9,7 +9,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
      * Get the specified UniversalViewer.
      *
      * @param array $args Associative array of optional values:
-     *   - (string) id: The main id, currently the id of the item.
+     *   - (string) id: The unique main id.
      *   - (integer|Record) record: The record is the item if it's an integer.
      *   - (string) type: Type of record if record is integer (item by default).
      *   - (integer|Item) item
@@ -55,7 +55,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         }
 
         $urlManifest = absolute_url(array(
-                'record' => Inflector::tableize(get_class($record)),
+                'recordtype' => Inflector::tableize(get_class($record)),
                 'id' => $record->id,
             ), 'universalviewer_presentation_manifest');
 
@@ -70,6 +70,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
             $width,
             $height);
         $html .= sprintf('<script type="text/javascript" id="embedUV" src="%s"></script>', $urlJs);
+        $html .= '<script type="text/javascript">/* wordpress fix */</script>';
         return $html;
     }
 
@@ -77,6 +78,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
     {
         $record = null;
         if (!empty($args['id'])) {
+            // Currently only item.
             $record = get_record_by_id('Item', (integer) $args['id']);
         }
         elseif (!empty($args['record'])) {
@@ -99,7 +101,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
                 $record = $args['item'];
             }
         }
-        elseif (!empty($args['collectiion'])) {
+        elseif (!empty($args['collection'])) {
             if (is_numeric($args['collection'])) {
                 $record = get_record_by_id('Collection', (integer) $args['collection']);
             }

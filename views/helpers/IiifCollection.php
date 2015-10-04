@@ -137,7 +137,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         foreach ($collectionTree as $collection) {
             $manifest = array();
             $manifest['@id'] = absolute_url(array(
-                'record' => 'collections',
+                'recordtype' => 'collections',
                 'id' => $collection['id'],
             ), 'universalviewer_presentation_manifest');
             $manifest['@type'] = 'sc:Collection';
@@ -157,7 +157,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         $recordClass = get_class($record);
         $manifest = array();
         $manifest['@id'] = absolute_url(array(
-            'record' => Inflector::tableize($recordClass),
+            'recordtype' => Inflector::tableize($recordClass),
             'id' => $record->id,
         ), 'universalviewer_presentation_manifest');
         $manifest['@type'] = $recordClass == 'Collection' ? 'sc:Collection' : 'sc:Manifest';

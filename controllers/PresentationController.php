@@ -25,7 +25,7 @@ class UniversalViewer_PresentationController extends Omeka_Controller_AbstractAc
             throw new Omeka_Controller_Exception_404;
         }
 
-        $recordType = $this->getParam('record');
+        $recordType = $this->getParam('recordtype');
         $record = get_record_by_id(Inflector::classify($recordType), $id);
         if (empty($record)) {
             throw new Omeka_Controller_Exception_404;
@@ -55,16 +55,12 @@ class UniversalViewer_PresentationController extends Omeka_Controller_AbstractAc
         // client asks json-ld.
         $accept = $request->getHeader('Accept');
         if (strstr($accept, 'application/ld+json')) {
-            $response->setHeader('Content-Type', 'application/ld+json', true);
-            $response->setHeader('Content-Type', 'charset=utf-8');
+            $response->setHeader('Content-Type', 'application/ld+json; charset=utf-8', true);
         }
         // Default to json with a link to json-ld.
         else {
-            $response->setHeader('Content-Type', 'application/json', true);
-            $response->setHeader('Content-Type', 'charset=utf-8');
-            $response->setHeader('Link', '<http://iiif.io/api/image/2/context.json>', true);
-            $response->setHeader('Link', 'rel="http://www.w3.org/ns/json-ld#context"');
-            $response->setHeader('Link', 'type="application/ld+json"');
+            $response->setHeader('Content-Type', 'application/json; charset=utf-8', true);
+            $response->setHeader('Link', '<http://iiif.io/api/image/2/context.json>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"', true);
        }
 
         // Header for CORS, required for access of IIIF.

@@ -51,18 +51,11 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             list($width, $height) = $this->_getWidthAndHeight($imagePath);
             $imageUrl = absolute_url(array(
                     'id' => $file->id,
-                    // TODO Useless?
-                    'region' => 'full',
-                    'size' => 'full',
-                    'rotation' => 0,
-                    'quality' => 'default',
-                    'format' => 'jpg',
                 ), 'universalviewer_image');
 
             // TODO Use tiles of OpenLayersZoom if any (required for big files).
             $tile = array();
             $tile['width'] = 256;
-            $tile['height'] = 256;
             $tile['scaleFactors'] = array(1, 2, 4, 8, 16, 32);
             $tile = (object) $tile;
             $tiles = array();
@@ -133,7 +126,7 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
     /**
      * Get the path to an original or derivative file for an image.
      *
-     * @param FIle $file
+     * @param File $file
      * @param string $derivativeType
      * @return string|null Null if not exists.
      * @see UniversalViewer_View_Helper_IiifManifest::_getImagePath()

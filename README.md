@@ -1,5 +1,5 @@
 Universal Viewer (plugin for Omeka)
-==================================
+===================================
 
 [Universal Viewer] is a plugin for [Omeka] that adds the [IIIF] specifications
 and the [UniversalViewer], a unified online player for any file. It can display
@@ -8,15 +8,15 @@ appropriate extensions are installed. Rotation, zoom, inside search, etc. may be
 managed too.
 
 The full specification of the "International Image Interoperability Framework"
-standard is supported (level 2), so any other widget that support it can use it.
+standard is supported (level 2), so any other widget that supports it can use it.
 
-The Universal Viewer was firstly developed for the [British Library] and the
-[National Library of Wales], then open sourced (unlike the viewer of [Gallica],
-the public digital library built by the [Bibliothèque Nationale de France],
-which is sold to its partners). Contents are available in the [Wellcome Library].
+The Universal Viewer was firstly developed for the [Wellcome Library] of the
+[British Library] and the [National Library of Wales], then open sourced (unlike
+the viewer of [Gallica], the public digital library built by the [Bibliothèque Nationale de France],
+which is sold to its partners).
 
 See a [demo] on the [Bibliothèque patrimoniale] of [Mines ParisTech], or you can
-set the url "https://patrimoine.mines-paristech.fr/items/presentation/2/manifest"
+set the url "https://patrimoine.mines-paristech.fr/collections/presentation/7/manifest"
 in the official [example server], because this is fully interoperable.
 
 
@@ -25,8 +25,8 @@ Installation
 
 Uncompress files and rename plugin folder "UniversalViewer".
 
-Then uncompress and rename "uv" the last official release of the [UniversalViewer]
-in the subdirectory `view/shared/javascripts` of the plugin. "nodejs" and other
+Then uncompress and rename "uv" the last [official release] of the [UniversalViewer]
+in the subdirectory `views/shared/javascripts` of the plugin. "nodejs" and other
 packages are not needed, because only the viewer is used: the IIIF server is
 provided directly by the plugin itself.
 
@@ -38,6 +38,7 @@ Options for the UniversalViewer player can be changed in the json file
 theme.
 Options for the IIIF server can be changed in the helpers "IiifCollection.php",
 "IiiifManifest.php" and "IiifInfo.php" of the plugin.
+
 
 Usage
 -----
@@ -75,7 +76,7 @@ current record'collection' or 'item').
 
 ```
     <?php
-        echo $this->shortcodes('[uv id=1]');
+        echo $this->shortcodes('[uv record=1 type=collection]');
     ?>
 ```
 
@@ -85,6 +86,13 @@ current record'collection' or 'item').
 
 If collections are organized hierarchically with the plugin [CollectionTree], it
 will be used to build manifests for collections.
+
+
+Notes
+-----
+
+- A batch edit is provided to sort images before other files (pdf, xml...) that
+are associated to an item (Items > check box items > edit button).
 
 
 Troubleshooting
@@ -156,6 +164,7 @@ Plugin Universal Viewer for Omeka:
 [Bibliothèque patrimoniale]: https://patrimoine.mines-paristech.fr
 [Mines ParisTech]: http://mines-paristech.fr
 [example server]: http://universalviewer.azurewebsites.net
+[official release]: https://github.com/UniversalViewer/universalviewer/releases
 [CollectionTree]: https://github.com/Daniel-KM/CollectionTree
 [plugin issues]: https://github.com/Daniel-KM/UniversalViewer4Omeka/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
@@ -163,4 +172,4 @@ Plugin Universal Viewer for Omeka:
 [FSF]: https://www.fsf.org
 [OSI]: http://opensource.org
 [MIT licence]: https://github.com/UniversalViewer/universalviewer/blob/master/LICENSE.txt
-[Daniel-KM]: https://github.com/Daniel-KM
+[Daniel-KM]: https://github.com/Daniel-KM "Daniel Berthereau"

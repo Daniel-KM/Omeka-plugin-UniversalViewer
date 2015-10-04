@@ -4,6 +4,9 @@
  */
 class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 {
+    // The base url of the current document.
+    protected $_baseUrl;
+
     /**
      * Get the IIIF manifest for the specified record.
      *
@@ -30,7 +33,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $result = $this->_buildManifestItem($record);
         }
         elseif ($recordClass == 'Collection') {
-            return get_view()->iiifCollection($record, $asJson);
+            return $this->view->iiifCollection($record, $asJson);
         }
         else {
             return null;
@@ -54,14 +57,14 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     {
         // Prepare all values needed for manifest.
         $url = absolute_url(array(
-                'record' => 'items',
+                'recordtype' => 'items',
                 'id' => $record->id,
             ), 'universalviewer_presentation_manifest');
 
         // The base url for some other ids.
-        $baseUrl = dirname($url);
+        $this->_baseUrl = dirname($url);
 
-        $elementTexts = get_view()->allElementTexts($record, array(
+        $elementTexts = $this->view->allElementTexts($record, array(
             'show_empty_elements' => false,
             // 'show_element_sets' => array('Dublin Core'),
             'return_type' => 'array',
@@ -84,6 +87,11 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             : __('[Untitled]');
 
         $description = metadata($record, 'citation', array('no_escape' => true));
+
+        // Thumbnail of the whole work.
+        // TODO Use index of the true representative file.
+        $file = get_db()->getTable('File')->findWithImages($record->id, 1);
+        $thumbnail = $this->_iiifThumbnail($file);
 
         $licence = get_option('universalviewer_licence');
 
@@ -111,101 +119,44 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $within = '';
         if ($record->collection_id) {
             $within = absolute_url(array(
-                    'record' => 'collections',
+                    'recordtype' => 'collections',
                     'id' => $record->collection_id,
                 ), 'universalviewer_presentation_manifest');
         }
 
         $canvases = array();
 
+        // Get all images and non-images.
         $files = $record->getFiles();
-        $imageNumber = 0;
+        $images = array();
         $nonImages = array();
         foreach ($files as $file) {
-            // Rendering non-image files for download.
-            if (strpos($file->mime_type, 'image/') !== 0) {
-                $nonImages[] = $file;
-                continue;
+            // Images files.
+            // Internal: has_derivative is not only for images.
+            if (strpos($file->mime_type, 'image/') === 0) {
+                $images[] = $file;
             }
+            // Non-images files.
+            else {
+                  $nonImages[] = $file;
+            }
+        }
+        unset ($files);
+        $totalImages = count($images);
 
-            ++$imageNumber;
-            $titleFile = metadata($file, array('Dublin Core', 'Title'));
-            $canvasUrl = $baseUrl . '/canvas/p' . $imageNumber;
-
-            $canvas = array();
-            $canvas['@id'] = $canvasUrl;
-            $canvas['@type'] = 'sc:Canvas';
-            $canvas['label'] = $titleFile ?: $imageNumber;
-
-            $imageType = 'thumbnail';
-            $imagePath  = $this->_getImagePath($file, $imageType);
-            list($width, $height) = $this->_getWidthAndHeight($imagePath);
-            $imageUrl = absolute_url(array(
-                    'id' => $file->id,
-                    'region' => 'full',
-                    'size' => $width . ',' . $height,
-                    'rotation' => 0,
-                    'quality' => 'default',
-                    'format' => 'jpg',
-                ), 'universalviewer_image');
-            $canvas['thumbnail'] = $imageUrl;
-
-            // TODO Manage png and other formats at original size.
-            $imageType = 'original';
-            $imagePath = $this->_getImagePath($file, $imageType);
-            list($width, $height) = $this->_getWidthAndHeight($imagePath);
-            $imageUrl = absolute_url(array(
-                    'id' => $file->id,
-                    'region' => 'full',
-                    'size' => 'full',
-                    'rotation' => 0,
-                    'quality' => 'default',
-                    'format' => 'jpg',
-                ), 'universalviewer_image');
-            $canvas['width'] = $width;
-            $canvas['height'] = $height;
-
-            // There is only one image (parallel is not managed).
-            $imageResource = array();
-            $imageResource['@id'] = $file->getWebPath($imageType);
-            $imageResource['@type'] = 'dctypes:Image';
-            $imageResource['format'] = $file->mime_type;
-            $imageResource['width'] = $width;
-            $imageResource['height'] = $height;
-
-            $imageUrl = absolute_url(array(
-                    'id' => $file->id,
-                ), 'universalviewer_image');
-
-            $imageResourceService = array();
-            $imageResourceService['@context'] = 'http://iiif.io/api/image/2/context.json';
-            $imageResourceService['@id'] = $imageUrl;
-            $imageResourceService['profile'] = 'http://iiif.io/api/image/2/level2.json';
-            $imageResourceService = (object) $imageResourceService;
-
-            $imageResource['service'] = $imageResourceService;
-            $imageResource = (object) $imageResource;
-
-            $image = array();
-            $image['@id'] = $baseUrl . '/annotation/p' . sprintf('%04d', $imageNumber) . '-image';
-            $image['@type'] = 'oa:Annotation';
-            $image['motivation'] = "sc:painting";
-            $image['resource'] = $imageResource;
-            $image['on'] = $canvasUrl;
-            $image = (object) $image;
-
-            $images = array($image);
-            $canvas['images'] = $images;
+        // Process images.
+        $imageNumber = 0;
+        foreach ($images as $file) {
+            $canvas = $this->_iiifCanvasImage($file, ++$imageNumber);
 
             // TODO Add other content.
             /*
             $otherContent = array();
             $otherContent = (object) $otherContent;
 
-            $canvas['otherContent'] = $otherContent;
+            $canvas->otherContent = $otherContent;
             */
 
-            $canvas = (object) $canvas;
             $canvases[] = $canvas;
         }
 
@@ -213,9 +164,10 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $rendering = array();
         $mediaSequences = array();
         $mediaSequencesElements = array();
-        foreach ($nonImages as $file) {
-            // When there are images.
-            if ($imageNumber) {
+
+        // When there are images, other files are added to download section.
+        if ($totalImages > 0) {
+            foreach ($nonImages as $file) {
                 if ($file->mime_type == 'application/pdf') {
                     $render = array();
                     $render['@id'] = $file->getWebPath('original');
@@ -227,8 +179,11 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 // TODO Add alto files and search.
                 // TODO Add other content.
             }
-            // Media sequences when there are no images (special content).
-            else {
+        }
+
+        // Else, check if non-images are managed (special content, as pdf).
+        else {
+            foreach ($nonImages as $file) {
                 if ($file->mime_type == 'application/pdf') {
                     $mediaSequenceElement = array();
                     $mediaSequenceElement['@id'] = $file->getWebPath('original');
@@ -236,10 +191,13 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     $mediaSequenceElement['format'] = 'application/pdf';
                     // TODO If no file metadata, then item ones.
                     // TODO Currently, the main title and metadata are used,
-                    // because in Omeka, a pdf is normally the only one file.
+                    // because in Omeka, a pdf is normally the only $thumbnailone file.
                     $mediaSequenceElement['label'] = $title;
                     $mediaSequenceElement['metadata'] = $metadata;
-                    $mediaSequenceElement['thumbnail'] = $file->getWebPath('thumbnail');
+                    $mseThumbnail = $file->getWebPath('thumbnail');
+                    if ($mseThumbnail) {
+                        $mediaSequenceElement['thumbnail'] = $mseThumbnail;
+                    }
                     $mediaSequencesService = array();
                     $mseUrl = absolute_url(array(
                             'id' => $file->id,
@@ -261,13 +219,13 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $sequences = array();
 
         // When there are images.
-        if ($imageNumber) {
+        if ($totalImages) {
             $sequence = array();
-            $sequence['@id'] = $baseUrl . '/sequence/normal';
+            $sequence['@id'] = $this->_baseUrl . '/sequence/normal';
             $sequence['@type'] = 'sc:Sequence';
             $sequence['label'] = 'Current Page Order';
             $sequence['viewingDirection'] = 'left-to-right';
-            $sequence['viewingHint'] = $imageNumber > 1 ? 'paged' : 'non-paged';
+            $sequence['viewingHint'] = $totalImages > 1 ? 'paged' : 'non-paged';
             if ($rendering) {
                 $sequence['rendering'] = $rendering;
             }
@@ -277,10 +235,10 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $sequences[] = $sequence;
         }
 
-        // Sequences when there are no images (special content).
+        // Sequences when there is no image (special content).
         elseif ($mediaSequencesElements) {
             $mediaSequence = array();
-            $mediaSequence['@id'] = $baseUrl . '/sequence/s0';
+            $mediaSequence['@id'] = $this->_baseUrl . '/sequence/s0';
             $mediaSequence['@type'] = 'ixif:MediaSequence';
             $mediaSequence['label'] = 'XSequence 0';
             $mediaSequence['elements'] = $mediaSequencesElements;
@@ -289,41 +247,12 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
             // Add a sequence in case of the media cannot be read.
             $sequence = array();
-            $sequence['@id'] = $baseUrl . '/sequence/normal';
+            $sequence['@id'] = $this->_baseUrl . '/sequence/normal';
             $sequence['@type'] = 'sc:Sequence';
             $sequence['label'] = __('Unsupported extension. This manifest is being used as a wrapper for non-IIIF content (e.g., audio, video) and is unfortunately incompatible with IIIF viewers.');
             $sequence['compatibilityHint'] = 'displayIfContentUnsupported';
 
-            $canvas = array();
-            $canvas['@id'] = WEB_ROOT . '/iiif/ixif-message/canvas/c1';
-            $canvas['@type'] = 'sc:Canvas';
-            $canvas['label'] = __('Placeholder image');
-            $placeHolder = 'images/placeholder.jpg';
-            $thumbnailPlaceholder = src($placeHolder);
-            list($widthPlaceholder, $heightPlaceholder) = $this->_getWidthAndHeight(physical_path_to($placeHolder));
-            $canvas['thumbnail'] = $thumbnailPlaceholder;
-            $canvas['width'] = $widthPlaceholder;
-            $canvas['height'] = $heightPlaceholder;
-
-            // There is only one image (parallel is not managed).
-            $imageResource = array();
-            $imageResource['@id'] = WEB_ROOT . '/iiif/ixif-message-0/res/placeholder';
-            $imageResource['@type'] = 'dctypes:Image';
-            $imageResource['width'] = $widthPlaceholder;
-            $imageResource['height'] = $heightPlaceholder;
-            $imageResource = (object) $imageResource;
-
-            $image = array();
-            $image['@id'] = WEB_ROOT . '/iiif/ixif-message/imageanno/placeholder';
-            $image['@type'] = 'oa:Annotation';
-            $image['motivation'] = "sc:painting";
-            $image['resource'] = $imageResource;
-            $image['on'] = WEB_ROOT . '/iiif/ixif-message/canvas/c1';
-            $image = (object) $image;
-            $images = array($image);
-
-            $canvas['images'] = $images;
-            $canvas = (object) $canvas;
+            $canvas = $this->_iiifCanvasPlaceholder();
 
             $canvases = array();
             $canvases[] = $canvas;
@@ -339,12 +268,12 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         // No managed content.
         else {
-            // TODO No files.
+            // TODO No files. Add a warning?
         }
 
         // Prepare manifest.
         $manifest = array();
-        $manifest['@context'] = $imageNumber
+        $manifest['@context'] = $totalImages > 0
             ? 'http://iiif.io/api/presentation/2/context.json'
             : array(
                 'http://iiif.io/api/presentation/2/context.json',
@@ -358,14 +287,21 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         if ($description) {
             $manifest['description'] = $description;
         }
+        if ($thumbnail) {
+            $manifest['thumbnail'] = $thumbnail;
+        }
         if ($licence) {
             $manifest['license'] = $licence;
         }
         if ($attribution) {
             $manifest['attribution'] = $attribution;
         }
-        // $manifest['service'] = $service;
-        // $manifest['seeAlso'] = $seeAlso;
+        if ($service) {
+            $manifest['service'] = $service;
+        }
+        if ($seeAlso) {
+            $manifest['seeAlso'] = $seeAlso;
+        }
         if ($within) {
             $manifest['within'] = $within;
         }
@@ -384,9 +320,182 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     }
 
     /**
+     * Create an IIIF thumbnail object from an Omeka file.
+     *
+     * @param File $file
+     * @return Standard object|null
+     */
+    protected function _iiifThumbnail($file)
+    {
+        if (empty($file)) {
+            return;
+        }
+
+        $imagePath  = $this->_getImagePath($file, 'thumbnail');
+        if (empty($imagePath)) {
+            return;
+        }
+
+        $thumbnail = array();
+
+        list($width, $height) = $this->_getWidthAndHeight($imagePath);
+        $imageUrl = absolute_url(array(
+                'id' => $file->id,
+                'region' => 'full',
+                'size' => $width . ',' . $height,
+                'rotation' => 0,
+                'quality' => 'default',
+                'format' => 'jpg',
+            ), 'universalviewer_image_url');
+        $thumbnail['@id'] = $imageUrl;
+
+        $thumbnailService = array();
+        $thumbnailService['@context'] = 'http://iiif.io/api/image/2/context.json';
+        $thumbnailServiceUrl = absolute_url(array(
+                'id' => $file->id,
+            ), 'universalviewer_image');
+        $thumbnailService['@id'] = $thumbnailServiceUrl;
+        $thumbnailService['profile'] = 'http://iiif.io/api/image/2/level2.json';
+        $thumbnailService = (object) $thumbnailService;
+
+        $thumbnail['service'] = $thumbnailService;
+        $thumbnail = (object) $thumbnail;
+
+        return $thumbnail;
+    }
+
+    /**
+     * Create an IIIF image object from an Omeka file.
+     *
+     * @param File $file
+     * @return Standard object|null
+     */
+    protected function _iiifImage($file)
+    {
+        if (empty($file)) {
+            return;
+        }
+
+        // There is only one image (parallel is not managed).
+        $imageResource = array();
+        $imageResource['@id'] = $file->getWebPath('original');
+        $imageResource['@type'] = 'dctypes:Image';
+        $imageResource['format'] = $file->mime_type;
+        $imageResource['width'] = $width;
+        $imageResource['height'] = $height;
+
+        $imageUrl = absolute_url(array(
+                'id' => $file->id,
+            ), 'universalviewer_image');
+
+        $imageResourceService = array();
+        $imageResourceService['@context'] = 'http://iiif.io/api/image/2/context.json';
+        $imageResourceService['@id'] = $imageUrl;
+        $imageResourceService['profile'] = 'http://iiif.io/api/image/2/level2.json';
+        $imageResourceService = (object) $imageResourceService;
+
+        $imageResource['service'] = $imageResourceService;
+        $imageResource = (object) $imageResource;
+
+        $image = array();
+        $image['@id'] = $this->_baseUrl . '/annotation/p' . sprintf('%04d', $index) . '-image';
+        $image['@type'] = 'oa:Annotation';
+        $image['motivation'] = "sc:painting";
+        $image['resource'] = $imageResource;
+        $image['on'] = $canvasUrl;
+        $image = (object) $image;
+
+        $images = array($image);
+
+
+
+    /**
+     * Create an IIIF canvas object for an image.
+     *
+     * @param File $file
+     * @param integer $index Used to set the standard name of the image.
+     * @return Standard object|null
+     */
+    protected function _iiifCanvasImage($file, $index)
+    {
+        $canvas = array();
+
+        $titleFile = metadata($file, array('Dublin Core', 'Title'));
+        $canvasUrl = $this->_baseUrl . '/canvas/p' . $index;
+
+        $canvas['@id'] = $canvasUrl;
+        $canvas['@type'] = 'sc:Canvas';
+        $canvas['label'] = $titleFile ?: '[' . $index .']';
+
+        // Thumbnail of the current file.
+        $canvas['thumbnail'] = $this->_iiifThumbnail($file);
+
+        // Size of canvas should be the double of small images (< 1200 px), but
+        // only when more than image is used by a canvas.
+        $imagePath = $this->_getImagePath($file, 'original');
+        list($width, $height) = $this->_getWidthAndHeight($imagePath);
+        $canvas['width'] = $width;
+        $canvas['height'] = $height;
+
+        $image = $this->_iiifImage($file, $canvasUrl, $width, $height);
+
+        $images = array();
+        $images[] = $image;
+        $canvas['images'] = $images;
+
+        $canvas = (object) $canvas;
+
+        return $canvas;
+    }
+
+    /**
+     * Create an IIIF canvas object for a place holder.
+     *
+     * @return Standard object
+     */
+    protected function _iiifCanvasPlaceholder()
+    {
+        $canvas = array();
+        $canvas['@id'] = WEB_ROOT . '/iiif/ixif-message/canvas/c1';
+        $canvas['@type'] = 'sc:Canvas';
+        $canvas['label'] = __('Placeholder image');
+
+        $placeholder = 'images/placeholder.jpg';
+        $canvas['thumbnail'] = src($placeholder);
+
+        list($widthPlaceholder, $heightPlaceholder) = $this->_getWidthAndHeight(physical_path_to($placeholder));
+        $canvas['width'] = $widthPlaceholder;
+        $canvas['height'] = $heightPlaceholder;
+
+        $image = array();
+        $image['@id'] = WEB_ROOT . '/iiif/ixif-message/imageanno/placeholder';
+        $image['@type'] = 'oa:Annotation';
+        $image['motivation'] = "sc:painting";
+
+        // There is only one image (parallel is not managed).
+        $imageResource = array();
+        $imageResource['@id'] = WEB_ROOT . '/iiif/ixif-message-0/res/placeholder';
+        $imageResource['@type'] = 'dctypes:Image';
+        $imageResource['width'] = $widthPlaceholder;
+        $imageResource['height'] = $heightPlaceholder;
+        $imageResource = (object) $imageResource;
+
+        $image['resource'] = $imageResource;
+        $image['on'] = WEB_ROOT . '/iiif/ixif-message/canvas/c1';
+        $image = (object) $image;
+        $images = array($image);
+
+        $canvas['images'] = $images;
+
+        $canvas = (object) $canvas;
+
+        return $canvas;
+    }
+
+    /**
      * Get the path to an original or derivative file for an image.
      *
-     * @param FIle $file
+     * @param File $file
      * @param string $derivativeType
      * @return string|null Null if not exists.
      * @see UniversalViewer_View_Helper_IiifInfo::_getImagePath()

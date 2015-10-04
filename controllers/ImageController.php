@@ -416,16 +416,12 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         // client asks json-ld (feature "jsonldMediaType").
         $accept = $request->getHeader('Accept');
         if (strstr($accept, 'application/ld+json')) {
-            $response->setHeader('Content-Type', 'application/ld+json', true);
-            $response->setHeader('Content-Type', 'charset=utf-8');
+            $response->setHeader('Content-Type', 'application/ld+json; charset=utf-8', true);
         }
         // Default to json with a link to json-ld.
         else {
-            $response->setHeader('Content-Type', 'application/json', true);
-            $response->setHeader('Content-Type', 'charset=utf-8');
-            $response->setHeader('Link', '<http://iiif.io/api/image/2/context.json>', true);
-            $response->setHeader('Link', 'rel="http://www.w3.org/ns/json-ld#context"');
-            $response->setHeader('Link', 'type="application/ld+json"');
+            $response->setHeader('Content-Type', 'application/json; charset=utf-8', true);
+            $response->setHeader('Link', '<http://iiif.io/api/image/2/context.json>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"', true);
        }
 
         // Header for CORS, required for access of IIIF.
@@ -439,7 +435,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
     /**
      * Get the path to an original or derivative file for an image.
      *
-     * @param FIle $file
+     * @param File $file
      * @param string $derivativeType
      * @return string|null Null if not exists.
      * @see UniversalViewer_View_Helper_IiifInfo::_getImagePath()
