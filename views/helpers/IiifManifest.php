@@ -370,29 +370,27 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $mediaSequences[] = $mediaSequence;
 
             // Add a sequence in case of the media cannot be read.
-            $sequence = array();
-            $sequence['@id'] = $this->_baseUrl . '/sequence/normal';
-            $sequence['@type'] = 'sc:Sequence';
-            $sequence['label'] = __('Unsupported extension. This manifest is being used as a wrapper for non-IIIF content (e.g., audio, video) and is unfortunately incompatible with IIIF viewers.');
-            $sequence['compatibilityHint'] = 'displayIfContentUnsupported';
-
-            $canvas = $this->_iiifCanvasPlaceholder();
-
-            $canvases = array();
-            $canvases[] = $canvas;
-
-            if ($rendering) {
-                $sequence['rendering'] = $rendering;
-            }
-            $sequence['canvases'] = $canvases;
-            $sequence = (object) $sequence;
-
+            $sequence = $this->_iiifSequenceUnsupported($rendering);
             $sequences[] = $sequence;
         }
 
-        // No managed content.
+        // No supported content.
         else {
-            // TODO No files. Add a warning?
+            // Set a default render if needed.
+            /*
+            if (empty($rendering)) {
+                $placeholder = 'images/placeholder-unsupported.jpg';
+                $render = array();
+                $render['@id'] = src($placeholder);
+                $render['format'] = 'image/jpeg';
+                $render['label'] = __('Unsupported content.');
+                $render = (object) $render;
+                $rendering[] = $render;
+            }
+            */
+
+            $sequence = $this->_iiifSequenceUnsupported($rendering);
+            $sequences[] = $sequence;
         }
 
         // Prepare manifest.
@@ -668,6 +666,34 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $canvas = (object) $canvas;
 
         return $canvas;
+    }
+
+    /**
+     * Create an IIIF sequence object for an unsupported format.
+     *
+     * @param array $rendering
+     * @return Standard object
+     */
+    protected function _iiifSequenceUnsupported($rendering = array())
+    {
+        $sequence = array();
+        $sequence['@id'] = $this->_baseUrl . '/sequence/normal';
+        $sequence['@type'] = 'sc:Sequence';
+        $sequence['label'] = __('Unsupported extension. This manifest is being used as a wrapper for non-IIIF content (e.g., audio, video) and is unfortunately incompatible with IIIF viewers.');
+        $sequence['compatibilityHint'] = 'displayIfContentUnsupported';
+
+        $canvas = $this->_iiifCanvasPlaceholder();
+
+        $canvases = array();
+        $canvases[] = $canvas;
+
+        if ($rendering) {
+            $sequence['rendering'] = $rendering;
+        }
+        $sequence['canvases'] = $canvases;
+        $sequence = (object) $sequence;
+
+        return $sequence;
     }
 
     /**
