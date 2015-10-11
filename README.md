@@ -103,6 +103,10 @@ improved for requests made outside of the Universal Viewer when OpenLayersZoom
 is used. Without it, a configurable limit should be set (10 MB by default).
 - If an item has no file, the viewer is not able to display it, so a check is
 automatically done.
+- Media: Currently, no image should be available in the same item.
+- Audio/Video: the format should be supported by the browser of the user. In
+fact, only open, free and/or common codecs are really supported: "mp3" and "ogg"
+for audio and "webm" and "ogv" for video.
 
 
 Troubleshooting
