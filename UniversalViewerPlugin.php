@@ -227,6 +227,9 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         if (!get_option('universalviewer_append_collections_show')) {
             return;
         }
+        if (!isset($args['view'])) {
+            $args['view'] = get_view();
+        }
         echo $args['view']->universalViewer($args);
     }
 
@@ -241,6 +244,9 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
     {
         if (!get_option('universalviewer_append_items_show')) {
             return;
+        }
+        if (!isset($args['view'])) {
+            $args['view'] = get_view();
         }
         echo $args['view']->universalViewer($args);
     }
