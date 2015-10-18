@@ -121,9 +121,13 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             $info = (object) $info;
         }
 
-        return $asJson
-            ? json_encode($info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-            : $info;
+        if ($asJson) {
+            return version_compare(phpversion(), '5.4.0', '<')
+                ? json_encode($info)
+                : json_encode($info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
+        // Return as array
+        return $info;
     }
 
     /**

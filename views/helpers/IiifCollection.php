@@ -33,9 +33,13 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
             return null;
         }
 
-        return $asJson
-            ? json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-            : $result;
+        if ($asJson) {
+            return version_compare(phpversion(), '5.4.0', '<')
+                ? json_encode($result)
+                : json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
+        // Return as array
+        return $result;
     }
 
     /**

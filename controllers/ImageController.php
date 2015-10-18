@@ -488,8 +488,9 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         // Header for CORS, required for access of IIIF.
         $response->setHeader('access-control-allow-origin', '*');
         $response->clearBody();
-        // $body = json_encode($data);
-        $body = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $body = version_compare(phpversion(), '5.4.0', '<')
+            ? json_encode($data)
+            : json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $response->setBody($body);
     }
 
