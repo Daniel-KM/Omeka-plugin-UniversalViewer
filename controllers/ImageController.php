@@ -131,6 +131,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         }
 
         // Now, process the requested transformation if needed.
+        $isTempFile = false;
 
         // A quick check when there is no transformation.
         if ($transform['region']['feature'] == 'full'
@@ -139,7 +140,6 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 && $transform['quality']['feature'] == 'default'
                 && $transform['format']['feature'] == $file->mime_type
             ) {
-            $isTempFile = false;
             $imagePath = $transform['source']['filepath'];
         }
 
@@ -153,10 +153,11 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 if ($transform['size']['feature'] != 'full'
                         || $transform['rotation']['feature'] != 'noRotation'
                         || $transform['quality']['feature'] != 'default'
-                        || $transform['format']['feature'] != 'image/jpeg'
+                        || $transform['format']['feature'] != $pretiled['mime_type']
                     ) {
                     $args = $transform;
                     $args['source']['filepath'] = $imagePath;
+                    $args['source']['mime_type'] = $pretiled['mime_type'];
                     $args['source']['width'] = $pretiled['width'];
                     $args['source']['height'] = $pretiled['height'];
                     $args['region']['feature'] = 'full';
@@ -179,10 +180,11 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                     // extraction of the region).
                     if ($transform['rotation']['feature'] != 'noRotation'
                             || $transform['quality']['feature'] != 'default'
-                            || $transform['format']['feature'] != 'image/jpeg'
+                            || $transform['format']['feature'] != $pretiled['mime_type']
                         ) {
                         $args = $transform;
                         $args['source']['filepath'] = $imagePath;
+                        $args['source']['mime_type'] = $pretiled['mime_type'];
                         $args['source']['width'] = $pretiled['width'];
                         $args['source']['height'] = $pretiled['height'];
                         $args['region']['feature'] = 'full';
@@ -255,7 +257,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         $transform['source']['filepath'] = $this->_getImagePath($file, 'original');
         $transform['source']['mime_type'] = $file->mime_type;
 
-        list($sourceWidth, $sourceHeight) = $this->_getImageSize($file, 'original');
+        list($sourceWidth, $sourceHeight) = array_values($this->_getImageSize($file, 'original'));
         $transform['source']['width'] = $sourceWidth;
         $transform['source']['height'] = $sourceHeight;
 
@@ -410,7 +412,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                     foreach ($availableTypes as $imageType) {
                         $filepath = $this->_getImagePath($file, $imageType);
                         if ($filepath) {
-                            list($testWidth, $testHeight) = $this->_getImageSize($file, $imageType);
+                            list($testWidth, $testHeight) = array_values($this->_getImageSize($file, $imageType));
                             if ($destinationWidth == $testWidth && $destinationHeight == $testHeight) {
                                 $transform['size']['feature'] = 'full';
                                 // Change the source file to avoid a transformation.
@@ -523,10 +525,10 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
         // Check size. Here, the "full" is already checked.
         $useDerivativePath = false;
-        $derivativeWidth = null;
-        $derivativeHeight = null;
+
         // Currently, the check is done only on fullsize.
         $derivativeType = 'fullsize';
+        list($derivativeWidth, $derivativeHeight) = array_values($this->_getImageSize($file, $derivativeType));
         switch ($transform['size']['feature']) {
             case 'sizeByW':
             case 'sizeByH':
@@ -535,7 +537,6 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                     : $transform['size']['height'];
 
                 // Check if width is lower than fulllsize or thumbnail.
-                list($derivativeWidth, $derivativeHeight) = $this->_getImageSize($file, $derivativeType);
                 // Omeka and IIIF doesn't use the same type of constraint, so
                 // a double check is done.
                 // TODO To be improved.
@@ -551,14 +552,12 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 $constraintH = $transform['size']['height'];
 
                 // Check if width is lower than fulllsize or thumbnail.
-                list($derivativeWidth, $derivativeHeight) = $this->_getImageSize($file, $derivativeType);
                 if ($constraintW <= $derivativeWidth || $constraintH <= $derivativeHeight) {
                     $useDerivativePath = true;
                 }
                 break;
 
             case 'sizeByPct':
-                list($derivativeWidth, $derivativeHeight) = $this->_getImageSize($file, $derivativeType);
                 if ($transform['size']['percentage'] <= ($derivativeWidth * 100 / $transform['source']['width'])) {
                     $useDerivativePath = true;
                 }
@@ -571,18 +570,20 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         }
 
         if ($useDerivativePath) {
-            // A temp file is needed to simplify unlinking in case of a light
-            // transformation.
+            // Currently, a temp file is needed to simplify unlinking in case of
+            // a light transformation.
             $derivativePath = $this->_getImagePath($file, $derivativeType);
             $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
             $result = copy($derivativePath, $tempPath);
             if (!$result) {
                 return;
             }
+            $imagePath = $tempPath;
 
             return array(
-                'filepath' => $tempPath,
+                'filepath' => $imagePath,
                 'derivativeType' => $derivativeType,
+                'mime_type' => 'image/jpeg',
                 'width' => $derivativeWidth,
                 'height' => $derivativeHeight,
             );
@@ -609,7 +610,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
      *
      * @param File $file
      * @param array $transform
-     * @return string|null The temp path to the image if any.
+     * @return array|null Associative array with the file path, the derivative
+     * type, the width and the height. Null if none.
      */
     protected function _usePreTiled($file, $transform)
     {
@@ -645,6 +647,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 : $olz->getZDataDir($file);
             $imagePath = $dirpath . sprintf('/TileGroup%d/%d-%d-%d.jpg',
                 $tileGroup, $data['level'], $data['x'] , $data['y']);
+            $derivativeType = 'zoom_tiles';
             // Url on the IIPImage server.
             if ($olz->useIIPImageServer()) {
                 $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
@@ -675,7 +678,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             list($tileWidth, $tileHeight) = array_values($this-> _getWidthAndHeight($imagePath));
             return array(
                 'filepath' => $imagePath,
-                'derivativeType' => 'zoom_tiles',
+                'derivativeType' => $derivativeType,
+                'mime_type' => 'image/jpeg',
                 'width' => $tileWidth,
                 'height' => $tileHeight,
             );
