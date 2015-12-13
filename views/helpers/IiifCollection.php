@@ -26,12 +26,10 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         }
 
         $recordClass = get_class($record);
-        if ($recordClass == 'Collection') {
-            $result = $this->_buildManifestCollection($record);
-        }
-        else {
+        if ($recordClass != 'Collection') {
             return null;
         }
+        $result = $this->_buildManifestCollection($record);
 
         if ($asJson) {
             return version_compare(phpversion(), '5.4.0', '<')

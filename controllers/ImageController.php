@@ -367,7 +367,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
         else {
             // Quick check if an Omeka derivative is appropriate.
-            if ($pretiled = $this->_useOmekaDerivative($file, $transform)) {
+            $pretiled = $this->_useOmekaDerivative($file, $transform);
+            if ($pretiled) {
                 $imagePath = $pretiled;
                 // Check if a light transformation is needed.
                 if ($transform['size']['feature'] != 'full'
@@ -389,41 +390,45 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 }
             }
 
-            // Check if the image is pre-tiled.
-            elseif ($pretiled = $this->_usePreTiled($file, $transform)) {
-                $imagePath = $pretiled;
-
-                // Check if a light transformation is needed (all except
-                // extraction of the region).
-                if ($transform['rotation']['feature'] != 'noRotation'
-                        || $transform['quality']['feature'] != 'default'
-                        || $transform['format']['feature'] != 'image/jpeg'
-                    ) {
-                    list($tileWidth, $tileHeight) = $this-> _getWidthAndHeight($imagePath);
-                    $args = $transform;
-                    $args['source']['filepath'] = $imagePath;
-                    $args['source']['width'] = $tileWidth;
-                    $args['source']['height'] = $tileHeight;
-                    $args['region']['feature'] = 'full';
-                    $args['region']['x'] = 0;
-                    $args['region']['y'] = 0;
-                    $args['region']['width'] = $tileWidth;
-                    $args['region']['height'] = $tileHeight;
-                    $args['size']['feature'] = 'full';
-                    $imagePath = $this->_transformImage($args);
-                }
-            }
-
-            // The image needs to be transformed dynamically.
+            // Check if another image can be used.
             else {
-                $maxFileSize = get_option('universalviewer_max_dynamic_size');
-                if (!empty($maxFileSize) && $file->size > $maxFileSize) {
-                    $response->setHttpResponseCode(500);
-                    $this->view->message = __('The IIIF server encountered an unexpected error that prevented it from fulfilling the request: the file is not tiled for dynamic processing.');
-                    $this->renderScript('image/error.php');
-                    return;
+                // Check if the image is pre-tiled.
+                $pretiled = $this->_usePreTiled($file, $transform);
+                if ($pretiled) {
+                    $imagePath = $pretiled;
+
+                    // Check if a light transformation is needed (all except
+                    // extraction of the region).
+                    if ($transform['rotation']['feature'] != 'noRotation'
+                            || $transform['quality']['feature'] != 'default'
+                            || $transform['format']['feature'] != 'image/jpeg'
+                        ) {
+                        list($tileWidth, $tileHeight) = $this-> _getWidthAndHeight($imagePath);
+                        $args = $transform;
+                        $args['source']['filepath'] = $imagePath;
+                        $args['source']['width'] = $tileWidth;
+                        $args['source']['height'] = $tileHeight;
+                        $args['region']['feature'] = 'full';
+                        $args['region']['x'] = 0;
+                        $args['region']['y'] = 0;
+                        $args['region']['width'] = $tileWidth;
+                        $args['region']['height'] = $tileHeight;
+                        $args['size']['feature'] = 'full';
+                        $imagePath = $this->_transformImage($args);
+                    }
                 }
-                $imagePath = $this->_transformImage($transform);
+
+                // The image needs to be transformed dynamically.
+                else {
+                    $maxFileSize = get_option('universalviewer_max_dynamic_size');
+                    if (!empty($maxFileSize) && $file->size > $maxFileSize) {
+                        $response->setHttpResponseCode(500);
+                        $this->view->message = __('The IIIF server encountered an unexpected error that prevented it from fulfilling the request: the file is not tiled for dynamic processing.');
+                        $this->renderScript('image/error.php');
+                        return;
+                    }
+                    $imagePath = $this->_transformImage($transform);
+                }
             }
 
             $isTempFile = true;
@@ -585,7 +590,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             case 'sizeByPct':
                 $filepath = $this->_getImagePath($file, 'fullsize');
                 list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
-                if ($transform['size']['percentage'] <= ($derivativeWidth * 100 / $args['source']['width'])) {
+                if ($transform['size']['percentage'] <= ($derivativeWidth * 100 / $transform['source']['width'])) {
                     $useDerivativePath = $filepath;
                 }
                 break;

@@ -1,6 +1,7 @@
 <?php
     $title = metadata($record, array('Dublin Core', 'Title'));
-    if ($creator = metadata($record, array('Dublin Core', 'Creator'))) {
+    $creator = metadata($record, array('Dublin Core', 'Creator'));
+    if ($creator) {
         $title .= ' - ' . $creator;
     }
     echo head(array(
@@ -15,4 +16,4 @@
         'height' => '700px',
     ));
 ?>
-<?php echo foot(); ?>
+<?php echo foot();

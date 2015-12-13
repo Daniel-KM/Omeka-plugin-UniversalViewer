@@ -26,9 +26,10 @@ Installation
 Uncompress files and rename plugin folder "UniversalViewer".
 
 Then uncompress and rename "uv" the last [official release] of the [UniversalViewer]
-in the subdirectory `views/shared/javascripts` of the plugin. "nodejs" and other
-packages are not needed, because only the viewer is used: the IIIF server is
-provided directly by the plugin itself.
+in the subdirectory `views/shared/javascripts` of the plugin. If you want a more
+recent release, go to the last [distribution] in the repertory. and clone it in
+the same subdirectory. "nodejs" and other packages are not needed, because only
+the viewer is used: the IIIF server is provided directly by the plugin itself.
 
 If your images are big (more than 1 to 5 MB, according to your server and your
 public), it's highly recommended to tile them with a plugin such [OpenLayersZoom].
@@ -181,6 +182,7 @@ Plugin Universal Viewer for Omeka:
 [Mines ParisTech]: http://mines-paristech.fr
 [example server]: http://universalviewer.azurewebsites.net
 [official release]: https://github.com/UniversalViewer/universalviewer/releases
+[distribution]: https://github.com/UniversalViewer/universalviewer/tree/master/dist
 [OpenLayersZoom]: https://github.com/Daniel-KM/OpenLayersZoom
 [CollectionTree]: https://github.com/Daniel-KM/CollectionTree
 [plugin issues]: https://github.com/Daniel-KM/UniversalViewer4Omeka/issues
