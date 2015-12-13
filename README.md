@@ -111,7 +111,7 @@ automatically done.
 fact, only open, free and/or common codecs are really supported: "mp3" and "ogg"
 for audio and "webm" and "ogv" for video.
 
-* Warning *
+*Warning*
 
 PHP should be installed with the extension "exif" in order to get the size of
 images. This is the case for all major distributions and providers.

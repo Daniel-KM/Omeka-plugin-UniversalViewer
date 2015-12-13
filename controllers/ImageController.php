@@ -65,6 +65,42 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
     }
 
     /**
+     * Return Json to client according to request.
+     *
+     * @param $data
+     * @see UniversalViewer_PresentationController::_sendJson()
+     */
+    protected function _sendJson($data)
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $request = $this->getRequest();
+        $response = $this->getResponse();
+
+        // The helper is not used, because it's not possible to set options.
+        // $this->_helper->json($data);
+
+        // According to specification, the response should be json, except if
+        // client asks json-ld (feature "jsonldMediaType").
+        $accept = $request->getHeader('Accept');
+        if (strstr($accept, 'application/ld+json')) {
+            $response->setHeader('Content-Type', 'application/ld+json; charset=utf-8', true);
+        }
+        // Default to json with a link to json-ld.
+        else {
+            $response->setHeader('Content-Type', 'application/json; charset=utf-8', true);
+            $response->setHeader('Link', '<http://iiif.io/api/image/2/context.json>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"', true);
+       }
+
+        // Header for CORS, required for access of IIIF.
+        $response->setHeader('access-control-allow-origin', '*');
+        $response->clearBody();
+        $body = version_compare(phpversion(), '5.4.0', '<')
+            ? json_encode($data)
+            : json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $response->setBody($body);
+    }
+
+    /**
      * Returns sized image for the current file.
      */
     public function fetchAction()
@@ -85,273 +121,18 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             return;
         }
 
-        // Prepare the parameters for the transformation.
-        $transform = array();
-
-        $transform['source']['filepath'] = $this->_getImagePath($file, 'original');
-        $transform['source']['mime_type'] = $file->mime_type;
-
-        list($sourceWidth, $sourceHeight) = $this->_getImageSize($file, 'original');
-        $transform['source']['width'] = $sourceWidth;
-        $transform['source']['height'] = $sourceHeight;
-
-        // TODO Move the maximum of checks in _transformImage().
-
-        // The regex in the route implies that all requests are valid (no 501),
-        // but may be bad formatted (400).
-
-        $region = $this->getParam('region');
-        $size = $this->getParam('size');
-        $rotation = $this->getParam('rotation');
-        $quality = $this->getParam('quality');
-        $format = $this->getParam('format');
-
-        // Determine the region.
-
-        // Full image.
-        if ($region == 'full') {
-            $transform['region']['feature'] = 'full';
-            // Next values may be needed for next parameters.
-            $transform['region']['x'] = 0;
-            $transform['region']['y'] = 0;
-            $transform['region']['width'] = $sourceWidth;
-            $transform['region']['height'] = $sourceHeight;
-        }
-
-        // "pct:x,y,w,h": regionByPct
-        elseif (strpos($region, 'pct:') === 0) {
-            $regionValues = explode(',', substr($region, 4));
-            if (count($regionValues) != 4) {
-                $response->setHttpResponseCode(400);
-                $this->view->message = __('The IIIF server cannot fulfil the request: the region "%s" is incorrect.', $region);
-                $this->renderScript('image/error.php');
-                return;
-            }
-            $regionValues = array_map('floatval', $regionValues);
-            // A quick check to avoid a possible transformation.
-            if ($regionValues[0] == 0
-                    && $regionValues[1] == 0
-                    && $regionValues[2] == 100
-                    && $regionValues[3] == 100
-                ) {
-                $transform['region']['feature'] = 'full';
-                // Next values may be needed for next parameters.
-                $transform['region']['x'] = 0;
-                $transform['region']['y'] = 0;
-                $transform['region']['width'] = $sourceWidth;
-                $transform['region']['height'] = $sourceHeight;
-            }
-            // Normal region.
-            else {
-                $transform['region']['feature'] = 'regionByPct';
-                $transform['region']['x'] = $regionValues[0];
-                $transform['region']['y'] = $regionValues[1];
-                $transform['region']['width'] = $regionValues[2];
-                $transform['region']['height'] = $regionValues[3];
-            }
-        }
-
-        // "x,y,w,h": regionByPx.
-        else {
-            $regionValues = explode(',', $region);
-            if (count($regionValues) != 4) {
-                $response->setHttpResponseCode(400);
-                $this->view->message = __('The IIIF server cannot fulfil the request: the region "%s" is incorrect.', $region);
-                $this->renderScript('image/error.php');
-                return;
-            }
-            $regionValues = array_map('intval', $regionValues);
-            // A quick check to avoid a possible transformation.
-            if ($regionValues[0] == 0
-                    && $regionValues[1] == 0
-                    && $regionValues[2] == $sourceWidth
-                    && $regionValues[3] == $sourceHeight
-                ) {
-                $transform['region']['feature'] = 'full';
-                // Next values may be needed for next parameters.
-                $transform['region']['x'] = 0;
-                $transform['region']['y'] = 0;
-                $transform['region']['width'] = $sourceWidth;
-                $transform['region']['height'] = $sourceHeight;
-            }
-            // Normal region.
-            else {
-                $transform['region']['feature'] = 'regionByPx';
-                $transform['region']['x'] = $regionValues[0];
-                $transform['region']['y'] = $regionValues[1];
-                $transform['region']['width'] = $regionValues[2];
-                $transform['region']['height'] = $regionValues[3];
-            }
-        }
-
-        // Determine the size.
-
-        // Full image.
-        if ($size == 'full') {
-            $transform['size']['feature'] = 'full';
-        }
-
-        // "pct:x": sizeByPct
-        elseif (strpos($size, 'pct:') === 0) {
-            $sizePercentage = floatval(substr($size, 4));
-            if (empty($sizePercentage) || $sizePercentage > 100) {
-                $response->setHttpResponseCode(400);
-                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is incorrect.', $size);
-                $this->renderScript('image/error.php');
-                return;
-            }
-            // A quick check to avoid a possible transformation.
-            if ($sizePercentage == 100) {
-                $transform['size']['feature'] = 'full';
-            }
-            // Normal size.
-            else {
-                $transform['size']['feature'] = 'sizeByPct';
-                $transform['size']['percentage'] = $sizePercentage;
-            }
-        }
-
-        // "!w,h": sizeByWh
-        elseif (strpos($size, '!') === 0) {
-            $pos = strpos($size, ',');
-            $destinationWidth = (integer) substr($size, 1, $pos);
-            $destinationHeight = (integer) substr($size, $pos + 1);
-            if (empty($destinationWidth) || empty($destinationHeight)) {
-                $response->setHttpResponseCode(400);
-                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is incorrect.', $size);
-                $this->renderScript('image/error.php');
-                return;
-            }
-            // A quick check to avoid a possible transformation.
-            if ($destinationWidth == $transform['region']['width']
-                    && $destinationHeight == $transform['region']['width']
-                ) {
-                $transform['size']['feature'] = 'full';
-            }
-            // Normal size.
-            else {
-                $transform['size']['feature'] = 'sizeByWh';
-                $transform['size']['width'] = $destinationWidth;
-                $transform['size']['height'] = $destinationHeight;
-            }
-        }
-
-        // "w,h", "w," or ",h".
-        else {
-            $pos = strpos($size, ',');
-            $destinationWidth = (integer) substr($size, 0, $pos);
-            $destinationHeight = (integer) substr($size, $pos + 1);
-            if (empty($destinationWidth) && empty($destinationHeight)) {
-                $response->setHttpResponseCode(400);
-                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is incorrect.', $size);
-                $this->renderScript('image/error.php');
-                return;
-            }
-
-            // "w,h": sizeByWhListed or sizeByForcedWh.
-            if ($destinationWidth && $destinationHeight) {
-                // Check the size only if the region is full, else it's forced.
-                if ($transform['region']['feature'] == 'full') {
-                    $availableTypes = array('thumbnail', 'fullsize', 'original');
-                    foreach ($availableTypes as $imageType) {
-                        $filepath = $this->_getImagePath($file, $imageType);
-                        if ($filepath) {
-                            list($testWidth, $testHeight) = $this->_getImageSize($file, $imageType);
-                            if ($destinationWidth == $testWidth && $destinationHeight == $testHeight) {
-                                $transform['size']['feature'] = 'full';
-                                // Change the source file to avoid a transformation.
-                                // TODO Check the format?
-                                if ($imageType != 'original') {
-                                    $transform['source']['filepath'] = $filepath;
-                                    $transform['source']['mime_type'] = 'image/jpeg';
-                                    $transform['source']['width'] = $testWidth;
-                                    $transform['source']['height'] = $testHeight;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (empty($transform['size']['feature'])) {
-                    $transform['size']['feature'] = 'sizeByForcedWh';
-                    $transform['size']['width'] = $destinationWidth;
-                    $transform['size']['height'] = $destinationHeight;
-                }
-            }
-
-            // "w,": sizeByW.
-            elseif ($destinationWidth && empty($destinationHeight)) {
-                $transform['size']['feature'] = 'sizeByW';
-                $transform['size']['width'] = $destinationWidth;
-            }
-
-            // ",h": sizeByH.
-            elseif (empty($destinationWidth) && $destinationHeight) {
-                $transform['size']['feature'] = 'sizeByH';
-                $transform['size']['height'] = $destinationHeight;
-            }
-
-            // Not supported.
-            else {
-                $response->setHttpResponseCode(400);
-                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is not supported.', $size);
-                $this->renderScript('image/error.php');
-                return;
-            }
-
-            // A quick check to avoid a possible transformation.
-            if (isset($transform['size']['width']) && empty($transform['size']['width'])
-                    || isset($transform['size']['height']) && empty($transform['size']['height'])
-                ) {
-                $response->setHttpResponseCode(400);
-                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is not supported.', $size);
-                $this->renderScript('image/error.php');
-            }
-        }
-
-        // Determine the rotation.
-
-        // No rotation.
-        if ($rotation == '0') {
-            $transform['rotation']['feature'] = 'noRotation';
-        }
-
-        // Simple rotation.
-        elseif ($rotation == '90' ||$rotation == '180' || $rotation == '270')  {
-            $transform['rotation']['feature'] = 'rotationBy90s';
-            $transform['rotation']['degrees'] = (integer) $rotation;
-        }
-
-        // Arbitrary rotation.
-        // Currently not supported.
-        else {
-            $transform['rotation']['feature'] = 'rotationArbitrary';
-            // if ($rotation > 360) {}
+        // Check, clean and optimize and fill values according to the request.
+        $transform = $this->_cleanRequest($file);
+        if (empty($transform)) {
+            // The message is set in view.
             $response->setHttpResponseCode(400);
-            $this->view->message = __('The IIIF server cannot fulfil the request: the rotation "%s" is not supported.', $rotation);
             $this->renderScript('image/error.php');
             return;
         }
 
-        // Determine the quality.
-        // The regex in route checks it.
-        $transform['quality']['feature'] = $quality;
+        // Now, process the requested transformation if needed.
 
-        // Determine the format.
-        // The regex in route checks it.
-        $mimeTypes = array(
-            'jpg' => 'image/jpeg',
-            'png' => 'image/png',
-            'tif' => 'image/tiff',
-            'gif' => 'image/gif',
-            'pdf' => 'application/pdf',
-            'jp2' => 'image/jp2',
-            'webp' => 'image/webp',
-        );
-        $transform['format']['feature'] = $mimeTypes[$format];
-
-        // A quick check when there is no transformation and the original or the
-        // derivative is used.
+        // A quick check when there is no transformation.
         if ($transform['region']['feature'] == 'full'
                 && $transform['size']['feature'] == 'full'
                 && $transform['rotation']['feature'] == 'noRotation'
@@ -462,181 +243,263 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
     }
 
     /**
-     * Return Json to client according to request.
-     *
-     * @param $data
-     * @see UniversalViewer_PresentationController::_sendJson()
-     */
-    protected function _sendJson($data)
-    {
-        $this->_helper->viewRenderer->setNoRender();
-        $request = $this->getRequest();
-        $response = $this->getResponse();
-
-        // The helper is not used, because it's not possible to set options.
-        // $this->_helper->json($data);
-
-        // According to specification, the response should be json, except if
-        // client asks json-ld (feature "jsonldMediaType").
-        $accept = $request->getHeader('Accept');
-        if (strstr($accept, 'application/ld+json')) {
-            $response->setHeader('Content-Type', 'application/ld+json; charset=utf-8', true);
-        }
-        // Default to json with a link to json-ld.
-        else {
-            $response->setHeader('Content-Type', 'application/json; charset=utf-8', true);
-            $response->setHeader('Link', '<http://iiif.io/api/image/2/context.json>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"', true);
-       }
-
-        // Header for CORS, required for access of IIIF.
-        $response->setHeader('access-control-allow-origin', '*');
-        $response->clearBody();
-        $body = version_compare(phpversion(), '5.4.0', '<')
-            ? json_encode($data)
-            : json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $response->setBody($body);
-    }
-
-    /**
-     * Get an array of the width and height of the image file.
-     *
-     * @internal The process uses the saved constraints. It they are changed but
-     * the derivative haven't been rebuilt, the return will be wrong (but
-     * generally without consequences for BookReader).
+     * Check, clean and optimize the request for quicker transformation.
      *
      * @param File $file
-     * @param string $imageType
-     * @return array Associative array of width and height of the image file.
-     * If the file is not an image, the width and the height will be null.
-     * @see UniversalViewer_View_Helper_IiifManifest::_getImageSize()
+     * @return array|null Array of cleaned requested image, else null.
      */
-    protected function _getImageSize($file, $imageType = 'original')
+    protected function _cleanRequest($file)
     {
-        static $sizeConstraints = array();
+        $transform = array();
 
-        if (!isset($sizeConstraints[$imageType])) {
-            $sizeConstraints[$imageType] = get_option($imageType . '_constraint');
+        $transform['source']['filepath'] = $this->_getImagePath($file, 'original');
+        $transform['source']['mime_type'] = $file->mime_type;
+
+        list($sourceWidth, $sourceHeight) = $this->_getImageSize($file, 'original');
+        $transform['source']['width'] = $sourceWidth;
+        $transform['source']['height'] = $sourceHeight;
+
+        // TODO Move the maximum of checks in _transformImage().
+
+        // The regex in the route implies that all requests are valid (no 501),
+        // but may be bad formatted (400).
+
+        $region = $this->getParam('region');
+        $size = $this->getParam('size');
+        $rotation = $this->getParam('rotation');
+        $quality = $this->getParam('quality');
+        $format = $this->getParam('format');
+
+        // Determine the region.
+
+        // Full image.
+        if ($region == 'full') {
+            $transform['region']['feature'] = 'full';
+            // Next values may be needed for next parameters.
+            $transform['region']['x'] = 0;
+            $transform['region']['y'] = 0;
+            $transform['region']['width'] = $sourceWidth;
+            $transform['region']['height'] = $sourceHeight;
         }
-        $sizeConstraint = $sizeConstraints[$imageType];
 
-        // Check if this is an image.
-        if (empty($file) || strpos($file->mime_type, 'image/') !== 0) {
-            $width = null;
-            $height = null;
+        // "pct:x,y,w,h": regionByPct
+        elseif (strpos($region, 'pct:') === 0) {
+            $regionValues = explode(',', substr($region, 4));
+            if (count($regionValues) != 4) {
+                $this->view->message = __('The IIIF server cannot fulfil the request: the region "%s" is incorrect.', $region);
+                return;
+            }
+            $regionValues = array_map('floatval', $regionValues);
+            // A quick check to avoid a possible transformation.
+            if ($regionValues[0] == 0
+                    && $regionValues[1] == 0
+                    && $regionValues[2] == 100
+                    && $regionValues[3] == 100
+                ) {
+                $transform['region']['feature'] = 'full';
+                // Next values may be needed for next parameters.
+                $transform['region']['x'] = 0;
+                $transform['region']['y'] = 0;
+                $transform['region']['width'] = $sourceWidth;
+                $transform['region']['height'] = $sourceHeight;
+            }
+            // Normal region.
+            else {
+                $transform['region']['feature'] = 'regionByPct';
+                $transform['region']['x'] = $regionValues[0];
+                $transform['region']['y'] = $regionValues[1];
+                $transform['region']['width'] = $regionValues[2];
+                $transform['region']['height'] = $regionValues[3];
+            }
         }
 
-        // This is an image.
+        // "x,y,w,h": regionByPx.
         else {
-            $metadata = json_decode($file->metadata, true);
-            if (empty($metadata['video']['resolution_x']) || empty($metadata['video']['resolution_y'])) {
-                $msg = __('The image #%d ("%s") is not stored correctly.', $file->id, $file->original_filename);
-                _log($msg, Zend_Log::NOTICE);
-
-                if (isset($metadata['video']['resolution_x']) || isset($metadata['video']['resolution_y'])) {
-                    throw new Exception($msg);
-                }
-
-                // Get the resolution directly.
-                // The storage adapter should be checked for external storage.
-                $storageAdapter = $file->getStorage()->getAdapter();
-                $filepath = get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem'
-                    ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($imageType)
-                    : $file->getWebPath($imageType);
-                list($width, $height, $type, $attr) = getimagesize($filepath);
-                if (empty($width) || empty($height)) {
-                    throw new Exception($msg);
-                }
+            $regionValues = explode(',', $region);
+            if (count($regionValues) != 4) {
+                $this->view->message = __('The IIIF server cannot fulfil the request: the region "%s" is incorrect.', $region);
+                return;
             }
-
-            // Calculate the size.
+            $regionValues = array_map('intval', $regionValues);
+            // A quick check to avoid a possible transformation.
+            if ($regionValues[0] == 0
+                    && $regionValues[1] == 0
+                    && $regionValues[2] == $sourceWidth
+                    && $regionValues[3] == $sourceHeight
+                ) {
+                $transform['region']['feature'] = 'full';
+                // Next values may be needed for next parameters.
+                $transform['region']['x'] = 0;
+                $transform['region']['y'] = 0;
+                $transform['region']['width'] = $sourceWidth;
+                $transform['region']['height'] = $sourceHeight;
+            }
+            // Normal region.
             else {
-                $sourceWidth = $metadata['video']['resolution_x'];
-                $sourceHeight = $metadata['video']['resolution_y'];
-
-                // Use the original size when possible.
-                if ($imageType == 'original') {
-                    $width = $sourceWidth;
-                    $height = $sourceHeight;
-                }
-                // This supposes that the option has not changed before.
-                else {
-                    // Source is landscape.
-                    if ($sourceWidth > $sourceHeight) {
-                        $width = $sizeConstraint;
-                        $height = round($sourceHeight * $sizeConstraint / $sourceWidth);
-                    }
-                    // Source is portrait.
-                    elseif ($sourceWidth < $sourceHeight) {
-                        $width = round($sourceWidth * $sizeConstraint / $sourceHeight);
-                        $height = $sizeConstraint;
-                    }
-                    // Source is square.
-                    else {
-                        $width = $sizeConstraint;
-                        $height = $sizeConstraint;
-                    }
-                }
+                $transform['region']['feature'] = 'regionByPx';
+                $transform['region']['x'] = $regionValues[0];
+                $transform['region']['y'] = $regionValues[1];
+                $transform['region']['width'] = $regionValues[2];
+                $transform['region']['height'] = $regionValues[3];
             }
         }
 
-        return array(
-            'width' => $width,
-            'height' => $height,
-        );
-    }
+        // Determine the size.
 
-    /**
-     * Get the path to an original or derivative file for an image.
-     *
-     * @param File $file
-     * @param string $derivativeType
-     * @return string|null Null if not exists.
-     * @see UniversalViewer_View_Helper_IiifInfo::_getImagePath()
-     */
-    protected function _getImagePath($file, $derivativeType = 'original')
-    {
-        // Check if the file is an image.
-        if (strpos($file->mime_type, 'image/') === 0) {
-            // Don't use the webpath to avoid the transfer through server.
-            $filepath = FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($derivativeType);
-            if (file_exists($filepath)) {
-                return $filepath;
+        // Full image.
+        if ($size == 'full') {
+            $transform['size']['feature'] = 'full';
+        }
+
+        // "pct:x": sizeByPct
+        elseif (strpos($size, 'pct:') === 0) {
+            $sizePercentage = floatval(substr($size, 4));
+            if (empty($sizePercentage) || $sizePercentage > 100) {
+                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is incorrect.', $size);
+                return;
             }
-            // Use the web url when an external storage is used. No check can be
-            // done.
-            // TODO Load locally the external path? It will be done later.
+            // A quick check to avoid a possible transformation.
+            if ($sizePercentage == 100) {
+                $transform['size']['feature'] = 'full';
+            }
+            // Normal size.
             else {
-                $storage = $file->getStorage();
-                if (get_class($storage) != 'Omeka_Storage_Adapter_Filesystem') {
-                    $filepath = $file->getWebPath($derivativeType);
-                    return $filepath;
-                }
+                $transform['size']['feature'] = 'sizeByPct';
+                $transform['size']['percentage'] = $sizePercentage;
             }
         }
-    }
 
-    /**
-     * Helper to get width and height of an image.
-     *
-     * @param string $filepath This should be an image (no check here).
-     * @return array Associative array of width and height of the image file.
-     * If the file is not an image, the width and the height will be null.
-     * @see UniversalViewer_View_Helper_IiifInfo::_getWidthAndHeight()
-     */
-    protected function _getWidthAndHeight($filepath)
-    {
-        if (file_exists($filepath)) {
-            list($width, $height, $type, $attr) = getimagesize($filepath);
-            return array(
-                'width' => $width,
-                'height' => $height,
-            );
+        // "!w,h": sizeByWh
+        elseif (strpos($size, '!') === 0) {
+            $pos = strpos($size, ',');
+            $destinationWidth = (integer) substr($size, 1, $pos);
+            $destinationHeight = (integer) substr($size, $pos + 1);
+            if (empty($destinationWidth) || empty($destinationHeight)) {
+                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is incorrect.', $size);
+                return;
+            }
+            // A quick check to avoid a possible transformation.
+            if ($destinationWidth == $transform['region']['width']
+                    && $destinationHeight == $transform['region']['width']
+                ) {
+                $transform['size']['feature'] = 'full';
+            }
+            // Normal size.
+            else {
+                $transform['size']['feature'] = 'sizeByWh';
+                $transform['size']['width'] = $destinationWidth;
+                $transform['size']['height'] = $destinationHeight;
+            }
         }
 
-        return array(
-            'width' => null,
-            'height' => null,
+        // "w,h", "w," or ",h".
+        else {
+            $pos = strpos($size, ',');
+            $destinationWidth = (integer) substr($size, 0, $pos);
+            $destinationHeight = (integer) substr($size, $pos + 1);
+            if (empty($destinationWidth) && empty($destinationHeight)) {
+                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is incorrect.', $size);
+                return;
+            }
+
+            // "w,h": sizeByWhListed or sizeByForcedWh.
+            if ($destinationWidth && $destinationHeight) {
+                // Check the size only if the region is full, else it's forced.
+                if ($transform['region']['feature'] == 'full') {
+                    $availableTypes = array('thumbnail', 'fullsize', 'original');
+                    foreach ($availableTypes as $imageType) {
+                        $filepath = $this->_getImagePath($file, $imageType);
+                        if ($filepath) {
+                            list($testWidth, $testHeight) = $this->_getImageSize($file, $imageType);
+                            if ($destinationWidth == $testWidth && $destinationHeight == $testHeight) {
+                                $transform['size']['feature'] = 'full';
+                                // Change the source file to avoid a transformation.
+                                // TODO Check the format?
+                                if ($imageType != 'original') {
+                                    $transform['source']['filepath'] = $filepath;
+                                    $transform['source']['mime_type'] = 'image/jpeg';
+                                    $transform['source']['width'] = $testWidth;
+                                    $transform['source']['height'] = $testHeight;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (empty($transform['size']['feature'])) {
+                    $transform['size']['feature'] = 'sizeByForcedWh';
+                    $transform['size']['width'] = $destinationWidth;
+                    $transform['size']['height'] = $destinationHeight;
+                }
+            }
+
+            // "w,": sizeByW.
+            elseif ($destinationWidth && empty($destinationHeight)) {
+                $transform['size']['feature'] = 'sizeByW';
+                $transform['size']['width'] = $destinationWidth;
+            }
+
+            // ",h": sizeByH.
+            elseif (empty($destinationWidth) && $destinationHeight) {
+                $transform['size']['feature'] = 'sizeByH';
+                $transform['size']['height'] = $destinationHeight;
+            }
+
+            // Not supported.
+            else {
+                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is not supported.', $size);
+                return;
+            }
+
+            // A quick check to avoid a possible transformation.
+            if (isset($transform['size']['width']) && empty($transform['size']['width'])
+                    || isset($transform['size']['height']) && empty($transform['size']['height'])
+                ) {
+                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is not supported.', $size);
+                return;
+            }
+        }
+
+        // Determine the rotation.
+
+        // No rotation.
+        if ($rotation == '0') {
+            $transform['rotation']['feature'] = 'noRotation';
+        }
+
+        // Simple rotation.
+        elseif ($rotation == '90' ||$rotation == '180' || $rotation == '270')  {
+            $transform['rotation']['feature'] = 'rotationBy90s';
+            $transform['rotation']['degrees'] = (integer) $rotation;
+        }
+
+        // Arbitrary rotation.
+        // Currently not supported.
+        else {
+            $transform['rotation']['feature'] = 'rotationArbitrary';
+            // TODO if ($rotation > 360) {}
+            $this->view->message = __('The IIIF server cannot fulfil the request: the rotation "%s" is not supported.', $rotation);
+            return;
+        }
+
+        // Determine the quality.
+        // The regex in route checks it.
+        $transform['quality']['feature'] = $quality;
+
+        // Determine the format.
+        // The regex in route checks it.
+        $mimeTypes = array(
+            'jpg' => 'image/jpeg',
+            'png' => 'image/png',
+            'tif' => 'image/tiff',
+            'gif' => 'image/gif',
+            'pdf' => 'application/pdf',
+            'jp2' => 'image/jp2',
+            'webp' => 'image/webp',
         );
+        $transform['format']['feature'] = $mimeTypes[$format];
+
+        return $transform;
     }
 
     /**
@@ -1404,5 +1267,147 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         }
 
         return $result;
+    }
+
+    /**
+     * Get an array of the width and height of the image file.
+     *
+     * @internal The process uses the saved constraints. It they are changed but
+     * the derivative haven't been rebuilt, the return will be wrong (but
+     * generally without consequences for BookReader).
+     *
+     * @param File $file
+     * @param string $imageType
+     * @return array Associative array of width and height of the image file.
+     * If the file is not an image, the width and the height will be null.
+     * @see UniversalViewer_View_Helper_IiifManifest::_getImageSize()
+     */
+    protected function _getImageSize($file, $imageType = 'original')
+    {
+        static $sizeConstraints = array();
+
+        if (!isset($sizeConstraints[$imageType])) {
+            $sizeConstraints[$imageType] = get_option($imageType . '_constraint');
+        }
+        $sizeConstraint = $sizeConstraints[$imageType];
+
+        // Check if this is an image.
+        if (empty($file) || strpos($file->mime_type, 'image/') !== 0) {
+            $width = null;
+            $height = null;
+        }
+
+        // This is an image.
+        else {
+            $metadata = json_decode($file->metadata, true);
+            if (empty($metadata['video']['resolution_x']) || empty($metadata['video']['resolution_y'])) {
+                $msg = __('The image #%d ("%s") is not stored correctly.', $file->id, $file->original_filename);
+                _log($msg, Zend_Log::NOTICE);
+
+                if (isset($metadata['video']['resolution_x']) || isset($metadata['video']['resolution_y'])) {
+                    throw new Exception($msg);
+                }
+
+                // Get the resolution directly.
+                // The storage adapter should be checked for external storage.
+                $storageAdapter = $file->getStorage()->getAdapter();
+                $filepath = get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem'
+                    ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($imageType)
+                    : $file->getWebPath($imageType);
+                list($width, $height, $type, $attr) = getimagesize($filepath);
+                if (empty($width) || empty($height)) {
+                    throw new Exception($msg);
+                }
+            }
+
+            // Calculate the size.
+            else {
+                $sourceWidth = $metadata['video']['resolution_x'];
+                $sourceHeight = $metadata['video']['resolution_y'];
+
+                // Use the original size when possible.
+                if ($imageType == 'original') {
+                    $width = $sourceWidth;
+                    $height = $sourceHeight;
+                }
+                // This supposes that the option has not changed before.
+                else {
+                    // Source is landscape.
+                    if ($sourceWidth > $sourceHeight) {
+                        $width = $sizeConstraint;
+                        $height = round($sourceHeight * $sizeConstraint / $sourceWidth);
+                    }
+                    // Source is portrait.
+                    elseif ($sourceWidth < $sourceHeight) {
+                        $width = round($sourceWidth * $sizeConstraint / $sourceHeight);
+                        $height = $sizeConstraint;
+                    }
+                    // Source is square.
+                    else {
+                        $width = $sizeConstraint;
+                        $height = $sizeConstraint;
+                    }
+                }
+            }
+        }
+
+        return array(
+            'width' => $width,
+            'height' => $height,
+        );
+    }
+
+    /**
+     * Get the path to an original or derivative file for an image.
+     *
+     * @param File $file
+     * @param string $derivativeType
+     * @return string|null Null if not exists.
+     * @see UniversalViewer_View_Helper_IiifInfo::_getImagePath()
+     */
+    protected function _getImagePath($file, $derivativeType = 'original')
+    {
+        // Check if the file is an image.
+        if (strpos($file->mime_type, 'image/') === 0) {
+            // Don't use the webpath to avoid the transfer through server.
+            $filepath = FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($derivativeType);
+            if (file_exists($filepath)) {
+                return $filepath;
+            }
+            // Use the web url when an external storage is used. No check can be
+            // done.
+            // TODO Load locally the external path? It will be done later.
+            else {
+                $storage = $file->getStorage();
+                if (get_class($storage) != 'Omeka_Storage_Adapter_Filesystem') {
+                    $filepath = $file->getWebPath($derivativeType);
+                    return $filepath;
+                }
+            }
+        }
+    }
+
+    /**
+     * Helper to get width and height of an image.
+     *
+     * @param string $filepath This should be an image (no check here).
+     * @return array Associative array of width and height of the image file.
+     * If the file is not an image, the width and the height will be null.
+     * @see UniversalViewer_View_Helper_IiifInfo::_getWidthAndHeight()
+     */
+    protected function _getWidthAndHeight($filepath)
+    {
+        if (file_exists($filepath)) {
+            list($width, $height, $type, $attr) = getimagesize($filepath);
+            return array(
+                'width' => $width,
+                'height' => $height,
+            );
+        }
+
+        return array(
+            'width' => null,
+            'height' => null,
+        );
     }
 }
