@@ -528,36 +528,53 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         // This is an image.
         else {
             $metadata = json_decode($file->metadata, true);
-            if (!isset($metadata['video']['resolution_x'])) {
+            if (empty($metadata['video']['resolution_x']) || empty($metadata['video']['resolution_y'])) {
                 $msg = __('The image #%d ("%s") is not stored correctly.', $file->id, $file->original_filename);
-                _log($msg, Zend_Log::WARN);
-                throw new Exception($msg);
+                _log($msg, Zend_Log::NOTICE);
+
+                if (isset($metadata['video']['resolution_x']) || isset($metadata['video']['resolution_y'])) {
+                    throw new Exception($msg);
+                }
+
+                // Get the resolution directly.
+                // The storage adapter should be checked for external storage.
+                $storageAdapter = $file->getStorage()->getAdapter();
+                $filepath = get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem'
+                    ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($imageType)
+                    : $file->getWebPath($imageType);
+                list($width, $height, $type, $attr) = getimagesize($filepath);
+                if (empty($width) || empty($height)) {
+                    throw new Exception($msg);
+                }
             }
 
-            $sourceWidth = $metadata['video']['resolution_x'];
-            $sourceHeight = $metadata['video']['resolution_y'];
-
-            // Use the original size when possible.
-            if ($imageType == 'original') {
-                $width = $sourceWidth;
-                $height = $sourceHeight;
-            }
-            // This supposes that the option has not changed before.
+            // Calculate the size.
             else {
-                // Source is landscape.
-                if ($sourceWidth > $sourceHeight) {
-                    $width = $sizeConstraint;
-                    $height = round($sourceHeight * $sizeConstraint / $sourceWidth);
+                $sourceWidth = $metadata['video']['resolution_x'];
+                $sourceHeight = $metadata['video']['resolution_y'];
+
+                // Use the original size when possible.
+                if ($imageType == 'original') {
+                    $width = $sourceWidth;
+                    $height = $sourceHeight;
                 }
-                // Source is portrait.
-                elseif ($sourceWidth < $sourceHeight) {
-                    $width = round($sourceWidth * $sizeConstraint / $sourceHeight);
-                    $height = $sizeConstraint;
-                }
-                // Source is square.
+                // This supposes that the option has not changed before.
                 else {
-                    $width = $sizeConstraint;
-                    $height = $sizeConstraint;
+                    // Source is landscape.
+                    if ($sourceWidth > $sourceHeight) {
+                        $width = $sizeConstraint;
+                        $height = round($sourceHeight * $sizeConstraint / $sourceWidth);
+                    }
+                    // Source is portrait.
+                    elseif ($sourceWidth < $sourceHeight) {
+                        $width = round($sourceWidth * $sizeConstraint / $sourceHeight);
+                        $height = $sizeConstraint;
+                    }
+                    // Source is square.
+                    else {
+                        $width = $sizeConstraint;
+                        $height = $sizeConstraint;
+                    }
                 }
             }
         }

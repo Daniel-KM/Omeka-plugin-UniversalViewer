@@ -44,6 +44,8 @@ theme.
 Options for the IIIF server can be changed in the helpers "IiifCollection.php",
 "IiifManifest.php" and "IiifInfo.php" of the plugin.
 
+See below the notes for more info.
+
 
 Usage
 -----
@@ -108,6 +110,19 @@ automatically done.
 - Audio/Video: the format should be supported by the browser of the user. In
 fact, only open, free and/or common codecs are really supported: "mp3" and "ogg"
 for audio and "webm" and "ogv" for video.
+
+* Warning *
+
+PHP should be installed with the extension "exif" in order to get the size of
+images. This is the case for all major distributions and providers.
+
+If technical metadata are missing for some images, in particular when the
+extension "exif" is not installed or when images are not fully compliant with
+the standards, they should be rebuilt. A notice is added in the error log.
+A form in the batch edit can be used to process them automatically: check the
+items in the "admin/items/browse" view, then click the button "Edit", then the
+checkbox "Rebuild metadata when missing". The viewer will work without these
+metadata, but the display will be slower.
 
 
 Troubleshooting

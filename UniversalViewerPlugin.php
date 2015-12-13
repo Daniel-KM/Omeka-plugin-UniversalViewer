@@ -146,9 +146,14 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         $item = $args['item'];
         $orderByFilename = $args['custom']['universalviewer']['orderByFilename'];
         $mixImages = $args['custom']['universalviewer']['mixImages'];
+        $checkImageSize = $args['custom']['universalviewer']['checkImageSize'];
 
         if ($orderByFilename) {
             $this->_sortFiles($item, (boolean) $mixImages);
+        }
+
+        if ($checkImageSize) {
+            $this->_checkImageSize($item);
         }
     }
 
@@ -161,7 +166,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      */
     protected function _sortFiles($item, $mixImages = false)
     {
-        if ($item->fileCount() == 0) {
+        if ($item->fileCount() < 2) {
             return;
         }
 
@@ -213,6 +218,44 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             WHERE files.id in ($list)
         ";
         $db->query($sql);
+    }
+
+   /**
+     * Rebuild missing metadata of files.
+     *
+     * @param Item $item
+     * @return void
+     */
+    protected function _checkImageSize($item)
+    {
+        foreach ($item->Files as $file) {
+            if (!$file->hasThumbnail() || strpos($file->mime_type, 'image/') !== 0) {
+                continue;
+            }
+            $metadata = json_decode($file->metadata, true);
+            if (empty($metadata)) {
+                $metadata = array();
+            }
+            // Check if resolution is set.
+            elseif (!empty($metadata['video']['resolution_x']) && !empty($metadata['video']['resolution_y'])) {
+                continue;
+            }
+
+            // Set the resolution directly.
+            $imageType = 'original';
+            // The storage adapter should be checked for external storage.
+            $storageAdapter = $file->getStorage()->getAdapter();
+            $filepath = get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem'
+                ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($imageType)
+                : $file->getWebPath($imageType);
+            list($width, $height, $type, $attr) = getimagesize($filepath);
+            $metadata['video']['resolution_x'] = $width;
+            $metadata['video']['resolution_y'] = $height;
+            $file->metadata = version_compare(phpversion(), '5.4.0', '<')
+                ? json_encode($metadata)
+                : json_encode($metadata, JSON_UNESCAPED_SLASHES);
+            $file->save();
+        }
     }
 
     /**
