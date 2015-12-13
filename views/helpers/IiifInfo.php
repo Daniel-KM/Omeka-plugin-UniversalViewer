@@ -37,18 +37,17 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             $sizes = array();
             $availableTypes = array('thumbnail', 'fullsize', 'original');
             foreach ($availableTypes as $imageType) {
-                $imagePath = $this->_getImagePath($file, $imageType);
-                list($width, $height) = $this->_getWidthAndHeight($imagePath);
+                $imageSize = $this->_getImageSize($file, $imageType);
                 $size = array();
-                $size['width'] = $width;
-                $size['height'] = $height;
+                $size['width'] = $imageSize['width'];
+                $size['height'] = $imageSize['height'];
                 $size = (object) $size;
                 $sizes[] = $size;
             }
 
             $imageType = 'original';
-            $imagePath = $this->_getImagePath($file, $imageType);
-            list($width, $height) = $this->_getWidthAndHeight($imagePath);
+            $imageSize = $this->_getImageSize($file, $imageType);
+            list($width, $height) = array_values($imageSize);
             $imageUrl = absolute_url(array(
                     'id' => $file->id,
                 ), 'universalviewer_image');
@@ -196,38 +195,73 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
     }
 
     /**
-     * Get the path to an original or derivative file for an image.
+     * Get an array of the width and height of the image file.
+     *
+     * @internal The process uses the saved constraints. It they are changed but
+     * the derivative haven't been rebuilt, the return will be wrong (but
+     * generally without consequences for BookReader).
      *
      * @param File $file
-     * @param string $derivativeType
-     * @return string|null Null if not exists.
-     * @see UniversalViewer_View_Helper_IiifManifest::_getImagePath()
+     * @param string $imageType
+     * @return array Associative array of width and height of the image file.
+     * If the file is not an image, the width and the height will be null.
+     * @see UniversalViewer_View_Helper_IiifManifest::_getImageSize()
      */
-    protected function _getImagePath($file, $derivativeType = 'original')
+    protected function _getImageSize($file, $imageType = 'original')
     {
-        // Check if the file is an image.
-        if (strpos($file->mime_type, 'image/') === 0) {
-            // Don't use the webpath to avoid the transfer through server.
-            $filepath = FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($derivativeType);
-            if (file_exists($filepath)) {
-                return $filepath;
+        static $sizeConstraints = array();
+
+        if (!isset($sizeConstraints[$imageType])) {
+            $sizeConstraints[$imageType] = get_option($imageType . '_constraint');
+        }
+        $sizeConstraint = $sizeConstraints[$imageType];
+
+        // Check if this is an image.
+        if (empty($file) || strpos($file->mime_type, 'image/') !== 0) {
+            $width = null;
+            $height = null;
+        }
+
+        // This is an image.
+        else {
+            $metadata = json_decode($file->metadata, true);
+            if (!isset($metadata['video']['resolution_x'])) {
+                $msg = __('The image #%d ("%s") is not stored correctly.', $file->id, $file->original_filename);
+                _log($msg, Zend_Log::WARN);
+                throw new Exception($msg);
+            }
+
+            $sourceWidth = $metadata['video']['resolution_x'];
+            $sourceHeight = $metadata['video']['resolution_y'];
+
+            // Use the original size when possible.
+            if ($imageType == 'original') {
+                $width = $sourceWidth;
+                $height = $sourceHeight;
+            }
+            // This supposes that the option has not changed before.
+            else {
+                // Source is landscape.
+                if ($sourceWidth > $sourceHeight) {
+                    $width = $sizeConstraint;
+                    $height = round($sourceHeight * $sizeConstraint / $sourceWidth);
+                }
+                // Source is portrait.
+                elseif ($sourceWidth < $sourceHeight) {
+                    $width = round($sourceWidth * $sizeConstraint / $sourceHeight);
+                    $height = $sizeConstraint;
+                }
+                // Source is square.
+                else {
+                    $width = $sizeConstraint;
+                    $height = $sizeConstraint;
+                }
             }
         }
-    }
 
-    /**
-     * Helper to get width and height of a file.
-     *
-     * @param string $filepath
-     * @return array of width and height.
-     * @see UniversalViewer_View_Helper_IiifManifest::_getWidthAndHeight()
-     */
-    protected function _getWidthAndHeight($filepath)
-    {
-        if (file_exists($filepath)) {
-            list($width, $height, $type, $attr) = getimagesize($filepath);
-            return array($width, $height);
-        }
-        return array(0, 0);
+        return array(
+            'width' => $width,
+            'height' => $height,
+        );
     }
 }

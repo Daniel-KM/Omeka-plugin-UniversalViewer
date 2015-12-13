@@ -33,7 +33,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         // TODO Common analysis of the request.
 
         $response->setHttpResponseCode(400);
-        $this->view->message = __('The IIIF server cannot fulfil the request: the arguments are incorrect.');
+        $this->view->message = __('The IIIF server cannot fulfill the request: the arguments are incorrect.');
         $this->renderScript('image/error.php');
 
         // $response->setHttpResponseCode(501);
@@ -88,11 +88,10 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         // Prepare the parameters for the transformation.
         $transform = array();
 
-        $filepath = $this->_getImagePath($file, 'original');
-        $transform['source']['filepath'] = $filepath;
+        $transform['source']['filepath'] = $this->_getImagePath($file, 'original');
         $transform['source']['mime_type'] = $file->mime_type;
 
-        list($sourceWidth, $sourceHeight) = $this->_getWidthAndHeight($filepath);
+        list($sourceWidth, $sourceHeight) = $this->_getImageSize($file, 'original');
         $transform['source']['width'] = $sourceWidth;
         $transform['source']['height'] = $sourceHeight;
 
@@ -257,7 +256,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                     foreach ($availableTypes as $imageType) {
                         $filepath = $this->_getImagePath($file, $imageType);
                         if ($filepath) {
-                            list($testWidth, $testHeight) = $this->_getWidthAndHeight($filepath);
+                            list($testWidth, $testHeight) = $this->_getImageSize($file, $imageType);
                             if ($destinationWidth == $testWidth && $destinationHeight == $testHeight) {
                                 $transform['size']['feature'] = 'full';
                                 // Change the source file to avoid a transformation.
@@ -265,10 +264,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                                 if ($imageType != 'original') {
                                     $transform['source']['filepath'] = $filepath;
                                     $transform['source']['mime_type'] = 'image/jpeg';
-
-                                    list($sourceWidth, $sourceHeight) = $this->_getWidthAndHeight($filepath);
-                                    $transform['source']['width'] = $sourceWidth;
-                                    $transform['source']['height'] = $sourceHeight;
+                                    $transform['source']['width'] = $testWidth;
+                                    $transform['source']['height'] = $testHeight;
                                 }
                                 break;
                             }
@@ -353,8 +350,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         );
         $transform['format']['feature'] = $mimeTypes[$format];
 
-        // A quick check when there is no transformation and the original or
-        // the derivative are used.
+        // A quick check when there is no transformation and the original or the
+        // derivative is used.
         if ($transform['region']['feature'] == 'full'
                 && $transform['size']['feature'] == 'full'
                 && $transform['rotation']['feature'] == 'noRotation'
@@ -365,27 +362,27 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             $imagePath = $transform['source']['filepath'];
         }
 
+        // A transformation is needed.
         else {
             // Quick check if an Omeka derivative is appropriate.
             $pretiled = $this->_useOmekaDerivative($file, $transform);
             if ($pretiled) {
-                $imagePath = $pretiled;
+                $imagePath = $pretiled['filepath'];
                 // Check if a light transformation is needed.
                 if ($transform['size']['feature'] != 'full'
                         || $transform['rotation']['feature'] != 'noRotation'
                         || $transform['quality']['feature'] != 'default'
                         || $transform['format']['feature'] != 'image/jpeg'
                     ) {
-                    list($tileWidth, $tileHeight) = $this-> _getWidthAndHeight($imagePath);
                     $args = $transform;
                     $args['source']['filepath'] = $imagePath;
-                    $args['source']['width'] = $tileWidth;
-                    $args['source']['height'] = $tileHeight;
+                    $args['source']['width'] = $pretiled['width'];
+                    $args['source']['height'] = $pretiled['height'];
                     $args['region']['feature'] = 'full';
                     $args['region']['x'] = 0;
                     $args['region']['y'] = 0;
-                    $args['region']['width'] = $tileWidth;
-                    $args['region']['height'] = $tileHeight;
+                    $args['region']['width'] = $pretiled['width'];
+                    $args['region']['height'] = $pretiled['height'];
                     $imagePath = $this->_transformImage($args);
                 }
             }
@@ -395,7 +392,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 // Check if the image is pre-tiled.
                 $pretiled = $this->_usePreTiled($file, $transform);
                 if ($pretiled) {
-                    $imagePath = $pretiled;
+                    $imagePath = $pretiled['filepath'];
 
                     // Check if a light transformation is needed (all except
                     // extraction of the region).
@@ -403,16 +400,15 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                             || $transform['quality']['feature'] != 'default'
                             || $transform['format']['feature'] != 'image/jpeg'
                         ) {
-                        list($tileWidth, $tileHeight) = $this-> _getWidthAndHeight($imagePath);
                         $args = $transform;
                         $args['source']['filepath'] = $imagePath;
-                        $args['source']['width'] = $tileWidth;
-                        $args['source']['height'] = $tileHeight;
+                        $args['source']['width'] = $pretiled['width'];
+                        $args['source']['height'] = $pretiled['height'];
                         $args['region']['feature'] = 'full';
                         $args['region']['x'] = 0;
                         $args['region']['y'] = 0;
-                        $args['region']['width'] = $tileWidth;
-                        $args['region']['height'] = $tileHeight;
+                        $args['region']['width'] = $pretiled['width'];
+                        $args['region']['height'] = $pretiled['height'];
                         $args['size']['feature'] = 'full';
                         $imagePath = $this->_transformImage($args);
                     }
@@ -440,6 +436,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             }
         }
 
+        // The response should be 200, not 302, so the file should be loaded.
+        // TODO Don't load the file if local, and redirect with 200 when remote (Amazon S3). This is generally a local transformed file.
         $output = file_get_contents($imagePath);
         if ($isTempFile) {
             unlink($imagePath);
@@ -500,6 +498,77 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
     }
 
     /**
+     * Get an array of the width and height of the image file.
+     *
+     * @internal The process uses the saved constraints. It they are changed but
+     * the derivative haven't been rebuilt, the return will be wrong (but
+     * generally without consequences for BookReader).
+     *
+     * @param File $file
+     * @param string $imageType
+     * @return array Associative array of width and height of the image file.
+     * If the file is not an image, the width and the height will be null.
+     * @see UniversalViewer_View_Helper_IiifManifest::_getImageSize()
+     */
+    protected function _getImageSize($file, $imageType = 'original')
+    {
+        static $sizeConstraints = array();
+
+        if (!isset($sizeConstraints[$imageType])) {
+            $sizeConstraints[$imageType] = get_option($imageType . '_constraint');
+        }
+        $sizeConstraint = $sizeConstraints[$imageType];
+
+        // Check if this is an image.
+        if (empty($file) || strpos($file->mime_type, 'image/') !== 0) {
+            $width = null;
+            $height = null;
+        }
+
+        // This is an image.
+        else {
+            $metadata = json_decode($file->metadata, true);
+            if (!isset($metadata['video']['resolution_x'])) {
+                $msg = __('The image #%d ("%s") is not stored correctly.', $file->id, $file->original_filename);
+                _log($msg, Zend_Log::WARN);
+                throw new Exception($msg);
+            }
+
+            $sourceWidth = $metadata['video']['resolution_x'];
+            $sourceHeight = $metadata['video']['resolution_y'];
+
+            // Use the original size when possible.
+            if ($imageType == 'original') {
+                $width = $sourceWidth;
+                $height = $sourceHeight;
+            }
+            // This supposes that the option has not changed before.
+            else {
+                // Source is landscape.
+                if ($sourceWidth > $sourceHeight) {
+                    $width = $sizeConstraint;
+                    $height = round($sourceHeight * $sizeConstraint / $sourceWidth);
+                }
+                // Source is portrait.
+                elseif ($sourceWidth < $sourceHeight) {
+                    $width = round($sourceWidth * $sizeConstraint / $sourceHeight);
+                    $height = $sizeConstraint;
+                }
+                // Source is square.
+                else {
+                    $width = $sizeConstraint;
+                    $height = $sizeConstraint;
+                }
+            }
+        }
+
+        return array(
+            'width' => $width,
+            'height' => $height,
+        );
+    }
+
+    /**
      * Get the path to an original or derivative file for an image.
      *
      * @param File $file
@@ -516,23 +585,41 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             if (file_exists($filepath)) {
                 return $filepath;
             }
+            // Use the web url when an external storage is used. No check can be
+            // done.
+            // TODO Load locally the external path? It will be done later.
+            else {
+                $storage = $file->getStorage();
+                if (get_class($storage) != 'Omeka_Storage_Adapter_Filesystem') {
+                    $filepath = $file->getWebPath($derivativeType);
+                    return $filepath;
+                }
+            }
         }
     }
 
     /**
-     * Helper to get width and height of a file.
+     * Helper to get width and height of an image.
      *
-     * @param string $filepath
-     * @return array of width and height.
+     * @param string $filepath This should be an image (no check here).
+     * @return array Associative array of width and height of the image file.
+     * If the file is not an image, the width and the height will be null.
      * @see UniversalViewer_View_Helper_IiifInfo::_getWidthAndHeight()
      */
     protected function _getWidthAndHeight($filepath)
     {
         if (file_exists($filepath)) {
             list($width, $height, $type, $attr) = getimagesize($filepath);
-            return array($width, $height);
+            return array(
+                'width' => $width,
+                'height' => $height,
+            );
         }
-        return array(0, 0);
+
+        return array(
+            'width' => null,
+            'height' => null,
+        );
     }
 
     /**
@@ -544,7 +631,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
      *
      * @param File $file
      * @param array $transform
-     * @return string|null The path to the image if any.
+     * @return array|null Associative array with the file path, the derivative
+     * type, the width and the height. Null if none.
      */
     protected function _useOmekaDerivative($file, $transform)
     {
@@ -554,7 +642,11 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         }
 
         // Check size. Here, the "full" is already checked.
-        $useDerivativePath = null;
+        $useDerivativePath = false;
+        $derivativeWidth = null;
+        $derivativeHeight = null;
+        // Currently, the check is done only on fullsize.
+        $derivativeType = 'fullsize';
         switch ($transform['size']['feature']) {
             case 'sizeByW':
             case 'sizeByH':
@@ -563,13 +655,12 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                     : $transform['size']['height'];
 
                 // Check if width is lower than fulllsize or thumbnail.
-                $filepath = $this->_getImagePath($file, 'fullsize');
-                list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
+                list($derivativeWidth, $derivativeHeight) = $this->_getImageSize($file, $derivativeType);
                 // Omeka and IIIF doesn't use the same type of constraint, so
                 // a double check is done.
-                // TODO To be improved
+                // TODO To be improved.
                 if ($constraint <= $derivativeWidth || $constraint <= $derivativeHeight) {
-                    $useDerivativePath = $filepath;
+                    $useDerivativePath = true;
                 }
                 break;
 
@@ -580,18 +671,16 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 $constraintH = $transform['size']['height'];
 
                 // Check if width is lower than fulllsize or thumbnail.
-                $filepath = $this->_getImagePath($file, 'fullsize');
-                list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
+                list($derivativeWidth, $derivativeHeight) = $this->_getImageSize($file, $derivativeType);
                 if ($constraintW <= $derivativeWidth || $constraintH <= $derivativeHeight) {
-                    $useDerivativePath = $filepath;
+                    $useDerivativePath = true;
                 }
                 break;
 
             case 'sizeByPct':
-                $filepath = $this->_getImagePath($file, 'fullsize');
-                list($derivativeWidth, $derivativeHeight) = $this->_getWidthAndHeight($filepath);
+                list($derivativeWidth, $derivativeHeight) = $this->_getImageSize($file, $derivativeType);
                 if ($transform['size']['percentage'] <= ($derivativeWidth * 100 / $transform['source']['width'])) {
-                    $useDerivativePath = $filepath;
+                    $useDerivativePath = true;
                 }
                 break;
 
@@ -604,14 +693,19 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         if ($useDerivativePath) {
             // A temp file is needed to simplify unlinking in case of a light
             // transformation.
+            $derivativePath = $this->_getImagePath($file, $derivativeType);
             $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
-            $result = copy($useDerivativePath, $tempPath);
+            $result = copy($derivativePath, $tempPath);
             if (!$result) {
                 return;
             }
-            $imagePath = $tempPath;
 
-            return $imagePath;
+            return array(
+                'filepath' => $tempPath,
+                'derivativeType' => $derivativeType,
+                'width' => $derivativeWidth,
+                'height' => $derivativeHeight,
+            );
         }
     }
 
@@ -684,6 +778,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
             // Local path
             else {
+                // TODO Manage remote server (Amazon S3).
                 if (!file_exists($imagePath)) {
                      return;
                 }
@@ -697,7 +792,13 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 $imagePath = $tempPath;
             }
 
-            return $imagePath;
+            list($tileWidth, $tileHeight) = array_values($this-> _getWidthAndHeight($imagePath));
+            return array(
+                'filepath' => $imagePath,
+                'derivativeType' => 'zoom_tiles',
+                'width' => $tileWidth,
+                'height' => $tileHeight,
+            );
         }
     }
 
@@ -1015,9 +1116,10 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             return;
         }
 
-        // Get width and height if needed.
+        // Get width and height if missing.
         if (empty($args['source']['width']) || empty($args['source']['height'])) {
-            list($args['source']['width'], $args['source']['height']) = $this->_getWidthAndHeight($args['source']['filepath']);
+            $args['source']['width'] = imagesx($sourceGD);
+            $args['source']['height'] = imagesy($sourceGD);
         }
 
         switch ($args['region']['feature']) {
@@ -1255,14 +1357,32 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
      */
     protected function _loadImageResource($source)
     {
-        if (empty($source) || !is_readable($source)) {
+        if (empty($source)) {
             return false;
         }
 
         try {
-            $result = imagecreatefromstring(file_get_contents($source));
+            // The source can be a local file or an external one.
+            $file = new File;
+            $storageAdapter = $file->getStorage()->getAdapter();
+            if (get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem') {
+                if (!is_readable($source)) {
+                    return false;
+                }
+                $result = imagecreatefromstring(file_get_contents($source));
+            }
+            // When the storage is external, the file should be fetched before.
+            else {
+                $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
+                $result = copy($source, $tempPath);
+                if (!$result) {
+                    return false;
+                }
+                $result = imagecreatefromstring(file_get_contents($tempPath));
+                unlink($tempPath);
+            }
         } catch (Exception $e) {
-            _log("GD failed to open the file. Details:\n$e", Zend_Log::ERR);
+            _log(__("GD failed to open the file \"%s\". Details:\n%s", $source, $e->getMessage()), Zend_Log::ERR);
             return false;
         }
 

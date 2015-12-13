@@ -31,7 +31,7 @@ class UniversalViewer_MediaController extends Omeka_Controller_AbstractActionCon
         // TODO Common analysis of the request.
 
         $response->setHttpResponseCode(400);
-        $this->view->message = __('The IXIF server cannot fulfil the request: the arguments are incorrect.');
+        $this->view->message = __('The IXIF server cannot fulfill the request: the arguments are incorrect.');
         $this->renderScript('image/error.php');
 
         // $response->setHttpResponseCode(501);
@@ -105,7 +105,11 @@ class UniversalViewer_MediaController extends Omeka_Controller_AbstractActionCon
 
         $response = $this->getResponse();
 
-        $filepath = FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath('original');
+        // Amazon can't use the local path.
+        $storage = $file->getStorage();
+        $filepath = get_class($storage) == 'Omeka_Storage_Adapter_Filesystem'
+            ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath('original')
+            : $file->getWebPath('original');
         if (!file_exists($filepath)) {
             $response->setHttpResponseCode(500);
             $this->view->message = __('The IXIF server encountered an unexpected error that prevented it from fulfilling the request: the resulting file is not found.');
@@ -113,8 +117,10 @@ class UniversalViewer_MediaController extends Omeka_Controller_AbstractActionCon
             return;
         }
 
+        // The response should be 200, not 302, so the file should be loaded.
+        // TODO Don't load the file if local, and redirect with 200 when remote (Amazon S3).
         $output = file_get_contents($filepath);
-        if (!$output) {
+        if (empty($output)) {
             $response->setHttpResponseCode(500);
             $this->view->message = __('The IXIF server encountered an unexpected error that prevented it from fulfilling the request: the resulting file is not found or empty.');
             $this->renderScript('image/error.php');
