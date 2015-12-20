@@ -477,12 +477,14 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         }
 
         // Arbitrary rotation.
-        // Currently not supported.
+        // Currently only supported with Imagick.
         else {
             $transform['rotation']['feature'] = 'rotationArbitrary';
-            // TODO if ($rotation > 360) {}
-            $this->view->message = __('The IIIF server cannot fulfill the request: the rotation "%s" is not supported.', $rotation);
-            return;
+            if (!extension_loaded('imagick') || get_option('universalviewer_iiif_creator') == 'GD') {
+                $this->view->message = __('The IIIF server cannot fulfill the request: the rotation "%s" is not supported.', $rotation);
+                return;
+            }
+            $transform['rotation']['degrees'] = (float) $rotation;
         }
 
         // Determine the quality.

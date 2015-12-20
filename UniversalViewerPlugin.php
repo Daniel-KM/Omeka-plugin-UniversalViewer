@@ -350,6 +350,9 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         if (extension_loaded('gd')) {
             $processors['GD'] = 'GD';
         }
+        if (extension_loaded('imagick')) {
+            $processors['Imagick'] = 'ImageMagick';
+        }
 
         return $processors;
     }

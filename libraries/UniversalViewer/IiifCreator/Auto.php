@@ -8,6 +8,7 @@ class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreat
 {
     // List of managed IIIF mime types.
     protected $_gdMimeTypes = array();
+    protected $_imagickMimeTypes = array();
 
     /**
      * Check for the imagick extension at creation.
@@ -35,6 +36,20 @@ class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreat
                 $this->_gdMimeTypes['image/webp'] = false;
             }
         }
+
+        if (extension_loaded('imagick')) {
+            $iiifMimeTypes = array(
+                'image/jpeg' => 'JPG',
+                'image/png' => 'PNG',
+                'image/tiff' => 'TIFF',
+                'image/gif' => 'GIF',
+                'application/pdf' => 'PDF',
+                'image/jp2' => 'JP2',
+                'image/webp' => 'WEBP',
+            );
+            $image = new Imagick();
+            $this->_imagickMimeTypes = array_intersect($iiifMimeTypes, $image->queryFormats());
+        }
     }
 
     /**
@@ -47,12 +62,20 @@ class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreat
      */
     public function transform(array $args = array())
     {
-        // If available, use GD when source and destination formats are managed.
+        // GD seems to be 15% speeder, so it is used first if available.
         if (!empty($this->_gdMimeTypes[$args['source']['mime_type']])
                 && !empty($this->_gdMimeTypes[$args['format']['feature']])
                 && $args['rotation']['feature'] != 'rotationArbitrary'
             ) {
             $processor = new UniversalViewer_IiifCreator_GD();
+            return $processor->transform($args);
+        }
+
+        // Else use the extension ImageMagick, that manages more formats.
+        if (!empty($this->_imagickMimeTypes[$args['source']['mime_type']])
+                && !empty($this->_imagickMimeTypes[$args['format']['feature']])
+            ) {
+            $processor = new UniversalViewer_IiifCreator_Imagick();
             return $processor->transform($args);
         }
     }
