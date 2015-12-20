@@ -241,6 +241,29 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
                 return;
         }
 
+        $supporteds = array(
+            'image/jpeg' => true,
+            'image/png' => true,
+            'image/tiff' => false,
+            'image/gif' => true,
+            'application/pdf' => false,
+            'image/jp2' => false,
+            'image/webp' => true,
+        );
+        $gdInfo = gd_info();
+        if (empty($gdInfo['GIF Read Support']) || empty($gdInfo['GIF Create Support'])) {
+            $supporteds['image/gif'] = false;
+        }
+        if (empty($gdInfo['WebP Support'])) {
+            $supporteds['image/webp'] = false;
+        }
+
+        if (empty($supporteds[$args['format']['feature']])) {
+            imagedestroy($sourceGD);
+            imagedestroy($destinationGD);
+            return;
+        }
+
         // Save resulted resource into the specified format.
         // TODO Use a true name to allow cache, or is it managed somewhere else?
         $destination = tempnam(sys_get_temp_dir(), 'uv_');
@@ -256,11 +279,7 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
                 $result = imagegif($destinationGD, $destination);
                 break;
             case 'image/webp':
-            case 'image/tiff':
-            case 'application/pdf':
-            case 'image/jp2':
-            default:
-                $result = false;
+                $result = imagewebp($destinationGD, $destination);
                 break;
         }
 
@@ -284,14 +303,12 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
 
         try {
             // The source can be a local file or an external one.
-            // TODO Use Zend register.
-            $file = new File;
-            $storageAdapter = $file->getStorage()->getAdapter();
+            $storageAdapter = Zend_Registry::get('storage')->getAdapter();
             if (get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem') {
                 if (!is_readable($source)) {
                     return false;
                 }
-                $result = imagecreatefromstring(file_get_contents($source));
+                $image = imagecreatefromstring(file_get_contents($source));
             }
             // When the storage is external, the file should be fetched before.
             else {
@@ -300,7 +317,7 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
                 if (!$result) {
                     return false;
                 }
-                $result = imagecreatefromstring(file_get_contents($tempPath));
+                $image = imagecreatefromstring(file_get_contents($tempPath));
                 unlink($tempPath);
             }
         } catch (Exception $e) {
@@ -308,6 +325,6 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
             return false;
         }
 
-        return $result;
+        return $image;
     }
 }

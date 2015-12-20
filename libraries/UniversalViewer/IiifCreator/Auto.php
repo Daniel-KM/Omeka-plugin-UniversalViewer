@@ -6,6 +6,7 @@
  */
 class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreator
 {
+    // List of managed IIIF mime types.
     protected $_gdMimeTypes = array();
 
     /**
@@ -20,18 +21,18 @@ class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreat
             $this->_gdMimeTypes = array(
                 'image/jpeg' => true,
                 'image/png' => true,
-                'image/x-xbitmap' => true,
-                'image/x-xbm' => true,
-                'image/xbm' => true,
-                'image/vnd.wap.wbmp' => true,
+                'image/tiff' => false,
+                'image/gif' => true,
+                'application/pdf' => false,
+                'image/jp2' => false,
+                'image/webp' => true,
             );
             $gdInfo = gd_info();
-            if (version_compare($gdInfo['GD Version'], '2.0.28', '>')) {
-                $this->_gdMimeTypes['image/gif'] = true;
+            if (empty($gdInfo['GIF Read Support']) || empty($gdInfo['GIF Create Support'])) {
+                $this->_gdMimeTypes['image/gif'] = false;
             }
-            if (version_compare($gdInfo['GD Version'], '2.1', '>=')
-                    && (version_compare(phpversion(), '5.5', '>='))) {
-                $this->_gdMimeTypes['image/webp'] = true;
+            if (empty($gdInfo['WebP Support'])) {
+                $this->_gdMimeTypes['image/webp'] = false;
             }
         }
     }
