@@ -655,8 +655,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $imageResource = array();
         $imageResource['@id'] = WEB_ROOT . '/iiif/ixif-message-0/res/placeholder';
         $imageResource['@type'] = 'dctypes:Image';
-        $imageResource['width'] = $widthPlaceholder;
-        $imageResource['height'] = $heightPlaceholder;
+        $imageResource['width'] = $imageSize['width'];
+        $imageResource['height'] = $imageSize['height'];
         $imageResource = (object) $imageResource;
 
         $image['resource'] = $imageResource;
