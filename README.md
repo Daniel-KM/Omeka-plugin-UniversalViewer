@@ -31,7 +31,7 @@ recent release, go to the last [distribution] in the repertory. and clone it in
 the same subdirectory. "nodejs" and other packages are not needed, because only
 the viewer is used: the IIIF server is provided directly by the plugin itself.
 
-If your images are big (more than 1 to 5 MB, according to your server and your
+If your images are big (more than 10 to 50 MB, according to your server and your
 public), it's highly recommended to tile them with a plugin such [OpenLayersZoom].
 Then, tiles will be automatically displayed by Universal Viewer.
 

@@ -46,7 +46,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
     protected $_options = array(
         'universalviewer_append_collections_show' => true,
         'universalviewer_append_items_show' => true,
-        'universalviewer_max_dynamic_size' => 10000000,
+        'universalviewer_max_dynamic_size' => 50000000,
         'universalviewer_licence' => 'http://www.example.org/license.html',
         'universalviewer_attribution' => 'Provided by Example Organization',
         'universalviewer_class' => '',
