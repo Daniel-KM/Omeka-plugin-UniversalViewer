@@ -6,7 +6,21 @@
  */
 abstract class UniversalViewer_AbstractIiifCreator
 {
+    // List of managed IIIF media types.
+    protected $_supportedFormats = array();
+
     protected $_args;
+
+    /**
+     * Check if a media type is supported.
+     *
+     * @param string $mediaType
+     * @return boolean
+     */
+    public function checkMediaType($mediaType)
+    {
+        return !empty($this->_supportedFormats[$mediaType]);
+    }
 
     /**
      * Transform an image into another image according to params.

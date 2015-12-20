@@ -6,6 +6,17 @@
  */
 class UniversalViewer_IiifCreator_Imagick extends UniversalViewer_AbstractIiifCreator
 {
+    // List of managed IIIF media types.
+    protected $_supportedFormats = array(
+        'image/jpeg' => 'JPG',
+        'image/png' => 'PNG',
+        'image/tiff' => 'TIFF',
+        'image/gif' => 'GIF',
+        'application/pdf' => 'PDF',
+        'image/jp2' => 'JP2',
+        'image/webp' => 'WEBP',
+    );
+
     /**
      * Check for the php extension.
      *
@@ -16,6 +27,8 @@ class UniversalViewer_IiifCreator_Imagick extends UniversalViewer_AbstractIiifCr
         if (!extension_loaded('imagick')) {
             throw new Exception(__('The transformation of images via ImageMagick requires the PHP extension "imagick".'));
         }
+
+        $this->_supportedFormats = array_intersect($this->_supportedFormats, Imagick::queryFormats());
     }
 
     /**
@@ -34,6 +47,12 @@ class UniversalViewer_IiifCreator_Imagick extends UniversalViewer_AbstractIiifCr
 
         $this->_args = $args;
         $args = &$this->_args;
+
+        if (!$this->checkMediaType($args['source']['mime_type'])
+                || !$this->checkMediaType($args['format']['feature'])
+            ) {
+            return;
+        }
 
         $imagick = $this->_loadImageResource($args['source']['filepath']);
         if (empty($imagick)) {
@@ -105,27 +124,13 @@ class UniversalViewer_IiifCreator_Imagick extends UniversalViewer_AbstractIiifCr
                 return;
         }
 
-        $iiifMimeTypes = array(
-            'image/jpeg' => 'JPG',
-            'image/png' => 'PNG',
-            'image/tiff' => 'TIFF',
-            'image/gif' => 'GIF',
-            'application/pdf' => 'PDF',
-            'image/jp2' => 'JP2',
-            'image/webp' => 'WEBP',
-        );
-        $supporteds = array_intersect($iiifMimeTypes, $imagick->queryFormats());
-        if (empty($supporteds[$args['format']['feature']])) {
-            $imagick->clear();
-            return;
-        }
-
         // Save resulted resource into the specified format.
         // TODO Use a true name to allow cache, or is it managed somewhere else?
         $destination = tempnam(sys_get_temp_dir(), 'uv_');
 
-        $imagick->setImageFormat($supporteds[$args['format']['feature']]);
-        $result = $imagick->writeImage($supporteds[$args['format']['feature']] . ':' . $destination);
+        $imagick->setImageFormat($this->_supportedFormats[$args['format']['feature']]);
+        $result = $imagick->writeImage($this->_supportedFormats[$args['format']['feature']] . ':' . $destination);
+
         $imagick->clear();
 
         return $result ? $destination : null;

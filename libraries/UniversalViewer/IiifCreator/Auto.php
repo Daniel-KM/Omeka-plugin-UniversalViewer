@@ -6,7 +6,6 @@
  */
 class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreator
 {
-    // List of managed IIIF mime types.
     protected $_gdMimeTypes = array();
     protected $_imagickMimeTypes = array();
 
@@ -17,6 +16,8 @@ class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreat
      */
     public function __construct()
     {
+        // For simplicity, the check is prepared here, without load of classes.
+
         // If available, use GD when source and destination formats are managed.
         if (extension_loaded('gd')) {
             $this->_gdMimeTypes = array(
@@ -47,8 +48,7 @@ class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreat
                 'image/jp2' => 'JP2',
                 'image/webp' => 'WEBP',
             );
-            $image = new Imagick();
-            $this->_imagickMimeTypes = array_intersect($iiifMimeTypes, $image->queryFormats());
+            $this->_imagickMimeTypes = array_intersect($iiifMimeTypes, Imagick::queryFormats());
         }
     }
 
@@ -65,6 +65,7 @@ class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreat
         // GD seems to be 15% speeder, so it is used first if available.
         if (!empty($this->_gdMimeTypes[$args['source']['mime_type']])
                 && !empty($this->_gdMimeTypes[$args['format']['feature']])
+                // The arbitrary rotation is not managed currently.
                 && $args['rotation']['feature'] != 'rotationArbitrary'
             ) {
             $processor = new UniversalViewer_IiifCreator_GD();

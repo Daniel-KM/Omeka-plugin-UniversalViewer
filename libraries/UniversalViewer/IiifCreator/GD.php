@@ -6,6 +6,17 @@
  */
 class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
 {
+    // List of managed IIIF media types.
+    protected $_supportedFormats = array(
+        'image/jpeg' => true,
+        'image/png' => true,
+        'image/tiff' => false,
+        'image/gif' => true,
+        'application/pdf' => false,
+        'image/jp2' => false,
+        'image/webp' => true,
+    );
+
     /**
      * Check for the php extension.
      *
@@ -15,6 +26,14 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
     {
         if (!extension_loaded('gd')) {
             throw new Exception(__('The transformation of images via GD requires the PHP extension "gd".'));
+        }
+
+        $gdInfo = gd_info();
+        if (empty($gdInfo['GIF Read Support']) || empty($gdInfo['GIF Create Support'])) {
+            $this->_supportedFormats['image/gif'] = false;
+        }
+        if (empty($gdInfo['WebP Support'])) {
+            $this->_supportedFormats['image/webp'] = false;
         }
     }
 
@@ -34,6 +53,12 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
 
         $this->_args = $args;
         $args = &$this->_args;
+
+        if (!$this->checkMediaType($args['source']['mime_type'])
+                || !$this->checkMediaType($args['format']['feature'])
+            ) {
+            return;
+        }
 
         $sourceGD = $this->_loadImageResource($args['source']['filepath']);
         if (empty($sourceGD)) {
@@ -143,29 +168,6 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
                 imagedestroy($sourceGD);
                 imagedestroy($destinationGD);
                 return;
-        }
-
-        $supporteds = array(
-            'image/jpeg' => true,
-            'image/png' => true,
-            'image/tiff' => false,
-            'image/gif' => true,
-            'application/pdf' => false,
-            'image/jp2' => false,
-            'image/webp' => true,
-        );
-        $gdInfo = gd_info();
-        if (empty($gdInfo['GIF Read Support']) || empty($gdInfo['GIF Create Support'])) {
-            $supporteds['image/gif'] = false;
-        }
-        if (empty($gdInfo['WebP Support'])) {
-            $supporteds['image/webp'] = false;
-        }
-
-        if (empty($supporteds[$args['format']['feature']])) {
-            imagedestroy($sourceGD);
-            imagedestroy($destinationGD);
-            return;
         }
 
         // Save resulted resource into the specified format.
