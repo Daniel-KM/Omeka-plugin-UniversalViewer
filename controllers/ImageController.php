@@ -131,7 +131,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         }
 
         // Now, process the requested transformation if needed.
-        $isTempFile = false;
+        $imageUrl = '';
+        $imagePath = '';
 
         // A quick check when there is no transformation.
         if ($transform['region']['feature'] == 'full'
@@ -140,7 +141,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 && $transform['quality']['feature'] == 'default'
                 && $transform['format']['feature'] == $file->mime_type
             ) {
-            $imagePath = $transform['source']['filepath'];
+            $imageUrl = $file->getWebPath('original');
         }
 
         // A transformation is needed.
@@ -148,8 +149,6 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             // Quick check if an Omeka derivative is appropriate.
             $pretiled = $this->_useOmekaDerivative($file, $transform);
             if ($pretiled) {
-                $imagePath = $pretiled['filepath'];
-
                 // Check if a light transformation is needed.
                 if ($transform['size']['feature'] != 'full'
                         || $transform['rotation']['feature'] != 'noRotation'
@@ -157,7 +156,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                         || $transform['format']['feature'] != $pretiled['mime_type']
                     ) {
                     $args = $transform;
-                    $args['source']['filepath'] = $imagePath;
+                    $args['source']['filepath'] = $pretiled['filepath'];
                     $args['source']['mime_type'] = $pretiled['mime_type'];
                     $args['source']['width'] = $pretiled['width'];
                     $args['source']['height'] = $pretiled['height'];
@@ -168,6 +167,10 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                     $args['region']['height'] = $pretiled['height'];
                     $imagePath = $this->_transformImage($args);
                 }
+                // No transformation.
+                else {
+                    $imageUrl = $file->getWebPath($pretiled['derivativeType']);
+                }
             }
 
             // Check if another image can be used.
@@ -175,8 +178,6 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 // Check if the image is pre-tiled.
                 $pretiled = $this->_usePreTiled($file, $transform);
                 if ($pretiled) {
-                    $imagePath = $pretiled['filepath'];
-
                     // Check if a light transformation is needed (all except
                     // extraction of the region).
                     if ($transform['rotation']['feature'] != 'noRotation'
@@ -184,7 +185,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                             || $transform['format']['feature'] != $pretiled['mime_type']
                         ) {
                         $args = $transform;
-                        $args['source']['filepath'] = $imagePath;
+                        $args['source']['filepath'] = $pretiled['filepath'];
                         $args['source']['mime_type'] = $pretiled['mime_type'];
                         $args['source']['width'] = $pretiled['width'];
                         $args['source']['height'] = $pretiled['height'];
@@ -195,6 +196,10 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                         $args['region']['height'] = $pretiled['height'];
                         $args['size']['feature'] = 'full';
                         $imagePath = $this->_transformImage($args);
+                    }
+                    // No transformation.
+                    else {
+                        $imageUrl = $pretiled['fileurl'];
                     }
                 }
 
@@ -210,39 +215,52 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                     $imagePath = $this->_transformImage($transform);
                 }
             }
+        }
 
-            $isTempFile = true;
-            if (empty($imagePath)) {
+        // Redirect to the url when an existing file is available.
+        if ($imageUrl) {
+            // Header for CORS, required for access of IIIF.
+            $response->setHeader('access-control-allow-origin', '*');
+            // Recommanded by feature "profileLinkHeader".
+            $response->setHeader('Link', '<http://iiif.io/api/image/2/level2.json>;rel="profile"');
+            $response->setHeader('Content-Type', $transform['format']['feature']);
+
+            // Redirect (302/307) to the url of the file.
+            // TODO This is a local file (normal server, except iiip server): use 200.
+            $this->_helper->redirector->gotoUrlAndExit($imageUrl);
+        }
+
+        //This is a transformed file.
+        elseif ($imagePath) {
+            $output = file_get_contents($imagePath);
+            unlink($imagePath);
+
+            if (empty($output)) {
                 $response->setHttpResponseCode(500);
                 $this->view->message = __('The IIIF server encountered an unexpected error that prevented it from fulfilling the request: the resulting file is not found or empty.');
                 $this->renderScript('image/error.php');
                 return;
             }
+
+            $this->_helper->viewRenderer->setNoRender();
+
+            // Header for CORS, required for access of IIIF.
+            $response->setHeader('access-control-allow-origin', '*');
+            // Recommanded by feature "profileLinkHeader".
+            $response->setHeader('Link', '<http://iiif.io/api/image/2/level2.json>;rel="profile"');
+            $response->setHeader('Content-Type', $transform['format']['feature']);
+
+            $response->clearBody();
+            $response->setBody($output);
         }
 
-        // The response should be 200, not 302, so the file should be loaded.
-        // TODO Don't load the file if local, and redirect with 200 when remote (Amazon S3). This is generally a local transformed file.
-        $output = file_get_contents($imagePath);
-        if ($isTempFile) {
-            unlink($imagePath);
-        }
-
-        if (!$output) {
+        // No result.
+        else {
             $response->setHttpResponseCode(500);
             $this->view->message = __('The IIIF server encountered an unexpected error that prevented it from fulfilling the request: the resulting file is not found or empty.');
             $this->renderScript('image/error.php');
             return;
         }
-
-        $this->_helper->viewRenderer->setNoRender();
-
-        // Header for CORS, required for access of IIIF.
-        $response->setHeader('access-control-allow-origin', '*');
-        // Recommanded by feature "profileLinkHeader".
-        $response->setHeader('Link', '<http://iiif.io/api/image/2/level2.json>;rel="profile"');
-        $response->setHeader('Content-Type', $transform['format']['feature']);
-        $response->clearBody();
-        $response->setBody($output);
     }
 
     /**
@@ -573,18 +591,10 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         }
 
         if ($useDerivativePath) {
-            // Currently, a temp file is needed to simplify unlinking in case of
-            // a light transformation.
             $derivativePath = $this->_getImagePath($file, $derivativeType);
-            $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
-            $result = copy($derivativePath, $tempPath);
-            if (!$result) {
-                return;
-            }
-            $imagePath = $tempPath;
 
             return array(
-                'filepath' => $imagePath,
+                'filepath' => $derivativePath,
                 'derivativeType' => $derivativeType,
                 'mime_type' => 'image/jpeg',
                 'width' => $derivativeWidth,
@@ -645,41 +655,20 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
             // Set the image path.
             $olz = new OpenLayersZoom_Creator();
+            $dirWeb = $olz->getZDataWeb($file);
             $dirpath = $olz->useIIPImageServer()
-                ? $olz->getZDataWeb($file)
+                ? $dirWeb
                 : $olz->getZDataDir($file);
-            $imagePath = $dirpath . sprintf('/TileGroup%d/%d-%d-%d.jpg',
+            $path = sprintf('/TileGroup%d/%d-%d-%d.jpg',
                 $tileGroup, $data['level'], $data['x'] , $data['y']);
+            // The imageUrl is used when there is no transformation.
+            $imageUrl = $dirWeb . $path;
+            $imagePath = $dirpath . $path;
             $derivativeType = 'zoom_tiles';
-            // Url on the IIPImage server.
-            if ($olz->useIIPImageServer()) {
-                $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
-                $imageContent = file_get_contents($imagePath);
-                $result = file_put_contents($imagePath, $imageContent);
-                if (!$result) {
-                    return;
-                }
-                $imagePath = $tempPath;
-            }
-
-            // Local path
-            else {
-                // TODO Manage remote server (Amazon S3).
-                if (!file_exists($imagePath)) {
-                     return;
-                }
-                // A temp file is needed to simplify unlinking in case of a
-                // light transformation.
-                $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
-                $result = copy($imagePath, $tempPath);
-                if (!$result) {
-                    return;
-                }
-                $imagePath = $tempPath;
-            }
 
             list($tileWidth, $tileHeight) = array_values($this-> _getWidthAndHeight($imagePath));
             return array(
+                'fileurl' => $imageUrl,
                 'filepath' => $imagePath,
                 'derivativeType' => $derivativeType,
                 'mime_type' => 'image/jpeg',
@@ -1108,12 +1097,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             // done.
             // TODO Load locally the external path? It will be done later.
             else {
-                // TODO In fact, it may depends on the url to allow external IIIF.
-                $storage = $file->getStorage();
-                if (get_class($storage) != 'Omeka_Storage_Adapter_Filesystem') {
-                    $filepath = $file->getWebPath($derivativeType);
-                    return $filepath;
-                }
+                $filepath = $file->getWebPath($derivativeType);
+                return $filepath;
             }
         }
     }
