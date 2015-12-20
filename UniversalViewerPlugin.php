@@ -53,6 +53,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_width' => '95%',
         'universalviewer_height' => '600px',
         'universalviewer_locale' => 'en-GB:English (GB),fr-FR:French',
+        'universalviewer_iiif_creator' => 'Auto',
     );
 
     /**
@@ -105,8 +106,20 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
     public function hookConfigForm($args)
     {
         $view = get_view();
+
+        $processors = $this->_getProcessors();
+        if (count($processors) == 1) {
+            $flash = Zend_Controller_Action_HelperBroker::getStaticHelper('FlashMessenger');
+            $flash->addMessage(__("Warning: No graphic library is installed: Universaliewer can't work.",
+                '<strong>', '</strong>'), 'error');
+            echo flash();
+        }
+
         echo $view->partial(
-            'plugins/universal-viewer-config-form.php'
+            'plugins/universal-viewer-config-form.php',
+            array(
+                'processors' => $processors,
+            )
         );
     }
 

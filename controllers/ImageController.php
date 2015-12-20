@@ -149,6 +149,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             $pretiled = $this->_useOmekaDerivative($file, $transform);
             if ($pretiled) {
                 $imagePath = $pretiled['filepath'];
+
                 // Check if a light transformation is needed.
                 if ($transform['size']['feature'] != 'full'
                         || $transform['rotation']['feature'] != 'noRotation'
@@ -247,6 +248,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
     /**
      * Check, clean and optimize the request for quicker transformation.
      *
+     * @todo Move the maximum of checks in ImageCreator/UniversalViewer_AbstractIiifCreator.
+     *
      * @param File $file
      * @return array|null Array of cleaned requested image, else null.
      */
@@ -260,8 +263,6 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         list($sourceWidth, $sourceHeight) = array_values($this->_getImageSize($file, 'original'));
         $transform['source']['width'] = $sourceWidth;
         $transform['source']['height'] = $sourceHeight;
-
-        // TODO Move the maximum of checks in _transformImage().
 
         // The regex in the route implies that all requests are valid (no 501),
         // but may be bad formatted (400).
@@ -288,7 +289,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         elseif (strpos($region, 'pct:') === 0) {
             $regionValues = explode(',', substr($region, 4));
             if (count($regionValues) != 4) {
-                $this->view->message = __('The IIIF server cannot fulfil the request: the region "%s" is incorrect.', $region);
+                $this->view->message = __('The IIIF server cannot fulfill the request: the region "%s" is incorrect.', $region);
                 return;
             }
             $regionValues = array_map('floatval', $regionValues);
@@ -319,7 +320,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         else {
             $regionValues = explode(',', $region);
             if (count($regionValues) != 4) {
-                $this->view->message = __('The IIIF server cannot fulfil the request: the region "%s" is incorrect.', $region);
+                $this->view->message = __('The IIIF server cannot fulfill the request: the region "%s" is incorrect.', $region);
                 return;
             }
             $regionValues = array_map('intval', $regionValues);
@@ -357,7 +358,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         elseif (strpos($size, 'pct:') === 0) {
             $sizePercentage = floatval(substr($size, 4));
             if (empty($sizePercentage) || $sizePercentage > 100) {
-                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is incorrect.', $size);
+                $this->view->message = __('The IIIF server cannot fulfill the request: the size "%s" is incorrect.', $size);
                 return;
             }
             // A quick check to avoid a possible transformation.
@@ -377,7 +378,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             $destinationWidth = (integer) substr($size, 1, $pos);
             $destinationHeight = (integer) substr($size, $pos + 1);
             if (empty($destinationWidth) || empty($destinationHeight)) {
-                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is incorrect.', $size);
+                $this->view->message = __('The IIIF server cannot fulfill the request: the size "%s" is incorrect.', $size);
                 return;
             }
             // A quick check to avoid a possible transformation.
@@ -400,7 +401,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             $destinationWidth = (integer) substr($size, 0, $pos);
             $destinationHeight = (integer) substr($size, $pos + 1);
             if (empty($destinationWidth) && empty($destinationHeight)) {
-                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is incorrect.', $size);
+                $this->view->message = __('The IIIF server cannot fulfill the request: the size "%s" is incorrect.', $size);
                 return;
             }
 
@@ -449,7 +450,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
             // Not supported.
             else {
-                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is not supported.', $size);
+                $this->view->message = __('The IIIF server cannot fulfill the request: the size "%s" is not supported.', $size);
                 return;
             }
 
@@ -457,7 +458,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             if (isset($transform['size']['width']) && empty($transform['size']['width'])
                     || isset($transform['size']['height']) && empty($transform['size']['height'])
                 ) {
-                $this->view->message = __('The IIIF server cannot fulfil the request: the size "%s" is not supported.', $size);
+                $this->view->message = __('The IIIF server cannot fulfill the request: the size "%s" is not supported.', $size);
                 return;
             }
         }
@@ -480,7 +481,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         else {
             $transform['rotation']['feature'] = 'rotationArbitrary';
             // TODO if ($rotation > 360) {}
-            $this->view->message = __('The IIIF server cannot fulfil the request: the rotation "%s" is not supported.', $rotation);
+            $this->view->message = __('The IIIF server cannot fulfill the request: the rotation "%s" is not supported.', $rotation);
             return;
         }
 
@@ -987,290 +988,13 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
     /**
      * Transform a file according to parameters.
      *
-     * @internal GD is used because it's installed by default with php and is
-     * quicker for simple processes.
-     *
      * @param array $args Contains the filepath and the parameters.
      * @return string|null The filepath to the temp image if success.
      */
     protected function _transformImage($args)
     {
-        $sourceGD = $this->_loadImageResource($args['source']['filepath']);
-        if (empty($sourceGD)) {
-            return;
-        }
-
-        // Get width and height if missing.
-        if (empty($args['source']['width']) || empty($args['source']['height'])) {
-            $args['source']['width'] = imagesx($sourceGD);
-            $args['source']['height'] = imagesy($sourceGD);
-        }
-
-        switch ($args['region']['feature']) {
-            case 'full':
-                $sourceX = 0;
-                $sourceY = 0;
-                $sourceWidth = $args['source']['width'];
-                $sourceHeight = $args['source']['height'];
-                break;
-
-            case 'regionByPx':
-                if ($args['region']['x'] >= $args['source']['width']) {
-                    imagedestroy($sourceGD);
-                    return;
-                }
-                if ($args['region']['y'] >= $args['source']['height']) {
-                    imagedestroy($sourceGD);
-                    return;
-                }
-                $sourceX = $args['region']['x'];
-                $sourceY = $args['region']['y'];
-                $sourceWidth = ($sourceX + $args['region']['width']) <= $args['source']['width']
-                    ? $args['region']['width']
-                    : $args['source']['width'] - $sourceX;
-                $sourceHeight = ($sourceY + $args['region']['height']) <= $args['source']['height']
-                    ? $args['region']['height']
-                    : $args['source']['height'] - $sourceY;
-                break;
-
-            case 'regionByPct':
-                // Percent > 100 has already been checked.
-                $sourceX = $args['source']['width'] * $args['region']['x'] / 100;
-                $sourceY = $args['source']['height'] * $args['region']['y'] / 100;
-                $sourceWidth = ($args['region']['x'] + $args['region']['width']) <= 100
-                    ? $args['source']['width'] * $args['region']['width'] / 100
-                    : $args['source']['width'] - $sourceX;
-                $sourceHeight = ($args['region']['y'] + $args['region']['height']) <= 100
-                    ? $args['source']['height'] * $args['region']['height'] / 100
-                    : $args['source']['height'] - $sourceY;
-                break;
-
-            default:
-                imagedestroy($sourceGD);
-                return;
-       }
-
-        // Final generic check for region of the source.
-        if ($sourceX < 0 || $sourceX >= $args['source']['width']
-                || $sourceY < 0 || $sourceY >= $args['source']['height']
-                || $sourceWidth <= 0 || $sourceWidth > $args['source']['width']
-                || $sourceHeight <= 0 || $sourceHeight > $args['source']['height']
-            ) {
-            imagedestroy($sourceGD);
-            return;
-        }
-
-        // The size is checked against the region, not the source.
-        switch ($args['size']['feature']) {
-            case 'full':
-                $destinationWidth = $sourceWidth;
-                $destinationHeight = $sourceHeight;
-                break;
-
-            case 'sizeByPct':
-                $destinationWidth = $sourceWidth * $args['size']['percentage'] / 100;
-                $destinationHeight = $sourceHeight * $args['size']['percentage'] / 100;
-                break;
-
-            case 'sizeByWhListed':
-            case 'sizeByForcedWh':
-                $destinationWidth = $args['size']['width'];
-                $destinationHeight = $args['size']['height'];
-                break;
-
-            case 'sizeByW':
-                $destinationWidth = $args['size']['width'];
-                $destinationHeight = $destinationWidth * $sourceHeight / $sourceWidth;
-                break;
-
-            case 'sizeByH':
-                $destinationHeight = $args['size']['height'];
-                $destinationWidth = $destinationHeight * $sourceWidth / $sourceHeight;
-                break;
-
-            case 'sizeByWh':
-                // Check sizes before testing.
-                if ($args['size']['width'] > $sourceWidth) {
-                    $args['size']['width'] = $sourceWidth;
-                }
-                if ($args['size']['height'] > $sourceHeight) {
-                    $args['size']['height'] = $sourceHeight;
-                }
-                // Check ratio to find best fit.
-                $destinationHeight = $args['size']['width'] * $sourceHeight / $sourceWidth;
-                if ($destinationHeight > $args['size']['height']) {
-                    $destinationWidth = $args['size']['height'] * $sourceWidth / $sourceHeight;
-                    $destinationHeight = $args['size']['height'];
-                }
-                // Ratio of height is better, so keep it.
-                else {
-                    $destinationWidth = $args['size']['width'];
-                }
-                break;
-
-            default:
-                imagedestroy($sourceGD);
-                return;
-        }
-
-        // Final generic checks for size.
-        if (empty($destinationWidth) || empty($destinationHeight)) {
-            imagedestroy($sourceGD);
-            return;
-        }
-
-        $destinationGD = imagecreatetruecolor($destinationWidth, $destinationHeight);
-        // The background is normally useless, but it's costless.
-        $black = imagecolorallocate($destinationGD, 0, 0, 0);
-        imagefill($destinationGD, 0, 0, $black);
-        $result = imagecopyresampled($destinationGD, $sourceGD, 0, 0, $sourceX, $sourceY, $destinationWidth, $destinationHeight, $sourceWidth, $sourceHeight);
-
-        if ($result === false) {
-            imagedestroy($sourceGD);
-            imagedestroy($destinationGD);
-            return;
-        }
-
-        // Rotation.
-        switch ($args['rotation']['feature']) {
-            case 'noRotation':
-                break;
-
-            case 'rotationBy90s':
-                switch ($args['rotation']['degrees']) {
-                    case 90:
-                    case 270:
-                        $i = $destinationWidth;
-                        $destinationWidth = $destinationHeight;
-                        $destinationHeight = $i;
-                        // GD uses anticlockwise rotation.
-                        $degrees = $args['rotation']['degrees'] == 90 ? 270 : 90;
-                        // Continues below.
-                    case 180:
-                        $degrees = isset($degrees) ? $degrees : 180;
-
-                        // imagerotate() returns a resource, not a boolean.
-                        $destinationGDrotated = imagerotate($destinationGD, $degrees, 0);
-                        imagedestroy($destinationGD);
-                        if ($destinationGDrotated === false) {
-                            imagedestroy($sourceGD);
-                            return;
-                        }
-                        $destinationGD = &$destinationGDrotated;
-                        break;
-                }
-                break;
-
-            case 'rotationArbitrary':
-                // Currently not managed.
-
-            default:
-                imagedestroy($sourceGD);
-                imagedestroy($destinationGD);
-                return;
-        }
-
-        // Quality.
-        switch ($args['quality']['feature']) {
-            case 'default':
-                break;
-
-            case 'color':
-                // No change, because only one image is managed.
-                break;
-
-            case 'gray':
-                $result = imagefilter($destinationGD, IMG_FILTER_GRAYSCALE);
-                if ($result === false) {
-                    imagedestroy($sourceGD);
-                    imagedestroy($destinationGD);
-                    return;
-                }
-                break;
-
-            case 'bitonal':
-                $result = imagefilter($destinationGD, IMG_FILTER_GRAYSCALE);
-                $result = imagefilter($destinationGD, IMG_FILTER_CONTRAST, -65535);
-                if ($result === false) {
-                    imagedestroy($sourceGD);
-                    imagedestroy($destinationGD);
-                    return;
-                }
-                break;
-
-            default:
-                imagedestroy($sourceGD);
-                imagedestroy($destinationGD);
-                return;
-        }
-
-        // Save resulted resource into the specified format.
-        // TODO Use a true name to allow cache, or is it managed somewhere else?
-        $destination = tempnam(sys_get_temp_dir(), 'uv_');
-
-        switch ($args['format']['feature']) {
-            case 'image/jpeg':
-                $result = imagejpeg($destinationGD, $destination);
-                break;
-            case 'image/png':
-                $result = imagepng($destinationGD, $destination);
-                break;
-            case 'image/gif':
-                $result = imagegif($destinationGD, $destination);
-                break;
-            case 'image/webp':
-            case 'image/tiff':
-            case 'application/pdf':
-            case 'image/jp2':
-            default:
-                $result = false;
-                break;
-        }
-
-        imagedestroy($sourceGD);
-        imagedestroy($destinationGD);
-
-        return $result ? $destination : null;
-    }
-
-    /**
-     * GD uses multiple functions to load an image, so this one manages all.
-     *
-     * @param string $source Path of the managed image file
-     * @return false|GD image ressource
-     */
-    protected function _loadImageResource($source)
-    {
-        if (empty($source)) {
-            return false;
-        }
-
-        try {
-            // The source can be a local file or an external one.
-            $file = new File;
-            $storageAdapter = $file->getStorage()->getAdapter();
-            if (get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem') {
-                if (!is_readable($source)) {
-                    return false;
-                }
-                $result = imagecreatefromstring(file_get_contents($source));
-            }
-            // When the storage is external, the file should be fetched before.
-            else {
-                $tempPath = tempnam(sys_get_temp_dir(), 'uv_');
-                $result = copy($source, $tempPath);
-                if (!$result) {
-                    return false;
-                }
-                $result = imagecreatefromstring(file_get_contents($tempPath));
-                unlink($tempPath);
-            }
-        } catch (Exception $e) {
-            _log(__("GD failed to open the file \"%s\". Details:\n%s", $source, $e->getMessage()), Zend_Log::ERR);
-            return false;
-        }
-
-        return $result;
+        $creator = new UniversalViewer_IiifCreator();
+        return $creator->transform($args);
     }
 
     /**
@@ -1382,6 +1106,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             // done.
             // TODO Load locally the external path? It will be done later.
             else {
+                // TODO In fact, it may depends on the url to allow external IIIF.
                 $storage = $file->getStorage();
                 if (get_class($storage) != 'Omeka_Storage_Adapter_Filesystem') {
                     $filepath = $file->getWebPath($derivativeType);
