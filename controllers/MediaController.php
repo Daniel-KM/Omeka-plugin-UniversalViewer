@@ -93,7 +93,7 @@ class UniversalViewer_MediaController extends Omeka_Controller_AbstractActionCon
     }
 
     /**
-     * Returns sized image for the current file.
+     * Returns the current file.
      */
     public function fetchAction()
     {
@@ -105,35 +105,40 @@ class UniversalViewer_MediaController extends Omeka_Controller_AbstractActionCon
 
         $response = $this->getResponse();
 
-        // Amazon can't use the local path.
-        $storage = $file->getStorage();
-        $filepath = get_class($storage) == 'Omeka_Storage_Adapter_Filesystem'
-            ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath('original')
-            : $file->getWebPath('original');
-        if (!file_exists($filepath)) {
+        // Because there is no conversion currently, the format should be
+        // checked.
+        $format = strtolower($this->getParam('format'));
+        if (pathinfo($file->filename, PATHINFO_EXTENSION) != $format) {
             $response->setHttpResponseCode(500);
-            $this->view->message = __('The IXIF server encountered an unexpected error that prevented it from fulfilling the request: the resulting file is not found.');
+            $this->view->message = __('The IXIF server encountered an unexpected error that prevented it from fulfilling the request: the requested format is not supported.');
             $this->renderScript('image/error.php');
             return;
         }
 
-        // The response should be 200, not 302, so the file should be loaded.
-        // TODO Don't load the file if local, and redirect with 200 when remote (Amazon S3).
-        $output = file_get_contents($filepath);
-        if (empty($output)) {
-            $response->setHttpResponseCode(500);
-            $this->view->message = __('The IXIF server encountered an unexpected error that prevented it from fulfilling the request: the resulting file is not found or empty.');
-            $this->renderScript('image/error.php');
-            return;
+        // The source can be a local file or an external one (Amazon S3).
+        // A check can be added if the file is local.
+        $storageAdapter = Zend_Registry::get('storage')->getAdapter();
+        if (get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem') {
+            $filepath = FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath('original');
+            if (!file_exists($filepath) || filesize($filepath) == 0) {
+                $response->setHttpResponseCode(500);
+                $this->view->message = __('The IXIF server encountered an unexpected error that prevented it from fulfilling the request: the resulting file is not found.');
+                $this->renderScript('image/error.php');
+                return;
+            }
         }
-
-        $this->_helper->viewRenderer->setNoRender();
+        // TODO Check if the external url is not empty.
 
         // Header for CORS, required for access of IXIF.
         $response->setHeader('access-control-allow-origin', '*');
         $response->setHeader('Content-Type', $file->mime_type);
-        $response->clearBody();
-        $response->setBody($output);
+
+        // TODO This is a local file (normal server): use 200.
+
+        // Redirect (302/307) to the url of the file.
+        $fileurl = $file->getWebPath('original');
+        $this->_helper->redirector->setGotoUrl($fileurl);
+        $this->_helper->redirector->redirectAndExit();
     }
 
     /**

@@ -109,7 +109,8 @@ automatically done.
 - Media: Currently, no image should be available in the same item.
 - Audio/Video: the format should be supported by the browser of the user. In
 fact, only open, free and/or common codecs are really supported: "mp3" and "ogg"
-for audio and "webm" and "ogv" for video.
+for audio and "webm" and "ogv" for video. They can be modified in the file
+"routes.ini".
 
 *Warning*
 
