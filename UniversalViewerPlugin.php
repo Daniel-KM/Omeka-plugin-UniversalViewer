@@ -60,6 +60,23 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      */
     public function hookInstall()
     {
+        $processors = $this->_getProcessors();
+        if (count($processors) == 1) {
+            throw new Omeka_Plugin_Exception(__('At least one graphic processor (GD or ImageMagick) is required to use the UniversalViewer.'));
+        }
+
+        $js = dirname(__FILE__)
+            . DIRECTORY_SEPARATOR . 'views'
+            . DIRECTORY_SEPARATOR . 'shared'
+            . DIRECTORY_SEPARATOR . 'javascripts'
+            . DIRECTORY_SEPARATOR . 'uv'
+            . DIRECTORY_SEPARATOR . 'lib'
+            . DIRECTORY_SEPARATOR . 'embed.js';
+        if (!file_exists($js)) {
+            throw new Omeka_Plugin_Exception(__('UniversalViewer library should be installed. See %sReadme%s.',
+                '<a href="https://github.com/Daniel-KM/UniversalViewer4Omeka#installation">', '</a>'));
+        }
+
         $this->_installOptions();
     }
 
@@ -305,5 +322,22 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
     {
         $args['view'] = $view;
         return $view->universalViewer($args);
+    }
+
+    /**
+     * Check and return the list of available processors.
+     *
+     * @return array Associative array of available processors.
+     */
+    protected function _getProcessors()
+    {
+        $processors = array(
+            'Auto' => __('Automatic'),
+        );
+        if (extension_loaded('gd')) {
+            $processors['GD'] = 'GD';
+        }
+
+        return $processors;
     }
 }
