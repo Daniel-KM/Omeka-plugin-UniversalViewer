@@ -32,6 +32,9 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
             return;
         }
 
+        $this->_args = $args;
+        $args = &$this->_args;
+
         $sourceGD = $this->_loadImageResource($args['source']['filepath']);
         if (empty($sourceGD)) {
             return;
@@ -43,118 +46,19 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
             $args['source']['height'] = imagesy($sourceGD);
         }
 
-        switch ($args['region']['feature']) {
-            case 'full':
-                $sourceX = 0;
-                $sourceY = 0;
-                $sourceWidth = $args['source']['width'];
-                $sourceHeight = $args['source']['height'];
-                break;
-
-            case 'regionByPx':
-                if ($args['region']['x'] >= $args['source']['width']) {
-                    imagedestroy($sourceGD);
-                    return;
-                }
-                if ($args['region']['y'] >= $args['source']['height']) {
-                    imagedestroy($sourceGD);
-                    return;
-                }
-                $sourceX = $args['region']['x'];
-                $sourceY = $args['region']['y'];
-                $sourceWidth = ($sourceX + $args['region']['width']) <= $args['source']['width']
-                    ? $args['region']['width']
-                    : $args['source']['width'] - $sourceX;
-                $sourceHeight = ($sourceY + $args['region']['height']) <= $args['source']['height']
-                    ? $args['region']['height']
-                    : $args['source']['height'] - $sourceY;
-                break;
-
-            case 'regionByPct':
-                // Percent > 100 has already been checked.
-                $sourceX = $args['source']['width'] * $args['region']['x'] / 100;
-                $sourceY = $args['source']['height'] * $args['region']['y'] / 100;
-                $sourceWidth = ($args['region']['x'] + $args['region']['width']) <= 100
-                    ? $args['source']['width'] * $args['region']['width'] / 100
-                    : $args['source']['width'] - $sourceX;
-                $sourceHeight = ($args['region']['y'] + $args['region']['height']) <= 100
-                    ? $args['source']['height'] * $args['region']['height'] / 100
-                    : $args['source']['height'] - $sourceY;
-                break;
-
-            default:
-                imagedestroy($sourceGD);
-                return;
-       }
-
-        // Final generic check for region of the source.
-        if ($sourceX < 0 || $sourceX >= $args['source']['width']
-                || $sourceY < 0 || $sourceY >= $args['source']['height']
-                || $sourceWidth <= 0 || $sourceWidth > $args['source']['width']
-                || $sourceHeight <= 0 || $sourceHeight > $args['source']['height']
-            ) {
+        $extraction = $this->_prepareExtraction();
+        if (!$extraction) {
             imagedestroy($sourceGD);
             return;
         }
 
-        // The size is checked against the region, not the source.
-        switch ($args['size']['feature']) {
-            case 'full':
-                $destinationWidth = $sourceWidth;
-                $destinationHeight = $sourceHeight;
-                break;
-
-            case 'sizeByPct':
-                $destinationWidth = $sourceWidth * $args['size']['percentage'] / 100;
-                $destinationHeight = $sourceHeight * $args['size']['percentage'] / 100;
-                break;
-
-            case 'sizeByWhListed':
-            case 'sizeByForcedWh':
-                $destinationWidth = $args['size']['width'];
-                $destinationHeight = $args['size']['height'];
-                break;
-
-            case 'sizeByW':
-                $destinationWidth = $args['size']['width'];
-                $destinationHeight = $destinationWidth * $sourceHeight / $sourceWidth;
-                break;
-
-            case 'sizeByH':
-                $destinationHeight = $args['size']['height'];
-                $destinationWidth = $destinationHeight * $sourceWidth / $sourceHeight;
-                break;
-
-            case 'sizeByWh':
-                // Check sizes before testing.
-                if ($args['size']['width'] > $sourceWidth) {
-                    $args['size']['width'] = $sourceWidth;
-                }
-                if ($args['size']['height'] > $sourceHeight) {
-                    $args['size']['height'] = $sourceHeight;
-                }
-                // Check ratio to find best fit.
-                $destinationHeight = $args['size']['width'] * $sourceHeight / $sourceWidth;
-                if ($destinationHeight > $args['size']['height']) {
-                    $destinationWidth = $args['size']['height'] * $sourceWidth / $sourceHeight;
-                    $destinationHeight = $args['size']['height'];
-                }
-                // Ratio of height is better, so keep it.
-                else {
-                    $destinationWidth = $args['size']['width'];
-                }
-                break;
-
-            default:
-                imagedestroy($sourceGD);
-                return;
-        }
-
-        // Final generic checks for size.
-        if (empty($destinationWidth) || empty($destinationHeight)) {
-            imagedestroy($sourceGD);
-            return;
-        }
+        list(
+            $sourceX,
+            $sourceY,
+            $sourceWidth,
+            $sourceHeight,
+            $destinationWidth,
+            $destinationHeight) = $extraction;
 
         $destinationGD = imagecreatetruecolor($destinationWidth, $destinationHeight);
         // The background is normally useless, but it's costless.
