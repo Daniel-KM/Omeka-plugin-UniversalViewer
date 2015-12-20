@@ -35,6 +35,12 @@ If your images are big (more than 10 to 50 MB, according to your server and your
 public), it's highly recommended to tile them with a plugin such [OpenLayersZoom].
 Then, tiles will be automatically displayed by Universal Viewer.
 
+Images are transformed internally via the GD or the ImageMagick libraries. GD is
+generally a little quicker, but ImageMagick manages many more formats. An option
+allows to select the library to use according to your server and your documents.
+So at least one of the php libraries ("php5-gd" and "php5-imagick" on Debian)
+should be installed.
+
 Then install it like any other Omeka plugin.
 
 Options for the integration of the player can be changed in the config page.
