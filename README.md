@@ -25,22 +25,6 @@ Installation
 
 Uncompress files and rename plugin folder "UniversalViewer".
 
-Then uncompress and rename "uv" the last [official release] of the [UniversalViewer]
-in the subdirectory `views/shared/javascripts` of the plugin. If you want a more
-recent release, go to the last [distribution] in the repertory. and clone it in
-the same subdirectory. "nodejs" and other packages are not needed, because only
-the viewer is used: the IIIF server is provided directly by the plugin itself.
-
-If your images are big (more than 10 to 50 MB, according to your server and your
-public), it's highly recommended to tile them with a plugin such [OpenLayersZoom].
-Then, tiles will be automatically displayed by Universal Viewer.
-
-Images are transformed internally via the GD or the ImageMagick libraries. GD is
-generally a little quicker, but ImageMagick manages many more formats. An option
-allows to select the library to use according to your server and your documents.
-So at least one of the php libraries ("php5-gd" and "php5-imagick" on Debian)
-should be installed.
-
 Then install it like any other Omeka plugin.
 
 Options for the integration of the player can be changed in the config page.
@@ -51,6 +35,28 @@ Options for the IIIF server can be changed in the helpers "IiifCollection.php",
 "IiifManifest.php" and "IiifInfo.php" of the plugin.
 
 See below the notes for more info.
+
+* Javascript library "UniversalViewer"
+
+Since version 2.2.1, the distribution release of the javascript library [UniversalViewer]
+is included in the folder `views/shared/javascripts/uv/`. If you want a more
+recent release, clone the last [distribution] in the same directory. "nodejs",
+other packages and any other files are not needed, because only the viewer is
+used: the IIIF server is provided directly by the plugin itself.
+
+* Processing of images
+
+Images are transformed internally via the GD or the ImageMagick libraries. GD is
+generally a little quicker, but ImageMagick manages many more formats. An option
+allows to select the library to use according to your server and your documents.
+So at least one of the php libraries ("php5-gd" and "php5-imagick" on Debian)
+should be installed.
+
+* Display of big images
+
+If your images are big (more than 10 to 50 MB, according to your server and your
+public), it's highly recommended to tile them with a plugin such [OpenLayersZoom].
+Then, tiles will be automatically displayed by Universal Viewer.
 
 
 Usage
