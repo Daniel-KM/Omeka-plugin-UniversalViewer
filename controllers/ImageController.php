@@ -257,7 +257,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         // No result.
         else {
             $response->setHttpResponseCode(500);
-            $this->view->message = __('The IIIF server encountered an unexpected error that prevented it from fulfilling the request: the resulting file is not found or empty.');
+            $this->view->message = __('The IIIF server encountered an unexpected error that prevented it from fulfilling the request: the resulting file is empty or not found.');
             $this->renderScript('image/error.php');
             return;
         }
