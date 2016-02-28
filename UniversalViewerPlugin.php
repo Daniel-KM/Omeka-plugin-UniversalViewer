@@ -108,10 +108,17 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         $view = get_view();
 
         $processors = $this->_getProcessors();
+
+        $flash = Zend_Controller_Action_HelperBroker::getStaticHelper('FlashMessenger');
         if (count($processors) == 1) {
-            $flash = Zend_Controller_Action_HelperBroker::getStaticHelper('FlashMessenger');
             $flash->addMessage(__("Warning: No graphic library is installed: Universaliewer can't work.",
                 '<strong>', '</strong>'), 'error');
+            echo flash();
+        }
+
+        if (!isset($processors['Imagick'])) {
+            $flash->addMessage(__('Warning: Imagick is not installed: Only standard images (jpg, png, gif and webp) will be processed.',
+                '<strong>', '</strong>'), 'info');
             echo flash();
         }
 

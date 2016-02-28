@@ -4,8 +4,8 @@ Universal Viewer (plugin for Omeka)
 [Universal Viewer] is a plugin for [Omeka] that adds the [IIIF] specifications
 in order to serve images like an [IIPImage] server, and the [UniversalViewer], a
 unified online player for any file. It can display books, images, maps, audio,
-movies, pdf and anything else as long as the appropriate extension is installed.
-Rotation, zoom, inside search, etc. may be managed too.
+movies, pdf, 3D, and anything else as long as the appropriate extension is
+installed. Rotation, zoom, inside search, etc. may be managed too.
 
 The full specification of the "International Image Interoperability Framework"
 standard is supported (level 2), so any other widget that supports it can use it.
@@ -49,7 +49,7 @@ used: the IIIF server is provided directly by the plugin itself.
 Images are transformed internally via the GD or the ImageMagick libraries. GD is
 generally a little quicker, but ImageMagick manages many more formats. An option
 allows to select the library to use according to your server and your documents.
-So at least one of the php libraries ("php5-gd" and "php5-imagick" on Debian)
+So at least one of the php libraries ("php-gd" and "php-imagick" on Debian)
 should be installed.
 
 * Display of big images
