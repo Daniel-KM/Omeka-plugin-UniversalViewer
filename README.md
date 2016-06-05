@@ -186,8 +186,9 @@ Copyright
 Widget [UniversalViewer]:
 
 * Copyright Wellcome Library, 2013
-* Copyright British Library, 2015
-* Copyright National Library of Wales, 2015
+* Copyright British Library, 2015-2016
+* Copyright National Library of Wales, 2015-2016
+* Copyright [Edward Silverton] 2013-2016
 
 Plugin Universal Viewer for Omeka:
 
@@ -208,7 +209,7 @@ Plugin Universal Viewer for Omeka:
 [demo]: https://patrimoine.mines-paristech.fr/collections/play/7
 [Bibliothèque patrimoniale]: https://patrimoine.mines-paristech.fr
 [Mines ParisTech]: http://mines-paristech.fr
-[example server]: http://universalviewer.azurewebsites.net
+[example server]: http://universalviewer.io/examples/
 [official release]: https://github.com/UniversalViewer/universalviewer/releases
 [distribution]: https://github.com/UniversalViewer/universalviewer/tree/master/dist
 [OpenLayersZoom]: https://github.com/Daniel-KM/OpenLayersZoom
@@ -219,4 +220,5 @@ Plugin Universal Viewer for Omeka:
 [FSF]: https://www.fsf.org
 [OSI]: http://opensource.org
 [MIT licence]: https://github.com/UniversalViewer/universalviewer/blob/master/LICENSE.txt
+[edsilv]: https://github.com/edsilv
 [Daniel-KM]: https://github.com/Daniel-KM "Daniel Berthereau"
