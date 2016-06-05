@@ -27,12 +27,15 @@ Uncompress files and rename plugin folder "UniversalViewer".
 
 Then install it like any other Omeka plugin.
 
-Options for the integration of the player can be changed in the config page.
-Options for the UniversalViewer player can be changed in the json file
-"config.json": copy and update it in a folder named "universal-viewer" in your
-theme.
-Options for the IIIF server can be changed in the helpers "IiifCollection.php",
-"IiifManifest.php" and "IiifInfo.php" of the plugin.
+Some options can be set:
+- Options for the integration of the player can be changed in the config page.
+- Options for the UniversalViewer player can be changed in the json file
+  "config.json": copy and update it in a folder named "universal-viewer" inside
+  the folder of the theme.
+- To use an alternative config for some items, add an option `config` with
+  its url in the array of arguments passed to the viewer (see below).
+- Options for the IIIF server can be changed in the helpers "IiifCollection.php",
+  "IiifManifest.php" and "IiifInfo.php" of the plugin.
 
 See below the notes for more info.
 
@@ -76,28 +79,32 @@ current record'collection' or 'item').
 
 * Helper (recommended)
 
-```
-     echo $this->universalViewer();
+```php
+    // Display the viewer with the current record and default parameters.
+    echo $this->universalViewer();
+
+    // Display the viewer with the specified item and specified config.
+    echo $this->universalViewer(array(
+        'item' => $item,
+        'config' => 'https://example.com/my/specific/config.json',
+    ));
 ```
 
 * Shortcode
     - In a field that can be shortcoded: `[uv]`.
+    - In the theme:
 
-```
-    <?php
+```php
         echo $this->shortcodes('[uv record=1 type=collection]');
-    ?>
 ```
 
 * Hook
 
-```
-    <?php
+```php
     echo get_specific_plugin_hook_output('UniversalViewer', 'public_items_show', array(
         'record' => $item,
         'view' => $this,
     ));
-    ?>
 ```
 
 All mechanisms share the same arguments and all of them are optional. For the

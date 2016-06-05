@@ -19,6 +19,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
      *   - (string) width
      *   - (string) height
      *   - (string) locale
+     *   - (string) config
      * The only one record is defined according to the priority above.
      * @return string. The html string corresponding to the UniversalViewer.
      */
@@ -74,7 +75,10 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
                 'id' => $record->id,
             ), 'universalviewer_presentation_manifest');
 
-        $config = src('config', 'universal-viewer', 'json');
+        // Default configuration file.
+        $config = empty($args['config'])
+            ? src('config', 'universal-viewer', 'json')
+            : $args['config'];
         $urlJs = src('embed', 'javascripts/uv/lib', 'js');
 
         $html = sprintf('<div class="uv%s" data-config="%s" data-uri="%s"%s style="background-color: #000;%s%s"></div>',
