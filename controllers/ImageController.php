@@ -666,15 +666,22 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             $imagePath = $dirpath . $path;
             $derivativeType = 'zoom_tiles';
 
+            // The use of a full url avoids some complexity when Omeka is not
+            // the root of the server.
+            $serverUrlHelper = new Zend_View_Helper_ServerUrl;
+            $serverUrl = $serverUrlHelper->serverUrl();
+
             list($tileWidth, $tileHeight) = array_values($this-> _getWidthAndHeight($imagePath));
-            return array(
-                'fileurl' => $imageUrl,
+
+            $return = array(
+                'fileurl' => $serverUrl . $imageUrl,
                 'filepath' => $imagePath,
                 'derivativeType' => $derivativeType,
                 'mime_type' => 'image/jpeg',
                 'width' => $tileWidth,
                 'height' => $tileHeight,
             );
+            return $return;
         }
     }
 
