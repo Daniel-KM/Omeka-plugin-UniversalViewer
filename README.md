@@ -191,7 +191,7 @@ Widget [UniversalViewer]:
 
 Plugin Universal Viewer for Omeka:
 
-* Copyright Daniel Berthereau, 2015
+* Copyright Daniel Berthereau, 2015-2016
 
 
 [Universal Viewer]: https://github.com/Daniel-KM/UniversalViewer4Omeka
