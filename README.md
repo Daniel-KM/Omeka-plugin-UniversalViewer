@@ -227,5 +227,5 @@ Plugin Universal Viewer for Omeka:
 [FSF]: https://www.fsf.org
 [OSI]: http://opensource.org
 [MIT licence]: https://github.com/UniversalViewer/universalviewer/blob/master/LICENSE.txt
-[edsilv]: https://github.com/edsilv
+[Edward Silverton]: https://github.com/edsilv
 [Daniel-KM]: https://github.com/Daniel-KM "Daniel Berthereau"
