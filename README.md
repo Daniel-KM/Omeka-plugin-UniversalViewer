@@ -91,11 +91,12 @@ current record'collection' or 'item').
 ```
 
 * Shortcode
-    - In a field that can be shortcoded: `[uv]`.
-    - In the theme:
+
+  - In a field that can be shortcoded: `[uv]`.
+  - In the theme:
 
 ```php
-        echo $this->shortcodes('[uv record=1 type=collection]');
+    echo $this->shortcodes('[uv record=1 type=collection]');
 ```
 
 * Hook
