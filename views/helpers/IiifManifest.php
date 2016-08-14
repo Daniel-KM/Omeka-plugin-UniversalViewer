@@ -748,7 +748,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $dirpath = $olz->useIIPImageServer()
             ? $olz->getZDataWeb($file)
             : $olz->getZDataDir($file);
-        $properties = simplexml_load_file($dirpath . '/ImageProperties.xml');
+        $properties = simplexml_load_file($dirpath . '/ImageProperties.xml', 'SimpleXMLElement', LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_PARSEHUGE);
         if ($properties === false) {
             return;
         }

@@ -945,7 +945,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         $dirpath = $olz->useIIPImageServer()
             ? $olz->getZDataWeb($file)
             : $olz->getZDataDir($file);
-        $properties = simplexml_load_file($dirpath . '/ImageProperties.xml');
+        $properties = simplexml_load_file($dirpath . '/ImageProperties.xml', 'SimpleXMLElement', LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_PARSEHUGE);
         if ($properties === false) {
             return;
         }
