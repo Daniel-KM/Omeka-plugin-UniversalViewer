@@ -97,9 +97,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $file = get_db()->getTable('File')->findWithImages($record->id, 1);
         $thumbnail = $this->_iiifThumbnail($file);
 
-        $licence = get_option('universalviewer_licence');
+        $licence = apply_filters('uv_item_manifest_licence', get_option('universalviewer_licence'), ['record' => $record]);
 
-        $attribution = get_option('universalviewer_attribution');
+        $attribution = apply_filters('uv_item_manifest_attribution', get_option('universalviewer_attribution'), ['record' => $record]);
 
         // TODO To parameter or to extract from metadata.
         $service = '';
