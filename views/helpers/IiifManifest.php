@@ -85,6 +85,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 );
             }
         }
+        $metadata = apply_filters('uv_item_manifest_metadata', $metadata, array('record' => $record));
 
         $title = isset($elementTexts['Dublin Core']['Title'][0])
             ? $elementTexts['Dublin Core']['Title'][0]
