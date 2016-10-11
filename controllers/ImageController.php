@@ -839,6 +839,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                         // Level is found.
                         $isLevelFound = true;
                         // Cells are 0-based.
+                        $level = $level - 1;
                         $cellX = $countX - 1;
                         $cellY = $countY - 1;
                         break;
