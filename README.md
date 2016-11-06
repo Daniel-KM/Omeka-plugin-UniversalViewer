@@ -61,6 +61,14 @@ If your images are big (more than 10 to 50 MB, according to your server and your
 public), it's highly recommended to tile them with a plugin such [OpenLayersZoom].
 Then, tiles will be automatically displayed by Universal Viewer.
 
+* Adaptation of the config
+
+To customize the configuration of the plugin, create a directory `universal-folder`
+in your theme and copy the file `plugins/UniversalViewer/views/public/universal-viewer/config.json`
+inside it: `themes/My_Theme/universal-viewer/config.json`.
+
+Details of the config options can be found on the [wiki] and tested [online].
+
 
 Usage
 -----
@@ -218,6 +226,8 @@ Plugin Universal Viewer for Omeka:
 [Bibliothèque patrimoniale]: https://patrimoine.mines-paristech.fr
 [Mines ParisTech]: http://mines-paristech.fr
 [example server]: http://universalviewer.io/examples/
+[wiki]: https://github.com/UniversalViewer/universalviewer/wiki/Configuration
+[online]: http://universalviewer.io/examples/
 [official release]: https://github.com/UniversalViewer/universalviewer/releases
 [distribution]: https://github.com/UniversalViewer/universalviewer/tree/master/dist
 [OpenLayersZoom]: https://github.com/Daniel-KM/OpenLayersZoom
