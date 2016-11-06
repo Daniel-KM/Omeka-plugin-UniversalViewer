@@ -618,7 +618,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
      * a fullsize image that is larger the Omeka derivatives. In that case,
      * multiple tiles should be joined.
      *
-     * @todo If OpenLayersZoom uses an IIPImage server, it simpler to link it
+     * @todo If OpenLayersZoom uses an IIPImage server, it's simpler to link it
      * directly to Universal Viewer.
      *
      * @param File $file
@@ -636,53 +636,56 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         }
 
         // Check if the file is pretiled with the OpenLayersZoom.
-        if (plugin_is_active('OpenLayersZoom')
-               && $this->view->openLayersZoom()->isZoomed($file)
-            ) {
-            // Get the level and position x and y of the tile.
-            $data = $this->_getLevelAndPosition($file, $transform['source'], $transform['region'], $transform['size']);
-            if (is_null($data)) {
-                return;
-            }
-            // Determine the tile group.
-            $tileGroup = $this->_getTileGroup(array(
-                    'width' => $transform['source']['width'],
-                    'height' => $transform['source']['height'],
-                ), $data);
-            if (is_null($tileGroup)) {
-                return;
-            }
-
-            // Set the image path.
-            $olz = new OpenLayersZoom_Creator();
-            $dirWeb = $olz->getZDataWeb($file);
-            $dirpath = $olz->useIIPImageServer()
-                ? $dirWeb
-                : $olz->getZDataDir($file);
-            $path = sprintf('/TileGroup%d/%d-%d-%d.jpg',
-                $tileGroup, $data['level'], $data['x'] , $data['y']);
-            // The imageUrl is used when there is no transformation.
-            $imageUrl = $dirWeb . $path;
-            $imagePath = $dirpath . $path;
-            $derivativeType = 'zoom_tiles';
-
-            // The use of a full url avoids some complexity when Omeka is not
-            // the root of the server.
-            $serverUrlHelper = new Zend_View_Helper_ServerUrl;
-            $serverUrl = $serverUrlHelper->serverUrl();
-
-            list($tileWidth, $tileHeight) = array_values($this-> _getWidthAndHeight($imagePath));
-
-            $return = array(
-                'fileurl' => $serverUrl . $imageUrl,
-                'filepath' => $imagePath,
-                'derivativeType' => $derivativeType,
-                'mime_type' => 'image/jpeg',
-                'width' => $tileWidth,
-                'height' => $tileHeight,
-            );
-            return $return;
+        if (!plugin_is_active('OpenLayersZoom')) {
+            return;
         }
+
+        // Check if the file is pretiled with the OpenLayersZoom.
+        if (!$this->view->openLayersZoom()->isZoomed($file)) {
+            return;
+        }
+
+        // Get the level and position x and y of the tile.
+        $data = $this->_getLevelAndPosition($file, $transform['source'], $transform['region'], $transform['size']);
+        if (is_null($data)) {
+            return;
+        }
+
+        // Determine the tile group.
+        $tileGroup = $this->_getTileGroup(array(
+                'width' => $transform['source']['width'],
+                'height' => $transform['source']['height'],
+            ), $data);
+        if (is_null($tileGroup)) {
+            return;
+        }
+
+        // Set the image path.
+        $olz = new OpenLayersZoom_Creator();
+        // The use of a full url avoids some complexity when Omeka is not
+        // the root of the server.
+        $dirWeb = $olz->getZDataWeb($file, true);
+        $dirpath = $olz->useIIPImageServer()
+            ? $dirWeb
+            : $olz->getZDataDir($file);
+        $path = sprintf('/TileGroup%d/%d-%d-%d.jpg',
+            $tileGroup, $data['level'], $data['x'] , $data['y']);
+        // The imageUrl is used when there is no transformation.
+        $imageUrl = $dirWeb . $path;
+        $imagePath = $dirpath . $path;
+        $derivativeType = 'zoom_tiles';
+
+        list($tileWidth, $tileHeight) = array_values($this-> _getWidthAndHeight($imagePath));
+
+        $return = array(
+            'fileurl' => $imageUrl,
+            'filepath' => $imagePath,
+            'derivativeType' => $derivativeType,
+            'mime_type' => 'image/jpeg',
+            'width' => $tileWidth,
+            'height' => $tileHeight,
+        );
+        return $return;
     }
 
     /**
