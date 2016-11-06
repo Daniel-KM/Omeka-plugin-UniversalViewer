@@ -163,7 +163,7 @@ since the release 2.3. 3D models are managed via the [threejs] library.
 * Possible requirement
 
 The plugin [Archive Repertory] must be installed when the json files that
-represent the 3D models uses files that are identified by a basename and not a
+represent the 3D models use files that are identified by a basename and not a
 full url. This is generally the case, because the model contains an external
 image for texture. Like Omeka hashes filenames when it ingests files, the file
 can't be retrieved by the Universal Viewer.
