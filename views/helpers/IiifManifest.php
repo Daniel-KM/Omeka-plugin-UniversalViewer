@@ -204,7 +204,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                         // because in Omeka, a pdf is normally the only one
                         // file.
                         $mediaSequenceElement['label'] = $title;
-                        $mediaSequenceElement['metadata'] = $metadata;
+                        // $mediaSequenceElement['metadata'] = $metadata;
                         if ($file->hasThumbnail()) {
                             $mseThumbnail = $file->getWebPath('thumbnail');
                             if ($mseThumbnail) {
@@ -239,7 +239,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                         // because in Omeka, such a file is normally the only
                         // one file.
                         $mediaSequenceElement['label'] = $title;
-                        $mediaSequenceElement['metadata'] = $metadata;
+                        // $mediaSequenceElement['metadata'] = $metadata;
                         if ($file->hasThumbnail()) {
                             $mseThumbnail = $file->getWebPath('thumbnail');
                             if ($mseThumbnail) {
@@ -293,7 +293,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                         // because in Omeka, such a file is normally the only
                         // one file.
                         $mediaSequenceElement['label'] = $title;
-                        $mediaSequenceElement['metadata'] = $metadata;
+                        // $mediaSequenceElement['metadata'] = $metadata;
                         if ($file->hasThumbnail()) {
                             $mseThumbnail = $file->getWebPath('thumbnail');
                             if ($mseThumbnail) {
