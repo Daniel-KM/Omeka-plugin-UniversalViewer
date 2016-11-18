@@ -1,5 +1,5 @@
 define(function() {
     return {
-        dependencies: ['openseadragon']
+        dependencies: ['iiif-tree-component', 'iiif-gallery-component', 'iiif-metadata-component', 'openseadragon.min']
     };
 });

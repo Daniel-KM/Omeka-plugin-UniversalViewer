@@ -90,16 +90,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $title = isset($elementTexts['Dublin Core']['Title'][0])
             ? $elementTexts['Dublin Core']['Title'][0]
             : __('[Untitled]');
-
         $description = metadata($record, 'citation', array('no_escape' => true));
-
-        // Thumbnail of the whole work.
-        // TODO Use index of the true representative file.
-        $file = get_db()->getTable('File')->findWithImages($record->id, 1);
-        $thumbnail = $this->_iiifThumbnail($file);
-
         $licence = apply_filters('uv_item_manifest_licence', get_option('universalviewer_licence'), array('record' => $record));
-
         $attribution = apply_filters('uv_item_manifest_attribution', get_option('universalviewer_attribution'), array('record' => $record));
 
         // TODO To parameter or to extract from metadata.
@@ -131,10 +123,11 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         $canvases = array();
 
-        // Get all images and non-images.
+        // Get all images and non-images and detect json files (for 3D model).
         $files = $record->getFiles();
         $images = array();
         $nonImages = array();
+        $jsonFiles = array();
         foreach ($files as $file) {
             // Images files.
             // Internal: has_derivative is not only for images.
@@ -144,25 +137,43 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             // Non-images files.
             else {
                 $nonImages[] = $file;
+                if ($file->mime_type == 'application/json') {
+                    $jsonFiles[] = $file;
+                }
+                // Check if this is a json file for old Omeka or old imports.
+                elseif ($file->mime_type == 'text/plain') {
+                    switch (strtolower($file->getExtension())) {
+                        case 'json':
+                            $jsonFiles[] = $file;
+                            break;
+                    }
+                }
             }
         }
         unset ($files);
         $totalImages = count($images);
+        $totalJsonFiles = count($jsonFiles);
 
-        // Process images.
-        $imageNumber = 0;
-        foreach ($images as $file) {
-            $canvas = $this->_iiifCanvasImage($file, ++$imageNumber);
+        // Prepare an exception.
+        // TODO Check if this is really a 3D model for three.js (see https://threejs.org).
+        $isThreejs = $totalJsonFiles == 1;
 
-            // TODO Add other content.
-            /*
-            $otherContent = array();
-            $otherContent = (object) $otherContent;
+        // Process images, except if they belong to a 3D model.
+        if (!$isThreejs) {
+            $imageNumber = 0;
+            foreach ($images as $file) {
+                $canvas = $this->_iiifCanvasImage($file, ++$imageNumber);
 
-            $canvas->otherContent = $otherContent;
-            */
+                // TODO Add other content.
+                /*
+                $otherContent = array();
+                $otherContent = (object) $otherContent;
 
-            $canvases[] = $canvas;
+                $canvas->otherContent = $otherContent;
+                */
+
+                $canvases[] = $canvas;
+            }
         }
 
         // Process non images.
@@ -174,19 +185,31 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         // is only a quick view. So a main file should be set, that is not the
         // representative file.
 
-        // When there are images, other files are added to download section.
-        if ($totalImages > 0) {
+        // When there are images or one json file, other files may be added to
+        // download section.
+        if ($totalImages || $isThreejs) {
             foreach ($nonImages as $file) {
-                if ($file->mime_type == 'application/pdf') {
-                    $render = array();
-                    $render['@id'] = $file->getWebPath('original');
-                    $render['format'] = $file->mime_type;
-                    $render['label'] = __('Download as PDF');
-                    $render = (object) $render;
-                    $rendering[] = $render;
+                switch ($file->mime_type) {
+                    case 'application/pdf':
+                        $render = array();
+                        $render['@id'] = $file->getWebPath('original');
+                        $render['format'] = $file->mime_type;
+                        $render['label'] = __('Download as PDF');
+                        $render = (object) $render;
+                        $rendering[] = $render;
+                        break;
                 }
                 // TODO Add alto files and search.
                 // TODO Add other content.
+            }
+
+            // Prepare the media sequence for threejs.
+            if ($isThreejs) {
+                $mediaSequenceElement = $this->_iiifMediaSequenceThreejs(
+                    $file,
+                    array('label' => $title, 'metadata' => $metadata, 'files' => $images)
+                    );
+                $mediaSequencesElements[] = $mediaSequenceElement;
             }
         }
 
@@ -195,32 +218,10 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             foreach ($nonImages as $file) {
                 switch ($file->mime_type) {
                     case 'application/pdf':
-                        $mediaSequenceElement = array();
-                        $mediaSequenceElement['@id'] = $file->getWebPath('original');
-                        $mediaSequenceElement['@type'] = 'foaf:Document';
-                        $mediaSequenceElement['format'] = $file->mime_type;
-                        // TODO If no file metadata, then item ones.
-                        // TODO Currently, the main title and metadata are used,
-                        // because in Omeka, a pdf is normally the only one
-                        // file.
-                        $mediaSequenceElement['label'] = $title;
-                        // $mediaSequenceElement['metadata'] = $metadata;
-                        if ($file->hasThumbnail()) {
-                            $mseThumbnail = $file->getWebPath('thumbnail');
-                            if ($mseThumbnail) {
-                                $mediaSequenceElement['thumbnail'] = $mseThumbnail;
-                            }
-                        }
-                        $mediaSequencesService = array();
-                        $mseUrl = absolute_url(array(
-                                'id' => $file->id,
-                            ), 'universalviewer_media');
-                        $mediaSequencesService['@id'] = $mseUrl;
-                        // See MediaController::contextAction()
-                        $mediaSequencesService['profile'] = 'http://wellcomelibrary.org/ld/ixif/0/alpha.json';
-                        $mediaSequencesService = (object) $mediaSequencesService;
-                        $mediaSequenceElement['service'] = $mediaSequencesService;
-                        $mediaSequenceElement = (object) $mediaSequenceElement;
+                        $mediaSequenceElement = $this->_iiifMediaSequencePdf(
+                            $file,
+                        $mediaSequenceElement['metadata'] = $metadata;
+                        );
                         $mediaSequencesElements[] = $mediaSequenceElement;
                         // TODO Add the file for download (no rendering)? The
                         // file is already available for download in the pdf viewer.
@@ -229,52 +230,11 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     case strpos($file->mime_type, 'audio/') === 0:
                     // case 'audio/ogg':
                     // case 'audio/mp3':
-                        $mediaSequenceElement = array();
-                        $mediaSequenceElement['@id'] = $file->getWebPath('original') . '/element/e0';
-                        $mediaSequenceElement['@type'] = 'dctypes:Sound';
-                        // The format is not be set here (see rendering).
-                        // $mediaSequenceElement['format'] = $file->mime_type;
-                        // TODO If no file metadata, then item ones.
-                        // TODO Currently, the main title and metadata are used,
-                        // because in Omeka, such a file is normally the only
-                        // one file.
-                        $mediaSequenceElement['label'] = $title;
-                        // $mediaSequenceElement['metadata'] = $metadata;
-                        if ($file->hasThumbnail()) {
-                            $mseThumbnail = $file->getWebPath('thumbnail');
-                            if ($mseThumbnail) {
-                                $mediaSequenceElement['thumbnail'] = $mseThumbnail;
-                            }
-                        }
-                        // A place holder is recommended for media.
-                        if (empty($mediaSequenceElement['thumbnail'])) {
-                            // $placeholder = 'images/placeholder-audio.jpg';
-                            // $mediaSequenceElement['thumbnail'] = src($placeholder);
-                            $mediaSequenceElement['thumbnail'] = '';
-                        }
-
-                        // Specific to media files.
-                        $mseRenderings = array();
-                        // Only one rendering currently: the file itself, but it
-                        // may be converted to multiple format: high and low
-                        // resolution, webm...
-                        $mseRendering = array();
-                        $mseRendering['@id'] = $file->getWebPath('original');
-                        $mseRendering['format'] = $file->mime_type;
-                        $mseRendering = (object) $mseRendering;
-                        $mseRenderings[] = $mseRendering;
-                        $mediaSequenceElement['rendering'] = $mseRenderings;
-
-                        $mediaSequencesService = array();
-                        $mseUrl = absolute_url(array(
-                                'id' => $file->id,
-                            ), 'universalviewer_media');
-                        $mediaSequencesService['@id'] = $mseUrl;
-                        // See MediaController::contextAction()
-                        $mediaSequencesService['profile'] = 'http://wellcomelibrary.org/ld/ixif/0/alpha.json';
-                        $mediaSequencesService = (object) $mediaSequencesService;
-                        $mediaSequenceElement['service'] = $mediaSequencesService;
-                        $mediaSequenceElement = (object) $mediaSequenceElement;
+                        $mediaSequenceElement = $this->_iiifMediaSequenceAudio(
+                            $file,
+                        $mediaSequenceElement['metadata'] = $metadata;
+                            array('label' => $title, 'metadata' => $metadata)
+                        );
                         $mediaSequencesElements[] = $mediaSequenceElement;
                         // Rendering files are automatically added for download.
                         break;
@@ -283,72 +243,41 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     // case 'application//octet-stream':
                     case strpos($file->mime_type, 'video/') === 0:
                     // case 'video/webm':
-                        $mediaSequenceElement = array();
-                        $mediaSequenceElement['@id'] = $file->getWebPath('original') . '/element/e0';
-                        $mediaSequenceElement['@type'] = 'dctypes:MovingImage';
-                        // The format is not be set here (see rendering).
-                        // $mediaSequenceElement['format'] = $file->mime_type;
-                        // TODO If no file metadata, then item ones.
-                        // TODO Currently, the main title and metadata are used,
-                        // because in Omeka, such a file is normally the only
-                        // one file.
-                        $mediaSequenceElement['label'] = $title;
-                        // $mediaSequenceElement['metadata'] = $metadata;
-                        if ($file->hasThumbnail()) {
-                            $mseThumbnail = $file->getWebPath('thumbnail');
-                            if ($mseThumbnail) {
-                                $mediaSequenceElement['thumbnail'] = $mseThumbnail;
-                            }
-                        }
-                        // A place holder is recommended for medias.
-                        if (empty($mediaSequenceElement['thumbnail'])) {
-                            // $placeholder = 'images/placeholder-video.jpg';
-                            // $mediaSequenceElement['thumbnail'] = src($placeholder);
-                            $mediaSequenceElement['thumbnail'] = '';
-                        }
-
-                        // Specific to media files.
-                        $mseRenderings = array();
-                        // Only one rendering currently: the file itself, but it
-                        // may be converted to multiple format: high and low
-                        // resolution, webm...
-                        $mseRendering = array();
-                        $mseRendering['@id'] = $file->getWebPath('original');
-                        $mseRendering['format'] = $file->mime_type;
-                        $mseRendering = (object) $mseRendering;
-                        $mseRenderings[] = $mseRendering;
-                        $mediaSequenceElement['rendering'] = $mseRenderings;
-
-                        $mediaSequencesService = array();
-                        $mseUrl = absolute_url(array(
-                                'id' => $file->id,
-                            ), 'universalviewer_media');
-                        $mediaSequencesService['@id'] = $mseUrl;
-                        // See MediaController::contextAction()
-                        $mediaSequencesService['profile'] = 'http://wellcomelibrary.org/ld/ixif/0/alpha.json';
-                        $mediaSequencesService = (object) $mediaSequencesService;
-                        $mediaSequenceElement['service'] = $mediaSequencesService;
-                        // TODO Get the true video width and height, even if it
-                        // is automatically managed.
-                        $mediaSequenceElement['width'] = 0;
-                        $mediaSequenceElement['height'] = 0;
-                        $mediaSequenceElement = (object) $mediaSequenceElement;
+                        $mediaSequenceElement = $this->_iiifMediaSequenceVideo(
+                            $file,
+                        $mediaSequenceElement['metadata'] = $metadata;
+                            array('label' => $title, 'metadata' => $metadata)
+                        );
                         $mediaSequencesElements[] = $mediaSequenceElement;
                         // Rendering files are automatically added for download.
                         break;
 
+                    // TODO Add other content.
                     default:
-                        // TODO Add other content.
                 }
 
                 // TODO Add other files as resources of the current element.
             }
         }
 
+        // Thumbnail of the whole work.
+        $thumbnail = $this->_mainThumbnail($record, $isThreejs);
+
+        // Prepare sequences.
         $sequences = array();
 
+        // Manage the exception: the media sequence with threejs 3D model.
+        if ($isThreejs && $mediaSequencesElements) {
+            $mediaSequence = array();
+            $mediaSequence['@id'] = $this->_baseUrl . '/sequence/s0';
+            $mediaSequence['@type'] = 'ixif:MediaSequence';
+            $mediaSequence['label'] = 'XSequence 0';
+            $mediaSequence['elements'] = $mediaSequencesElements;
+            $mediaSequence = (object) $mediaSequence;
+            $mediaSequences[] = $mediaSequence;
+        }
         // When there are images.
-        if ($totalImages) {
+        elseif ($totalImages) {
             $sequence = array();
             $sequence['@id'] = $this->_baseUrl . '/sequence/normal';
             $sequence['@type'] = 'sc:Sequence';
@@ -400,14 +329,25 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         // Prepare manifest.
         $manifest = array();
-        $manifest['@context'] = $totalImages > 0
-            ? 'http://iiif.io/api/presentation/2/context.json'
-            : array(
+        if ($isThreejs) {
+            $manifest['@context'] = array(
+                "http://iiif.io/api/presentation/2/context.json",
+                "http://files.universalviewer.io/ld/ixif/0/context.json",
+            );
+        }
+        // For images, the normalized context.
+        elseif($totalImages) {
+            $manifest['@context'] = 'http://iiif.io/api/presentation/2/context.json';
+        }
+        // For other non standard iiif files.
+        else {
+            $manifest['@context'] = array(
                 'http://iiif.io/api/presentation/2/context.json',
                 // See MediaController::contextAction()
                 'http://wellcomelibrary.org/ld/ixif/0/context.json',
                 // WEB_ROOT . '/ld/ixif/0/context.json',
             );
+        }
         $manifest['@id'] = $url;
         $manifest['@type'] = 'sc:Manifest';
         $manifest['label'] = $title;
@@ -673,6 +613,200 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     }
 
     /**
+     * Create an IIIF media sequence object for a pdf.
+     *
+     * @param File $file
+     * @param array $values
+     * @return Standard object|null
+     */
+    protected function _iiifMediaSequencePdf($file, $values)
+    {
+        $mediaSequenceElement = array();
+        $mediaSequenceElement['@id'] = $file->getWebPath('original');
+        $mediaSequenceElement['@type'] = 'foaf:Document';
+        $mediaSequenceElement['format'] = $file->mime_type;
+        // TODO If no file metadata, then item ones.
+        // TODO Currently, the main title and metadata are used,
+        // because in Omeka, a pdf is normally the only one
+        // file.
+        $mediaSequenceElement['label'] = $values['label'];
+        $mediaSequenceElement['metadata'] = $values['metadata'];
+        if ($file->hasThumbnail()) {
+            $mseThumbnail = $file->getWebPath('thumbnail');
+            if ($mseThumbnail) {
+                $mediaSequenceElement['thumbnail'] = $mseThumbnail;
+            }
+        }
+        $mediaSequencesService = array();
+        $mseUrl = absolute_url(array(
+            'id' => $file->id,
+        ), 'universalviewer_media');
+        $mediaSequencesService['@id'] = $mseUrl;
+        // See MediaController::contextAction()
+        $mediaSequencesService['profile'] = 'http://wellcomelibrary.org/ld/ixif/0/alpha.json';
+        $mediaSequencesService = (object) $mediaSequencesService;
+        $mediaSequenceElement['service'] = $mediaSequencesService;
+        $mediaSequenceElement = (object) $mediaSequenceElement;
+        return $mediaSequenceElement;
+    }
+
+    /**
+     * Create an IIIF media sequence object for an audio.
+     *
+     * @param File $file
+     * @param array $values
+     * @return Standard object|null
+     */
+    protected function _iiifMediaSequenceAudio($file, $values)
+    {
+        $mediaSequenceElement = array();
+        $mediaSequenceElement['@id'] = $file->getWebPath('original') . '/element/e0';
+        $mediaSequenceElement['@type'] = 'dctypes:Sound';
+        // The format is not be set here (see rendering).
+        // $mediaSequenceElement['format'] = $file->mime_type;
+        // TODO If no file metadata, then item ones.
+        // TODO Currently, the main title and metadata are used,
+        // because in Omeka, such a file is normally the only
+        // one file.
+        $mediaSequenceElement['label'] = $values['label'];
+        $mediaSequenceElement['metadata'] = $values['metadata'];
+        if ($file->hasThumbnail()) {
+            $mseThumbnail = $file->getWebPath('thumbnail');
+            if ($mseThumbnail) {
+                $mediaSequenceElement['thumbnail'] = $mseThumbnail;
+            }
+        }
+        // A place holder is recommended for media.
+        if (empty($mediaSequenceElement['thumbnail'])) {
+            // $placeholder = 'images/placeholder-audio.jpg';
+            // $mediaSequenceElement['thumbnail'] = src($placeholder);
+            $mediaSequenceElement['thumbnail'] = '';
+        }
+
+        // Specific to media files.
+        $mseRenderings = array();
+        // Only one rendering currently: the file itself, but it
+        // may be converted to multiple format: high and low
+        // resolution, webm...
+        $mseRendering = array();
+        $mseRendering['@id'] = $file->getWebPath('original');
+        $mseRendering['format'] = $file->mime_type;
+        $mseRendering = (object) $mseRendering;
+        $mseRenderings[] = $mseRendering;
+        $mediaSequenceElement['rendering'] = $mseRenderings;
+
+        $mediaSequencesService = array();
+        $mseUrl = absolute_url(array(
+            'id' => $file->id,
+        ), 'universalviewer_media');
+        $mediaSequencesService['@id'] = $mseUrl;
+        // See MediaController::contextAction()
+        $mediaSequencesService['profile'] = 'http://wellcomelibrary.org/ld/ixif/0/alpha.json';
+        $mediaSequencesService = (object) $mediaSequencesService;
+        $mediaSequenceElement['service'] = $mediaSequencesService;
+        $mediaSequenceElement = (object) $mediaSequenceElement;
+        return $mediaSequenceElement;
+    }
+
+    /**
+     * Create an IIIF media sequence object for a video.
+     *
+     * @param File $file
+     * @param array $values
+     * @return Standard object|null
+     */
+    protected function _iiifMediaSequenceVideo($file, $values)
+    {
+        $mediaSequenceElement = array();
+        $mediaSequenceElement['@id'] = $file->getWebPath('original') . '/element/e0';
+        $mediaSequenceElement['@type'] = 'dctypes:MovingImage';
+        // The format is not be set here (see rendering).
+        // $mediaSequenceElement['format'] = $file->mime_type;
+        // TODO If no file metadata, then item ones.
+        // TODO Currently, the main title and metadata are used,
+        // because in Omeka, such a file is normally the only
+        // one file.
+        $mediaSequenceElement['label'] = $values['label'];
+        $mediaSequenceElement['metadata'] = $values['metadata'];
+        if ($file->hasThumbnail()) {
+            $mseThumbnail = $file->getWebPath('thumbnail');
+            if ($mseThumbnail) {
+                $mediaSequenceElement['thumbnail'] = $mseThumbnail;
+            }
+        }
+        // A place holder is recommended for medias.
+        if (empty($mediaSequenceElement['thumbnail'])) {
+            // $placeholder = 'images/placeholder-video.jpg';
+            // $mediaSequenceElement['thumbnail'] = src($placeholder);
+            $mediaSequenceElement['thumbnail'] = '';
+        }
+
+        // Specific to media files.
+        $mseRenderings = array();
+        // Only one rendering currently: the file itself, but it
+        // may be converted to multiple format: high and low
+        // resolution, webm...
+        $mseRendering = array();
+        $mseRendering['@id'] = $file->getWebPath('original');
+        $mseRendering['format'] = $file->mime_type;
+        $mseRendering = (object) $mseRendering;
+        $mseRenderings[] = $mseRendering;
+        $mediaSequenceElement['rendering'] = $mseRenderings;
+
+        $mediaSequencesService = array();
+        $mseUrl = absolute_url(array(
+            'id' => $file->id,
+        ), 'universalviewer_media');
+        $mediaSequencesService['@id'] = $mseUrl;
+        // See MediaController::contextAction()
+        $mediaSequencesService['profile'] = 'http://wellcomelibrary.org/ld/ixif/0/alpha.json';
+        $mediaSequencesService = (object) $mediaSequencesService;
+        $mediaSequenceElement['service'] = $mediaSequencesService;
+        // TODO Get the true video width and height, even if it
+        // is automatically managed.
+        $mediaSequenceElement['width'] = 0;
+        $mediaSequenceElement['height'] = 0;
+        $mediaSequenceElement = (object) $mediaSequenceElement;
+        return $mediaSequenceElement;
+    }
+
+    /**
+     * Create an IIIF media sequence object for a threejs 3D model.
+     *
+     * @param File $file
+     * @param array $values
+     * @return Standard object|null
+     */
+    protected function _iiifMediaSequenceThreejs($file, $values)
+    {
+        $mediaSequenceElement = array();
+        $mediaSequenceElement['@id'] = $file->getWebPath('original');
+        $mediaSequenceElement['@type'] = 'dctypes:PhysicalObject';
+        $mediaSequenceElement['format'] = 'application/vnd.threejs+json';
+        // TODO If no file metadata, then item ones.
+        // TODO Currently, the main title and metadata are used,
+        // because in Omeka, a 3D model is normally the only one
+        // file.
+        $mediaSequenceElement['label'] = $values['label'];
+        // Metadata are already set at record level.
+        // $mediaSequenceElement['metadata'] = $values['metadata'];
+        // Check if there is a "thumb.jpg" that can be managed as a thumbnail.
+        foreach ($values['files'] as $imageFile) {
+            if ($imageFile->original_filename == 'thumb.jpg') {
+                // The original is used, because this is already a thumbnail.
+                $mseThumbnail = $imageFile->getWebPath('original');
+                if ($mseThumbnail) {
+                    $mediaSequenceElement['thumbnail'] = $mseThumbnail;
+                }
+                break;
+            }
+        }
+        // No media sequence service and no sequences.
+        $mediaSequenceElement = (object) $mediaSequenceElement;
+        return $mediaSequenceElement;
+    }
+
+    /**
      * Create an IIIF sequence object for an unsupported format.
      *
      * @param array $rendering
@@ -698,6 +832,40 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $sequence = (object) $sequence;
 
         return $sequence;
+    }
+
+    /**
+     * Get the representative thumbnail of the whole work.
+     *
+     * @param Record $record
+     * @param boolean $isThreejs Manage an exception.
+     * @return object The iiif thumbnail.
+     */
+    protected function _mainThumbnail($record, $isThreejs)
+    {
+        $file = null;
+        $db = get_db();
+        $table = $db->getTable('File');
+        // Threejs is an exception, because the thumbnail may be a true file
+        // named "thumb.js".
+        if ($isThreejs) {
+            $files = $table->findBy(array(
+                'item_id' => $record->id,
+                'has_derivative_image' => 1,
+                'original_filename' => 'thumb.jpg',
+            ), 1);
+            if ($files) {
+                $file = reset($files);
+            }
+        }
+
+        // Standard record.
+        if (empty($file)) {
+            // TODO Use index of the true Omeka representative file.
+            $file = $table->findWithImages($record->id, 1);
+        }
+
+        return $this->_iiifThumbnail($file);
     }
 
     /**

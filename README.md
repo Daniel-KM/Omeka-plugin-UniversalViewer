@@ -61,6 +61,14 @@ If your images are big (more than 10 to 50 MB, according to your server and your
 public), it's highly recommended to tile them with a plugin such [OpenLayersZoom].
 Then, tiles will be automatically displayed by Universal Viewer.
 
+* Adaptation of the config
+
+To customize the configuration of the plugin, create a directory `universal-folder`
+in your theme and copy the file `plugins/UniversalViewer/views/public/universal-viewer/config.json`
+inside it: `themes/My_Theme/universal-viewer/config.json`.
+
+Details of the config options can be found on the [wiki] and tested [online].
+
 
 Usage
 -----
@@ -146,6 +154,49 @@ checkbox "Rebuild metadata when missing". The viewer will work without these
 metadata, but the display will be slower.
 
 
+3D models
+---------
+
+The display of 3D models is fully supported by the widget and natively managed
+since the release 2.3. 3D models are managed via the [threejs] library.
+
+* Possible requirement
+
+The plugin [Archive Repertory] must be installed when the json files that
+represent the 3D models use files that are identified by a basename and not a
+full url. This is generally the case, because the model contains an external
+image for texture. Like Omeka hashes filenames when it ingests files, the file
+can't be retrieved by the Universal Viewer.
+
+This plugin is not required when there is no external images or when these
+images are referenced in the json files with a full url.
+
+* Example
+
+  - Install the plugin [Archive Repertory].
+  - Download the next three files from the official examples:
+    - http://files.universalviewer.io/manifests/foundobjects/thekiss/thumb.jpg
+    - http://files.universalviewer.io/manifests/foundobjects/thekiss/thekiss.jpg
+    - http://files.universalviewer.io/manifests/foundobjects/thekiss/thekiss.json
+  - Add a new item with these three files, in this order, and the following
+  metadata:
+    - Title: The Kiss
+    - Date: 2015/11/27
+    - Description: Soap stone statuette of Rodin's The Kiss. Found at Snooper's Paradise in Brighton UK.
+    - Rights: 3D model produced by Sophie Dixon
+    - LIcense (or Rights): by-nc-nd
+  - Go to the public page of the item and watch it!
+
+*Important*: When using [Archive Repertory] and when two files have the same
+base name (here "thekiss.jpg" and "thekiss.json"), the image, that is referenced
+inside the json, must be uploaded before the json.
+Furthermore, the name of the thumbnail must be `thumb.jpg` and it is recommended
+to upload it first.
+
+Finally, note that 3D models are often heavy, so the user has to wait some
+seconds that the browser loads all files and prepares them to be displayed.
+
+
 Troubleshooting
 ---------------
 
@@ -218,10 +269,14 @@ Plugin Universal Viewer for Omeka:
 [Bibliothèque patrimoniale]: https://patrimoine.mines-paristech.fr
 [Mines ParisTech]: http://mines-paristech.fr
 [example server]: http://universalviewer.io/examples/
+[wiki]: https://github.com/UniversalViewer/universalviewer/wiki/Configuration
+[online]: http://universalviewer.io/examples/
 [official release]: https://github.com/UniversalViewer/universalviewer/releases
 [distribution]: https://github.com/UniversalViewer/universalviewer/tree/master/dist
 [OpenLayersZoom]: https://github.com/Daniel-KM/OpenLayersZoom
 [CollectionTree]: https://github.com/Daniel-KM/CollectionTree
+[threejs]: https://threejs.org
+[Archive Repertory]: https://omeka.org/add-ons/plugins/archive-repertory
 [plugin issues]: https://github.com/Daniel-KM/UniversalViewer4Omeka/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html

@@ -88,6 +88,9 @@
         </div>
         <div class="inputs five columns omega">
             <?php echo $this->formText('universalviewer_width', get_option('universalviewer_width'), null); ?>
+            <p class="explanation">
+                <?php echo __('Keep this field blank to avoid an issue with some themes.'); ?>
+            </p>
         </div>
     </div>
     <div class="field">
