@@ -220,7 +220,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     case 'application/pdf':
                         $mediaSequenceElement = $this->_iiifMediaSequencePdf(
                             $file,
-                        $mediaSequenceElement['metadata'] = $metadata;
+                            array('label' => $title, 'metadata' => $metadata)
                         );
                         $mediaSequencesElements[] = $mediaSequenceElement;
                         // TODO Add the file for download (no rendering)? The
@@ -232,7 +232,6 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     // case 'audio/mp3':
                         $mediaSequenceElement = $this->_iiifMediaSequenceAudio(
                             $file,
-                        $mediaSequenceElement['metadata'] = $metadata;
                             array('label' => $title, 'metadata' => $metadata)
                         );
                         $mediaSequencesElements[] = $mediaSequenceElement;
@@ -245,7 +244,6 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     // case 'video/webm':
                         $mediaSequenceElement = $this->_iiifMediaSequenceVideo(
                             $file,
-                        $mediaSequenceElement['metadata'] = $metadata;
                             array('label' => $title, 'metadata' => $metadata)
                         );
                         $mediaSequencesElements[] = $mediaSequenceElement;
