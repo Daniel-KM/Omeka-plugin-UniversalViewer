@@ -181,7 +181,7 @@ images are referenced in the json files with a full url.
   - Add a new item with these three files, in this order, and the following
   metadata:
     - Title: The Kiss
-    - Date: 2015/11/27
+    - Date: 2015-11-27
     - Description: Soap stone statuette of Rodin's The Kiss. Found at Snooper's Paradise in Brighton UK.
     - Rights: 3D model produced by Sophie Dixon
     - LIcense (or Rights): by-nc-nd
