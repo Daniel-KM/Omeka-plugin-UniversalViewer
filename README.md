@@ -79,7 +79,7 @@ hosted on another server.
 
 For example, you could set Manifest Element Set to "Dublin Core" and 
 Manifest Element to "Has Format" in the plugin configuration, and then put a URL
-like "https://www.myserver.org/iiif/HI-SK20161207-0009/manifest" in the "Has Element"
+like "https://example.com/iiif/HI-SK20161207-0009/manifest" in the "Has Element"
 field of a record. The Universal Viewer included on that record's display page will
 use that manifest URL to retrieve images and metadata for the viewer.
 
