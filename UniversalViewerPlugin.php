@@ -54,6 +54,8 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_height' => '600px',
         'universalviewer_locale' => 'en-GB:English (GB),fr-FR:French',
         'universalviewer_iiif_creator' => 'Auto',
+        'universalviewer_manifest_elementset' => '',
+        'universalviewer_manifest_element' => '',
     );
 
     /**
