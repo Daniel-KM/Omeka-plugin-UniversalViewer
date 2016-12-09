@@ -47,6 +47,7 @@
         <div class="inputs five columns omega">
             <?php echo $this->formText('universalviewer_manifest_elementset', get_option('universalviewer_manifest_elementset'), null); ?>
             <p class="explanation">
+                <?php echo __('The element set of the field supplying the alternative manifest URL for the viewer (for example, "Dublin Core").'); ?>
             </p>
         </div>
     </div>
@@ -58,6 +59,7 @@
         <div class="inputs five columns omega">
             <?php echo $this->formText('universalviewer_manifest_element', get_option('universalviewer_manifest_element'), null); ?>
             <p class="explanation">
+                <?php echo __('The element/field supplying the alternative manifest URL for the viewer (for example, "Has Format").'); ?>
             </p>
         </div>
     </div>
