@@ -30,19 +30,38 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
             return '';
         }
 
+        // determine if we should get the manifest from a field in the metadata
+        $manifestES = get_option('universalviewer_manifest_elementset');
+        $manifestE = get_option('universalviewer_manifest_element');
+        $urlManifest = '';
+
+        if ($manifestES != '' and $manifestE != '') {
+            $urlManifest = metadata($record, array($manifestES, $manifestE));
+        }
+
         // Some specific checks.
         switch (get_class($record)) {
             case 'Item':
                 // Currently, item without files is unprocessable.
-                if ($record->fileCount() == 0) {
-                    return __('This item has no files and is not displayable.');
+                if ($record->fileCount() == 0 and $urlManifest == '') {
+                    // return __('This item has no files and is not displayable.');
+                    return '';
                 }
                 break;
             case 'Collection':
-                if ($record->totalItems() == 0) {
-                    return __('This collection has no item and is not displayable.');
+                if ($record->totalItems() == 0 and $urlManifest == '') {
+                    // return __('This collection has no item and is not displayable.');
+                    return '';
                 }
                 break;
+        }
+
+        // if manifest not provided in metadata, point to manifest created from Omeka files
+        if ($urlManifest == '') {
+            $urlManifest = absolute_url(array(
+                    'recordtype' => Inflector::tableize(get_class($record)),
+                    'id' => $record->id,
+                ), 'universalviewer_presentation_manifest');
         }
 
         $class = isset($args['class'])
@@ -69,11 +88,6 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         if (!empty($locale)) {
             $locale = ' data-locale="' . $locale . '"';
         }
-
-        $urlManifest = absolute_url(array(
-                'recordtype' => Inflector::tableize(get_class($record)),
-                'id' => $record->id,
-            ), 'universalviewer_presentation_manifest');
 
         // Default configuration file.
         $config = empty($args['config'])

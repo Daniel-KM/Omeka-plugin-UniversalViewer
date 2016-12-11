@@ -61,13 +61,27 @@ If your images are big (more than 10 to 50 MB, according to your server and your
 public), it's highly recommended to tile them with a plugin such [OpenLayersZoom].
 Then, tiles will be automatically displayed by Universal Viewer.
 
-* Adaptation of the config
+* Adaptation of the Universal Viewer config
 
 To customize the configuration of the plugin, create a directory `universal-folder`
 in your theme and copy the file `plugins/UniversalViewer/views/public/universal-viewer/config.json`
 inside it: `themes/My_Theme/universal-viewer/config.json`.
 
 Details of the config options can be found on the [wiki] and tested [online].
+
+* Using externally supplied IIIF manifest and images
+
+If you are harvesting data (via OAI-PMH, for instance) from another system where 
+images are hosted and exposed via IIIF, you can use a configurable metadata field
+to supply the manifest to the Universal Viewer. In this case, no images are hosted
+in the Omeka record, but one of the metadata fields has the URL of the manifest
+hosted on another server.
+
+For example, you could set Manifest Element Set to "Dublin Core" and 
+Manifest Element to "Has Format" in the plugin configuration, and then put a URL
+like "https://example.com/iiif/HI-SK20161207-0009/manifest" in the "Has Element"
+field of a record. The Universal Viewer included on that record's display page will
+use that manifest URL to retrieve images and metadata for the viewer.
 
 
 Usage

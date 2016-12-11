@@ -38,6 +38,32 @@
         </div>
     </div>
 </fieldset>
+<fieldset id="fieldset-universalviewer-manifestsource"><legend><?php echo __('Manifest source'); ?></legend>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_elementset',
+                __('Manifest Element Set')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formText('universalviewer_manifest_elementset', get_option('universalviewer_manifest_elementset'), null); ?>
+            <p class="explanation">
+                <?php echo __('The element set of the field supplying the alternative manifest URL for the viewer (for example, "Dublin Core").'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_element',
+                __('Manifest Element')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formText('universalviewer_manifest_element', get_option('universalviewer_manifest_element'), null); ?>
+            <p class="explanation">
+                <?php echo __('The element/field supplying the alternative manifest URL for the viewer (for example, "Has Format").'); ?>
+            </p>
+        </div>
+    </div>
+</fieldset>
 <fieldset id="fieldset-universalviewer-info"><legend><?php echo __('Common infos'); ?></legend>
     <div class="field">
         <div class="two columns alpha">
