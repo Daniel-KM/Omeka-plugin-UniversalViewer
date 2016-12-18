@@ -65,7 +65,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
     {
         $processors = $this->_getProcessors();
         if (count($processors) == 1) {
-            throw new Omeka_Plugin_Exception(__('At least one graphic processor (GD or ImageMagick) is required to use the UniversalViewer.'));
+            throw new Omeka_Plugin_Installer_Exception(__('At least one graphic processor (GD or ImageMagick) is required to use the UniversalViewer.'));
         }
 
         $js = dirname(__FILE__)
@@ -76,7 +76,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             . DIRECTORY_SEPARATOR . 'lib'
             . DIRECTORY_SEPARATOR . 'embed.js';
         if (!file_exists($js)) {
-            throw new Omeka_Plugin_Exception(__('UniversalViewer library should be installed. See %sReadme%s.',
+            throw new Omeka_Plugin_Installer_Exception(__('UniversalViewer library should be installed. See %sReadme%s.',
                 '<a href="https://github.com/Daniel-KM/UniversalViewer4Omeka#installation">', '</a>'));
         }
 
