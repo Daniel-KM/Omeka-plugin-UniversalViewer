@@ -253,12 +253,31 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         // Else, check if non-images are managed (special content, as pdf).
         else {
             foreach ($nonImages as $file) {
+                $fileElementTexts = $this->view->allElementTexts($file, array(
+                    'show_empty_elements' => false,
+                    'show_element_sets' => array('Dublin Core'),
+                    'return_type' => 'array',
+                ));
+                $fileMetadata = array();
+                foreach ($fileElementTexts as $elementSetName => $elements) {
+                    foreach ($elements as $elementName => $values) {
+                        $fileMetadata[] = (object) array(
+                            'label' => "$elementName (file)",
+                            'value' => count($values) > 1
+                                ? $values
+                                : reset($values),
+                        );
+                    }
+                }
+
+                $values = array(
+                    'label' => metadata($file, 'display_title'),
+                    'metadata' => $fileMetadata,
+                );
+
                 switch ($file->mime_type) {
                     case 'application/pdf':
-                        $mediaSequenceElement = $this->_iiifMediaSequencePdf(
-                            $file,
-                            array('label' => $label, 'metadata' => $metadata)
-                        );
+                        $mediaSequenceElement = $this->_iiifMediaSequencePdf($file, $values);
                         $mediaSequencesElements[] = $mediaSequenceElement;
                         // TODO Add the file for download (no rendering)? The
                         // file is already available for download in the pdf viewer.
@@ -267,10 +286,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     case strpos($file->mime_type, 'audio/') === 0:
                     // case 'audio/ogg':
                     // case 'audio/mp3':
-                        $mediaSequenceElement = $this->_iiifMediaSequenceAudio(
-                            $file,
-                            array('label' => $label, 'metadata' => $metadata)
-                        );
+                        $mediaSequenceElement = $this->_iiifMediaSequenceAudio($file, $values);
                         $mediaSequencesElements[] = $mediaSequenceElement;
                         // Rendering files are automatically added for download.
                         break;
@@ -279,10 +295,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     // case 'application//octet-stream':
                     case strpos($file->mime_type, 'video/') === 0:
                     // case 'video/webm':
-                        $mediaSequenceElement = $this->_iiifMediaSequenceVideo(
-                            $file,
-                            array('label' => $label, 'metadata' => $metadata)
-                        );
+                        $mediaSequenceElement = $this->_iiifMediaSequenceVideo($file, $values);
                         $mediaSequencesElements[] = $mediaSequenceElement;
                         // Rendering files are automatically added for download.
                         break;
