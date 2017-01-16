@@ -1,4 +1,4 @@
-// iiif-gallery-component v1.0.0 https://github.com/viewdir/iiif-gallery-component#readme
+// iiif-gallery-component v1.0.5 https://github.com/viewdir/iiif-gallery-component#readme
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.iiifGalleryComponent = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -83,18 +83,22 @@ var IIIFComponents;
             this._setRange();
             $.templates({
                 galleryThumbsTemplate: '\
-                    <div class="{{:~className()}}" data-src="{{>uri}}" data-index="{{>index}}" data-visible="{{>visible}}" data-width="{{>width}}" data-height="{{>height}}" data-initialwidth="{{>initialWidth}}" data-initialheight="{{>initialHeight}}">\
+                    <div class="{{:~galleryThumbClassName()}}" data-src="{{>uri}}" data-index="{{>index}}" data-visible="{{>visible}}" data-width="{{>width}}" data-height="{{>height}}" data-initialwidth="{{>initialWidth}}" data-initialheight="{{>initialHeight}}">\
                         <div class="wrap" style="width:{{>initialWidth}}px; height:{{>initialHeight}}px" data-link="class{merge:multiSelected toggle=\'multiSelected\'}">\
                         {^{if multiSelectEnabled}}\
                             <input id="thumb-checkbox-{{>id}}" type="checkbox" data-link="checked{:multiSelected ? \'checked\' : \'\'}" class="multiSelect" />\
                         {{/if}}\
                         </div>\
-                        <span class="index">{{:#index + 1}}</span>\
-                        <span class="label" style="width:{{>initialWidth}}px" title="{{>label}}">{{>label}}&nbsp;</span>\
+                        <div class="info">\
+                            <span class="index" style="width:{{>initialWidth}}px">{{:#index + 1}}</span>\
+                            <span class="label" style="width:{{>initialWidth}}px" title="{{>label}}">{{>label}}&nbsp;</span>\
+                            <span class="searchResults" title="{{:~galleryThumbSearchResultsTitle()}}">{{>data.searchResults}}</span>\
+                        </div>\
                     </div>'
             });
+            var that = this;
             $.views.helpers({
-                className: function () {
+                galleryThumbClassName: function () {
                     var className = "thumb preLoad";
                     if (this.data.index === 0) {
                         className += " first";
@@ -103,6 +107,15 @@ var IIIFComponents;
                         className += " placeholder";
                     }
                     return className;
+                },
+                galleryThumbSearchResultsTitle: function () {
+                    var searchResults = Number(this.data.data.searchResults);
+                    if (searchResults) {
+                        if (searchResults > 1) {
+                            return String.format(that.options.content.searchResults, searchResults);
+                        }
+                        return String.format(that.options.content.searchResult, searchResults);
+                    }
                 }
             });
             // use unevent to detect scroll stop.
@@ -116,9 +129,10 @@ var IIIFComponents;
         };
         GalleryComponent.prototype._getDefaultOptions = function () {
             return {
-                chunkedResizingEnabled: true,
                 chunkedResizingThreshold: 400,
                 content: {
+                    searchResult: "{0} search result",
+                    searchResults: "{0} search results",
                     select: "Select",
                     selectAll: "Select All"
                 },
@@ -126,8 +140,10 @@ var IIIFComponents;
                 helper: null,
                 imageFadeInDuration: 300,
                 initialZoom: 6,
+                minLabelWidth: 20,
                 pageModeEnabled: false,
                 scrollStopDuration: 100,
+                searchResults: [],
                 sizingEnabled: true,
                 thumbHeight: 320,
                 thumbLoadPadding: 3,
@@ -140,6 +156,17 @@ var IIIFComponents;
             if (this.options.viewingDirection.toString() === manifesto.ViewingDirection.bottomToTop().toString()) {
                 this._thumbs.reverse();
             }
+            if (this.options.searchResults && this.options.searchResults.length) {
+                for (var i = 0; i < this.options.searchResults.length; i++) {
+                    var searchResult = this.options.searchResults[i];
+                    // find the thumb with the same canvasIndex and add the searchResult
+                    var thumb = this._thumbs.en().where(function (t) { return t.index === searchResult.canvasIndex; }).first();
+                    // clone the data so searchResults isn't persisted on the canvas.
+                    var data = $.extend(true, {}, thumb.data);
+                    data.searchResults = searchResult.rects.length;
+                    thumb.data = data;
+                }
+            }
             this._thumbsCache = null; // delete cache
             this._createThumbs();
             this.selectIndex(this.options.helper.canvasIndex);
@@ -147,8 +174,8 @@ var IIIFComponents;
             if (multiSelectState.isEnabled) {
                 this._$multiSelectOptions.show();
                 this._$thumbs.addClass("multiSelect");
-                for (var j = 0; j < multiSelectState.canvases.length; j++) {
-                    var canvas = multiSelectState.canvases[j];
+                for (var i = 0; i < multiSelectState.canvases.length; i++) {
+                    var canvas = multiSelectState.canvases[i];
                     var thumb = this._getThumbByCanvas(canvas);
                     this._setThumbMultiSelected(thumb, canvas.multiSelected);
                 }
@@ -156,8 +183,8 @@ var IIIFComponents;
                 for (var i = 0; i < multiSelectState.ranges.length; i++) {
                     var range = multiSelectState.ranges[i];
                     var thumbs = this._getThumbsByRange(range);
-                    for (var k = 0; k < thumbs.length; k++) {
-                        var thumb = thumbs[k];
+                    for (var i_1 = 0; i_1 < thumbs.length; i_1++) {
+                        var thumb = thumbs[i_1];
                         this._setThumbMultiSelected(thumb, range.multiSelected);
                     }
                 }
@@ -177,9 +204,6 @@ var IIIFComponents;
                 return;
             this._$thumbs.undelegate('.thumb', 'click');
             this._$thumbs.empty();
-            if (this._isChunkedResizingEnabled()) {
-                this._$thumbs.addClass("chunked");
-            }
             var multiSelectState = this._getMultiSelectState();
             // set initial thumb sizes
             var heights = [];
@@ -193,8 +217,8 @@ var IIIFComponents;
                 thumb.multiSelectEnabled = multiSelectState.isEnabled;
             }
             var medianHeight = Math.median(heights);
-            for (var j = 0; j < this._thumbs.length; j++) {
-                var thumb = this._thumbs[j];
+            for (var i = 0; i < this._thumbs.length; i++) {
+                var thumb = this._thumbs[i];
                 thumb.initialHeight = medianHeight;
             }
             this._$thumbs.link($.templates.galleryThumbsTemplate, this._thumbs);
@@ -227,22 +251,47 @@ var IIIFComponents;
                     });
                 });
             }
-            this._setLabel();
-            this._updateThumbs();
         };
         GalleryComponent.prototype._getThumbByCanvas = function (canvas) {
             return this._thumbs.en().where(function (c) { return c.data.id === canvas.id; }).first();
         };
         GalleryComponent.prototype._sizeThumb = function ($thumb) {
-            var $wrap = $thumb.find('.wrap');
-            var width = Number($thumb.data().initialwidth);
-            var height = Number($thumb.data().initialheight);
-            var $label = $thumb.find('.label');
+            var initialWidth = $thumb.data().initialwidth;
+            var initialHeight = $thumb.data().initialheight;
+            var width = Number(initialWidth);
+            var height = Number(initialHeight);
             var newWidth = Math.floor(width * this._range);
             var newHeight = Math.floor(height * this._range);
+            var $wrap = $thumb.find('.wrap');
+            var $label = $thumb.find('.label');
+            var $index = $thumb.find('.index');
+            var $searchResults = $thumb.find('.searchResults');
+            var newLabelWidth = newWidth;
+            // if search results are visible, size index/label to accommodate it.
+            // if the resulting size is below options.minLabelWidth, hide search results.
+            if (this.options.searchResults && this.options.searchResults.length) {
+                $searchResults.show();
+                newLabelWidth = newWidth - $searchResults.outerWidth();
+                if (newLabelWidth < this.options.minLabelWidth) {
+                    $searchResults.hide();
+                    newLabelWidth = newWidth;
+                }
+                else {
+                    $searchResults.show();
+                }
+            }
+            if (this.options.pageModeEnabled) {
+                $index.hide();
+                $label.show();
+            }
+            else {
+                $index.show();
+                $label.hide();
+            }
             $wrap.outerWidth(newWidth);
             $wrap.outerHeight(newHeight);
-            $label.outerWidth(newWidth);
+            $index.outerWidth(newLabelWidth);
+            $label.outerWidth(newLabelWidth);
         };
         GalleryComponent.prototype._loadThumb = function ($thumb, cb) {
             var $wrap = $thumb.find('.wrap');
@@ -255,16 +304,16 @@ var IIIFComponents;
             if (visible !== "false") {
                 $wrap.addClass('loading');
                 var src = $thumb.attr('data-src');
-                var img = $('<img class="thumbImage" src="' + src + '" />');
+                var $img = $('<img class="thumbImage" src="' + src + '" />');
                 // fade in on load.
-                $(img).hide().load(function () {
+                $img.hide().load(function () {
                     $(this).fadeIn(fadeDuration, function () {
                         $(this).parent().swapClass('loading', 'loaded');
                     });
                 });
-                $wrap.prepend(img);
+                $wrap.prepend($img);
                 if (cb)
-                    cb(img);
+                    cb($img);
             }
             else {
                 $wrap.addClass('hidden');
@@ -294,45 +343,37 @@ var IIIFComponents;
             }
             // test which thumbs are scrolled into view
             var thumbs = this._getAllThumbs();
+            var numToUpdate = 0;
             for (var i = 0; i < thumbs.length; i++) {
                 var $thumb = $(thumbs[i]);
                 var thumbTop = $thumb.position().top;
                 var thumbHeight = $thumb.outerHeight();
                 var thumbBottom = thumbTop + thumbHeight;
-                if (debug) {
-                    var $label = $thumb.find('span:visible');
-                    $label.empty().append('t: ' + thumbTop + ', b: ' + thumbBottom);
-                }
-                // if chunked resizing isn't enabled, resize all thumbs
-                if (!this._isChunkedResizingEnabled()) {
-                    this._sizeThumb($thumb);
-                }
                 var padding = thumbHeight * this.options.thumbLoadPadding;
                 // check all thumbs to see if they are within the scroll area plus padding
                 if (thumbTop <= scrollBottom + padding && thumbBottom >= scrollTop - padding) {
-                    // if chunked resizing is enabled, only resize, equalise, and show thumbs in the scroll area
-                    if (this._isChunkedResizingEnabled()) {
-                        this._sizeThumb($thumb);
-                    }
-                    $thumb.removeClass('outsideScrollArea');
-                    if (debug) {
-                        $label.append(', i: true');
-                    }
+                    numToUpdate += 1;
+                    var $label = $thumb.find('span:visible').not('.searchResults');
+                    // if (debug) {
+                    //     $thumb.addClass('debug');
+                    //     $label.empty().append('t: ' + thumbTop + ', b: ' + thumbBottom);
+                    // } else {
+                    //     $thumb.removeClass('debug');
+                    // }
+                    this._sizeThumb($thumb);
+                    $thumb.addClass('insideScrollArea');
+                    // if (debug) {
+                    //     $label.append(', i: true');
+                    // }
                     this._loadThumb($thumb);
                 }
                 else {
-                    $thumb.addClass('outsideScrollArea');
-                    if (debug) {
-                        $label.append(', i: false');
-                    }
+                    $thumb.removeClass('insideScrollArea');
                 }
             }
-        };
-        GalleryComponent.prototype._isChunkedResizingEnabled = function () {
-            if (this.options.chunkedResizingEnabled && this._thumbs.length > this.options.chunkedResizingThreshold) {
-                return true;
+            if (debug) {
+                console.log('number of thumbs to update: ' + numToUpdate);
             }
-            return false;
         };
         GalleryComponent.prototype._getSelectedThumbIndex = function () {
             return Number(this._$selectedThumb.data('index'));
@@ -350,15 +391,16 @@ var IIIFComponents;
             var $thumb = this._getThumbByIndex(canvasIndex);
             this._$main.scrollTop($thumb.position().top);
         };
-        GalleryComponent.prototype._searchPreviewStart = function (canvasIndex) {
-            this._scrollToThumb(canvasIndex);
-            var $thumb = this._getThumbByIndex(canvasIndex);
-            $thumb.addClass('searchpreview');
-        };
-        GalleryComponent.prototype._searchPreviewFinish = function () {
-            this._scrollToThumb(this.options.helper.canvasIndex);
-            this._getAllThumbs().removeClass('searchpreview');
-        };
+        // these don't work well because thumbs are loaded in chunks
+        // public searchPreviewStart(canvasIndex: number): void {
+        //     this._scrollToThumb(canvasIndex);
+        //     const $thumb: JQuery = this._getThumbByIndex(canvasIndex);
+        //     $thumb.addClass('searchpreview');
+        // }
+        // public searchPreviewFinish(): void {
+        //     this._scrollToThumb(this.options.helper.canvasIndex);
+        //     this._getAllThumbs().removeClass('searchpreview');
+        // }
         GalleryComponent.prototype.selectIndex = function (index) {
             if (!this._thumbs || !this._thumbs.length)
                 return;
@@ -368,16 +410,6 @@ var IIIFComponents;
             this._scrollToThumb(index);
             // make sure visible images are loaded.
             this._updateThumbs();
-        };
-        GalleryComponent.prototype._setLabel = function () {
-            if (this.options.pageModeEnabled) {
-                $(this._$thumbs).find('span.index').hide();
-                $(this._$thumbs).find('span.label').show();
-            }
-            else {
-                $(this._$thumbs).find('span.index').show();
-                $(this._$thumbs).find('span.label').hide();
-            }
         };
         GalleryComponent.prototype._setRange = function () {
             var norm = Math.normalise(Number(this._$sizeRange.val()), 0, 10);

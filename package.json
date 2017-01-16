@@ -1,0 +1,29 @@
+{
+  "name": "universalviewer4omeka",
+  "version": "1.0.0",
+  "description": "Universal Viewer (plugin for Omeka)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Daniel-KM/UniversalViewer4Omeka"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Daniel-KM/UniversalViewer4Omeka/issues"
+  },
+  "homepage": "https://github.com/Daniel-KM/UniversalViewer4Omeka#readme",
+  "devDependencies": {
+    "async": "^2.1.4",
+    "del": "^2.2.2",
+    "gulp": "^3.9.1",
+    "gulp-rename": "^1.2.2",
+    "run-sequence": "^1.2.2"
+  },
+  "dependencies": {
+    "universalviewer": "github:universalviewer/universalviewer#dev"
+  }
+}
