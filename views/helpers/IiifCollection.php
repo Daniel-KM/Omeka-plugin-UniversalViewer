@@ -142,6 +142,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
                 'recordtype' => 'collections',
                 'id' => $collection['id'],
             ), 'universalviewer_presentation_manifest');
+            $manifest['@id'] = $this->view->uvForceHttpsIfRequired($manifest['@id']);
             $manifest['@type'] = 'sc:Collection';
             $manifest['label'] = $collection['name'] ?: __('[Untitled]');
             $children = $this->_buildManifestCollectionTree($collection['children']);
@@ -162,6 +163,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
             'recordtype' => Inflector::tableize($recordClass),
             'id' => $record->id,
         ), 'universalviewer_presentation_manifest');
+        $manifest['@id'] = $this->view->uvForceHttpsIfRequired($manifest['@id']);
         $manifest['@type'] = $recordClass == 'Collection' ? 'sc:Collection' : 'sc:Manifest';
         $manifest['label'] = strip_formatting(metadata($record, array('Dublin Core', 'Title'), array('no_filter' => true))) ?: __('[Untitled]');
 

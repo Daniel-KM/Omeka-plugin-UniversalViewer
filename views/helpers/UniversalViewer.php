@@ -62,6 +62,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
                     'recordtype' => Inflector::tableize(get_class($record)),
                     'id' => $record->id,
                 ), 'universalviewer_presentation_manifest');
+            $urlManifest = $this->view->uvForceHttpsIfRequired($urlManifest);
         }
 
         $class = isset($args['class'])

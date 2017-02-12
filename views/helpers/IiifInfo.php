@@ -51,6 +51,7 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             $imageUrl = absolute_url(array(
                     'id' => $file->id,
                 ), 'universalviewer_image');
+            $imageUrl = $this->view->uvForceHttpsIfRequired($imageUrl);
 
             $tiles = array();
             if (plugin_is_active('OpenLayersZoom')
@@ -114,6 +115,7 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             $fileUrl = absolute_url(array(
                     'id' => $file->id,
                 ), 'universalviewer_media');
+            $fileUrl = $this->view->uvForceHttpsIfRequired($fileUrl);
             $info['@id'] = $fileUrl;
             // See MediaController::contextAction()
             $info['protocol'] = 'http://wellcomelibrary.org/ld/ixif';

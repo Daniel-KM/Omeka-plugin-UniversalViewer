@@ -37,6 +37,21 @@
             </p>
         </div>
     </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_force_https',
+                __('Force https')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formCheckbox('universalviewer_force_https', true,
+                array('checked' => (boolean) get_option('universalviewer_force_https'))); ?>
+            <p class="explanation">
+                <?php echo __('In some cases, the json files (manifest and info) on a secured site (https) contains some urls with the scheme "http".'); ?>
+                <?php echo __('This option forces all Omeka absolute urls in these files to start with the scheme "https".'); ?>
+                <?php echo __('Of course, this should be unchecked on a http-only site.'); ?>
+            </p>
+        </div>
+    </div>
 </fieldset>
 <fieldset id="fieldset-universalviewer-manifestsource"><legend><?php echo __('Manifest source'); ?></legend>
     <div class="field">
