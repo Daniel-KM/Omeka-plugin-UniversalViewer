@@ -59,16 +59,37 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      */
     protected function _buildManifestItem($record)
     {
-        // Prepare all values needed for manifest.
+        // Prepare values needed for the manifest. Empty values will be removed.
+        // Some are required.
+        $manifest = array(
+            '@context' => '',
+            '@id' => '',
+            '@type' => 'sc:Manifest',
+            'label' => '',
+            'description' => '',
+            'thumbnail' => '',
+            'license' => '',
+            'attribution' => '',
+            'service' => '',
+            'seeAlso' => '',
+            'within' => '',
+            'metadata' => array(),
+            'mediaSequences' => array(),
+            'sequences' => array(),
+        );
+
         $url = absolute_url(array(
                 'recordtype' => 'items',
                 'id' => $record->id,
             ), 'universalviewer_presentation_manifest');
         $url = $this->view->uvForceHttpsIfRequired($url);
+        $manifest['@id'] = $url;
 
         // The base url for some other ids.
         $this->_baseUrl = dirname($url);
 
+        // Prepare the metadata of the record.
+        // TODO Manage filter and escape or use $record->getAllElementTexts()?
         $elementTexts = $this->view->allElementTexts($record, array(
             'show_empty_elements' => false,
             // 'show_element_sets' => array('Dublin Core'),
@@ -86,11 +107,13 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 );
             }
         }
-        $metadata = apply_filters('uv_item_manifest_metadata', $metadata, array('record' => $record));
+        $manifest['metadata'] = $metadata;
 
-        $title = isset($elementTexts['Dublin Core']['Title'][0])
+        // "Display title" is available for items since Omeka 2.5 only.
+        $label = isset($elementTexts['Dublin Core']['Title'][0])
             ? $elementTexts['Dublin Core']['Title'][0]
             : __('[Untitled]');
+        $manifest['label'] = $label;
 
         $description = '';
         $descriptionElement = get_option('universalviewer_manifest_description_element');
@@ -105,6 +128,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 $description = metadata($record, 'citation', array('no_escape' => true, 'no_filter' => true));
             }
         }
+        $manifest['description'] = $description;
 
         $licenseElement = get_option('universalviewer_manifest_license_element');
         if ($licenseElement) {
@@ -113,7 +137,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         if (empty($license)) {
             $license = get_option('universalviewer_manifest_license_default');
         }
-        $license = apply_filters('uv_item_manifest_licence', $license, array('record' => $record));
+        $manifest['license'] = $license;
 
         $attributionElement = get_option('universalviewer_manifest_attribution_element');
         if ($attributionElement) {
@@ -122,34 +146,32 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         if (empty($attribution)) {
             $attribution = get_option('universalviewer_manifest_attribution_default');
         }
-        $attribution = apply_filters('uv_item_manifest_attribution', $attribution, array('record' => $record));
+        $manifest['attribution'] = $attribution;
 
         // TODO To parameter or to extract from metadata.
-        $service = '';
         /*
-        $service = (object) array(
+        $metadata['service'] = array(
             '@context' =>'http://example.org/ns/jsonld/context.json',
             '@id' => 'http://example.org/service/example',
             'profile' => 'http://example.org/docs/example-service.html',
         );
         */
 
-        // TODO To parameter or to extract from metadata.
-        $seeAlso = '';
+        // TODO To parameter or to extract from metadata (Dublin Core Relation).
         /*
-        $seeAlso = (object) array(
+        $metadata['seeAlso'] = array(
             '@id' => 'http://www.example.org/library/catalog/book1.marc',
             'format' =>'application/marc',
         );
         */
 
-        $within = '';
         if ($record->collection_id) {
             $within = absolute_url(array(
                     'recordtype' => 'collections',
                     'id' => $record->collection_id,
                 ), 'universalviewer_presentation_manifest');
             $within = $this->view->uvForceHttpsIfRequired($within);
+            $metadata['within'] = $within;
         }
 
         $canvases = array();
@@ -238,7 +260,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             if ($isThreejs) {
                 $mediaSequenceElement = $this->_iiifMediaSequenceThreejs(
                     $file,
-                    array('label' => $title, 'metadata' => $metadata, 'files' => $images)
+                    array('label' => $label, 'metadata' => $metadata, 'files' => $images)
                     );
                 $mediaSequencesElements[] = $mediaSequenceElement;
             }
@@ -251,7 +273,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     case 'application/pdf':
                         $mediaSequenceElement = $this->_iiifMediaSequencePdf(
                             $file,
-                            array('label' => $title, 'metadata' => $metadata)
+                            array('label' => $label, 'metadata' => $metadata)
                         );
                         $mediaSequencesElements[] = $mediaSequenceElement;
                         // TODO Add the file for download (no rendering)? The
@@ -263,7 +285,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     // case 'audio/mp3':
                         $mediaSequenceElement = $this->_iiifMediaSequenceAudio(
                             $file,
-                            array('label' => $title, 'metadata' => $metadata)
+                            array('label' => $label, 'metadata' => $metadata)
                         );
                         $mediaSequencesElements[] = $mediaSequenceElement;
                         // Rendering files are automatically added for download.
@@ -275,7 +297,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     // case 'video/webm':
                         $mediaSequenceElement = $this->_iiifMediaSequenceVideo(
                             $file,
-                            array('label' => $title, 'metadata' => $metadata)
+                            array('label' => $label, 'metadata' => $metadata)
                         );
                         $mediaSequencesElements[] = $mediaSequenceElement;
                         // Rendering files are automatically added for download.
@@ -290,7 +312,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         }
 
         // Thumbnail of the whole work.
-        $thumbnail = $this->_mainThumbnail($record, $isThreejs);
+        $manifest['thumbnail'] = $this->_mainThumbnail($record, $isThreejs);
 
         // Prepare sequences.
         $sequences = array();
@@ -356,8 +378,14 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $sequences[] = $sequence;
         }
 
-        // Prepare manifest.
-        $manifest = array();
+        if ($mediaSequences) {
+            $manifest['mediaSequences'] = $mediaSequences;
+        }
+
+        if ($sequences) {
+            $manifest['sequences'] = $sequences;
+        }
+
         if ($isThreejs) {
             $manifest['@context'] = array(
                 "http://iiif.io/api/presentation/2/context.json",
@@ -377,42 +405,12 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 // WEB_ROOT . '/ld/ixif/0/context.json',
             );
         }
-        $manifest['@id'] = $url;
-        $manifest['@type'] = 'sc:Manifest';
-        $manifest['label'] = $title;
-        if ($description) {
-            $manifest['description'] = $description;
-        }
-        if ($thumbnail) {
-            $manifest['thumbnail'] = $thumbnail;
-        }
-        if ($license) {
-            $manifest['license'] = $license;
-        }
-        if ($attribution) {
-            $manifest['attribution'] = $attribution;
-        }
-        if ($service) {
-            $manifest['service'] = $service;
-        }
-        if ($seeAlso) {
-            $manifest['seeAlso'] = $seeAlso;
-        }
-        if ($within) {
-            $manifest['within'] = $within;
-        }
-        if ($metadata) {
-            $manifest['metadata'] = $metadata;
-        }
-        if ($mediaSequences) {
-            $manifest['mediaSequences'] = $mediaSequences;
-        }
-        if ($sequences) {
-            $manifest['sequences'] = $sequences;
-        }
-        $manifest = (object) $manifest;
 
-        return $manifest;
+        $manifest = apply_filters('uv_manifest', $manifest, array('record' => $record));
+
+        // Remove all empty values (there is no "0" or "null" at first level).
+        $manifest = array_filter($manifest);
+        return (object) $manifest;
     }
 
     /**

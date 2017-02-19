@@ -8,6 +8,8 @@ $elements = get_table_options('Element', null, array(
     <p class="explanation">
         <?php echo __('The plugin creates a manifest for the viewer with elements from each record (item or collection).'); ?>
         <?php echo __('The elements below are used when some metadata are missing.'); ?>
+        <?php echo __('In all cases, empty elements are not displayed.'); ?>
+        <?php echo __('Futhermore, the filter "uv_manifest" is available to change any data.'); ?>
     </p>
     <div class="field">
         <div class="two columns alpha">
@@ -23,6 +25,7 @@ $elements = get_table_options('Element', null, array(
             <p class="explanation">
                 <?php echo __('If any, the first metadata of the record will be added in all manifests and viewers for main description.'); ?>
                 <?php echo __('It’s recommended to use "Dublin Core:Bibliographic Citation" when the plugin Dublin Core Extended is enabled.'); ?>
+                <?php echo __('For collections, the element "Dublin Core Description" is always used.'); ?>
             </p>
         </div>
     </div>

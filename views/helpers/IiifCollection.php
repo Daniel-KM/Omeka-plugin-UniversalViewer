@@ -43,12 +43,35 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
     /**
      * Get the IIIF manifest for the specified collection.
      *
-     * @param Collection $collection Collection
+     * @param Collection $record Collection
      * @return Object|null. The object corresponding to the collection.
      */
-    protected function _buildManifestCollection($collection)
+    protected function _buildManifestCollection($record)
     {
-        $elementTexts = get_view()->allElementTexts($collection, array(
+        // Prepare values needed for the manifest. Empty values will be removed.
+        // Some are required.
+        $manifest = array(
+            '@context' => 'http://iiif.io/api/presentation/2/context.json',
+            '@id' => '',
+            '@type' => 'sc:Collection',
+            'label' => '',
+            'description' => '',
+            'thumbnail' => '',
+            'license' => '',
+            'attribution' => '',
+            'service' => '',
+            'seeAlso' => '',
+            'within' => '',
+            'metadata' => array(),
+            'collections' => array(),
+            'manifests' => array(),
+        );
+
+        $manifest = array_merge($manifest, $this->_buildManifestBase($record, false));
+
+        // Prepare the metadata of the record.
+        // TODO Manage filter and escape or use $record->getAllElementTexts()?
+        $elementTexts = get_view()->allElementTexts($record, array(
             'show_empty_elements' => false,
             // 'show_element_sets' => array('Dublin Core'),
             'return_type' => 'array',
@@ -65,8 +88,12 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
                 );
             }
         }
+        $manifest['metadata'] = $metadata;
 
-        $description = strip_formatting(metadata($collection, array('Dublin Core', 'Description')));
+        // There is no citation for collections.
+        // TODO Use option universalviewer_manifest_description_element?
+        $description = strip_formatting(metadata($record, array('Dublin Core', 'Description')));
+        $manifest['description'] = $description;
 
         $licenseElement = get_option('universalviewer_manifest_license_element');
         if ($licenseElement) {
@@ -75,6 +102,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         if (empty($license)) {
             $license = get_option('universalviewer_manifest_license_default');
         }
+        $manifest['license'] = $license;
 
         $attributionElement = get_option('universalviewer_manifest_attribution_element');
         if ($attributionElement) {
@@ -83,61 +111,48 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         if (empty($attribution)) {
             $attribution = get_option('universalviewer_manifest_attribution_default');
         }
+        $manifest['attribution'] = $attribution;
 
-        $collections = array();
+        // $manifest['thumbnail'] = $thumbnail;
+        // $manifest['service'] = $service;
+        // TODO To parameter or to extract from metadata (Dublin Core Relation).
+        // $manifest['seeAlso'] = $seeAlso;
+        // TODO Use within with collection tree.
+        // $manifest['within'] = $within;
+
         // TODO Finalize display of collections.
         /*
+        $collections = array();
         // Hierarchical list of collections.
         if (plugin_is_active('CollectionTree')) {
-            $collectionTree = get_db()->getTable('CollectionTree')->getDescendantTree($collection->id);
+            $collectionTree = get_db()->getTable('CollectionTree')->getDescendantTree($record->id);
             $collections = $this->_buildManifestCollectionTree($collectionTree);
         }
         // Flat list of collections.
         else {
             $collectionsList = get_records('Collection', array(), 0);
             foreach ($collectionsList as $collectionRecord) {
-                if ($collectionRecord->id != $collection->id) {
+                if ($collectionRecord->id != $record->id) {
                     $collections[] = $this->_buildManifestBase($collectionRecord);
                 }
             }
         }
+        $manifest['collections'] = $collections;
         */
 
         // List of manifests inside the collection.
         $manifests = array();
-        $items = get_records('Item', array('collection_id' => $collection->id), 0);
+        $items = get_records('Item', array('collection_id' => $record->id), 0);
         foreach ($items as $item) {
             $manifests[] = $this->_buildManifestBase($item);
         }
+        $manifest['manifests'] = $manifests;
 
-        // Prepare manifest.
-        $manifest = array();
-        $manifest['@context'] = 'http://iiif.io/api/presentation/2/context.json';
-        $manifest = array_merge($manifest, $this->_buildManifestBase($collection, false));
-        if ($metadata) {
-            $manifest['metadata'] = $metadata;
-        }
-        if ($description) {
-           $manifest['description'] = $description;
-        }
-        if ($license) {
-            $manifest['license'] = $license;
-        }
-        if ($attribution) {
-            $manifest['attribution'] = $attribution;
-        }
-        // $manifest['service'] = $service;
-        // $manifest['seeAlso'] = $seeAlso;
-        // $manifest['within'] = $within;
-        if ($collections) {
-            $manifest['collections'] = $collections;
-        }
-        if ($manifests) {
-            $manifest['manifests'] = $manifests;
-        }
-        $manifest = (object) $manifest;
+        $manifest = apply_filters('uv_manifest', $manifest, array('record' => $record));
 
-        return $manifest;
+        // Remove all empty values (there is no "0" or "null" at first level).
+        $manifest = array_filter($manifest);
+        return (object) $manifest;
     }
 
     /**
@@ -173,16 +188,19 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
     {
         $recordClass = get_class($record);
         $manifest = array();
-        $manifest['@id'] = absolute_url(array(
+
+        $url = absolute_url(array(
             'recordtype' => Inflector::tableize($recordClass),
             'id' => $record->id,
         ), 'universalviewer_presentation_manifest');
-        $manifest['@id'] = $this->view->uvForceHttpsIfRequired($manifest['@id']);
-        $manifest['@type'] = $recordClass == 'Collection' ? 'sc:Collection' : 'sc:Manifest';
-        $manifest['label'] = strip_formatting(metadata($record, array('Dublin Core', 'Title'), array('no_filter' => true))) ?: __('[Untitled]');
+        $url = $this->view->uvForceHttpsIfRequired($url);
+        $manifest['@id'] = $url;
 
-        return $asObject
-            ? (object) $manifest
-            : $manifest;
+        $manifest['@type'] = $recordClass == 'Collection' ? 'sc:Collection' : 'sc:Manifest';
+
+        $label = strip_formatting(metadata($record, array('Dublin Core', 'Title'), array('no_filter' => true))) ?: __('[Untitled]');
+        $manifest['label'] = $label;
+
+        return $asObject ? (object) $manifest : $manifest;
     }
 }
