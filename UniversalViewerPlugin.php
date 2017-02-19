@@ -52,6 +52,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_manifest_attribution_default' => 'Provided by Example Organization',
         'universalviewer_manifest_license_element' => '["Dublin Core", "Rights"]',
         'universalviewer_manifest_license_default' => 'http://www.example.org/license.html',
+        'universalviewer_manifest_logo_default' => '',
         'universalviewer_alternative_manifest_element' => '',
         'universalviewer_append_collections_show' => true,
         'universalviewer_append_items_show' => true,
@@ -137,6 +138,10 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             set_option('universalviewer_alternative_manifest_element', $element);
             delete_option('universalviewer_manifest_elementset');
             delete_option('universalviewer_manifest_element');
+        }
+
+        if (version_compare($oldVersion, '2.4.2', '<')) {
+            set_option('universalviewer_manifest_logo_default', $this->_options['universalviewer_manifest_logo_default']);
         }
     }
 

@@ -153,6 +153,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         }
         $manifest['attribution'] = $attribution;
 
+        $manifest['logo'] = get_option('universalviewer_manifest_logo_default');
+
         // TODO To parameter or to extract from metadata.
         /*
         $metadata['service'] = array(

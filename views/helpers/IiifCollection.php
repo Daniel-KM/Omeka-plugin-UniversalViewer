@@ -118,6 +118,8 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         }
         $manifest['attribution'] = $attribution;
 
+        $manifest['logo'] = get_option('universalviewer_manifest_logo_default');
+
         // $manifest['thumbnail'] = $thumbnail;
         // $manifest['service'] = $service;
         // TODO To parameter or to extract from metadata (Dublin Core Relation).

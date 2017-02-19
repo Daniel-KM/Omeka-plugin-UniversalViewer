@@ -4,7 +4,7 @@ $elements = get_table_options('Element', null, array(
     'sort' => 'alphaBySet',
 ));
 ?>
-<fieldset id="fieldset-universalviewer-metadata"><legend><?php echo __('Metadata'); ?></legend>
+<fieldset id="fieldset-universalviewer-manifest"><legend><?php echo __('Manifest'); ?></legend>
     <p class="explanation">
         <?php echo __('The plugin creates a manifest for the viewer with elements from each record (item or collection).'); ?>
         <?php echo __('The elements below are used when some metadata are missing.'); ?>
@@ -94,6 +94,17 @@ $elements = get_table_options('Element', null, array(
             <?php echo $this->formText('universalviewer_manifest_license_default', get_option('universalviewer_manifest_license_default'), null); ?>
             <p class="explanation">
                 <?php echo __('If any, and if there is no metadata for the element above, this text will be added in all manifests and viewers to indicate the rights.'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_logo_default', __('Logo')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formText('universalviewer_manifest_logo_default', get_option('universalviewer_manifest_logo_default'), null); ?>
+            <p class="explanation">
+                <?php echo __('If any, this url to an image will be used as logo and displayed in the right panel.'); ?>
             </p>
         </div>
     </div>
