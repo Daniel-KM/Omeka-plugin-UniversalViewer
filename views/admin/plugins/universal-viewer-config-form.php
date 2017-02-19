@@ -11,29 +11,30 @@ $elements = get_table_options('Element', null, array(
     </p>
     <div class="field">
         <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_manifest_license_element', __('Element to use for License')); ?>
+            <?php echo $this->formLabel('universalviewer_manifest_description_element', __('Element to use for Description')); ?>
         </div>
         <div class='inputs five columns omega'>
             <?php
-                echo $this->formSelect('universalviewer_manifest_license_element',
-                    $element_ids['license'],
+                echo $this->formSelect('universalviewer_manifest_description_element',
+                    $element_ids['description'],
                     array(),
                     $elements);
             ?>
             <p class="explanation">
-                <?php echo __('If any, the first metadata of the record will be added in all manifests and viewers to indicate the rights.'); ?>
-                <?php echo __('It’s recommended to use "Dublin Core:Rights" (or "Dublin Core:License" when the plugin Dublin Core Extended is enabled).'); ?>
+                <?php echo __('If any, the first metadata of the record will be added in all manifests and viewers for main description.'); ?>
+                <?php echo __('It’s recommended to use "Dublin Core:Bibliographic Citation" when the plugin Dublin Core Extended is enabled.'); ?>
             </p>
         </div>
     </div>
     <div class="field">
         <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_manifest_license_default', __('Default License')); ?>
+            <?php echo $this->formLabel('universalviewer_manifest_description_default', __('Default Description')); ?>
         </div>
         <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_manifest_license_default', get_option('universalviewer_manifest_license_default'), null); ?>
+            <?php echo $this->formCheckbox('universalviewer_manifest_description_default', true,
+                array('checked' => (boolean) get_option('universalviewer_manifest_description_default'))); ?>
             <p class="explanation">
-                <?php echo __('If any, and if there is no metadata for the element above, this text will be added in all manifests and viewers to indicate the rights.'); ?>
+                <?php echo __('If checked, and if there is no metadata for the element above, the Omeka citation will be added in all manifests and viewers as main description.'); ?>
             </p>
         </div>
     </div>
@@ -62,6 +63,34 @@ $elements = get_table_options('Element', null, array(
             <p class="explanation">
                 <?php echo __('If any, and if there is no metadata for the element above, this text will be added in all manifests and viewers.'); ?>
                 <?php echo __('It will be used as pop up in the viewer too, if enabled.'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_license_element', __('Element to use for License')); ?>
+        </div>
+        <div class='inputs five columns omega'>
+            <?php
+                echo $this->formSelect('universalviewer_manifest_license_element',
+                    $element_ids['license'],
+                    array(),
+                    $elements);
+            ?>
+            <p class="explanation">
+                <?php echo __('If any, the first metadata of the record will be added in all manifests and viewers to indicate the rights.'); ?>
+                <?php echo __('It’s recommended to use "Dublin Core:Rights" (or "Dublin Core:License" when the plugin Dublin Core Extended is enabled).'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_license_default', __('Default License')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formText('universalviewer_manifest_license_default', get_option('universalviewer_manifest_license_default'), null); ?>
+            <p class="explanation">
+                <?php echo __('If any, and if there is no metadata for the element above, this text will be added in all manifests and viewers to indicate the rights.'); ?>
             </p>
         </div>
     </div>

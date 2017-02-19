@@ -45,10 +45,12 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * @var array Options and their default values.
      */
     protected $_options = array(
-        'universalviewer_manifest_license_element' => '["Dublin Core", "Rights"]',
-        'universalviewer_manifest_license_default' => 'http://www.example.org/license.html',
+        'universalviewer_manifest_description_element' => '',
+        'universalviewer_manifest_description_default' => true,
         'universalviewer_manifest_attribution_element' => '',
         'universalviewer_manifest_attribution_default' => 'Provided by Example Organization',
+        'universalviewer_manifest_license_element' => '["Dublin Core", "Rights"]',
+        'universalviewer_manifest_license_default' => 'http://www.example.org/license.html',
         'universalviewer_alternative_manifest_element' => '',
         'universalviewer_append_collections_show' => true,
         'universalviewer_append_items_show' => true,
@@ -84,6 +86,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         }
 
         if (plugin_is_active('DublinCoreExtended')) {
+            $this->_options['universalviewer_manifest_description_element'] = json_encode(array('Dublin Core', 'Bibliographic Citation'));
             $this->_options['universalviewer_manifest_license_element'] = json_encode(array('Dublin Core', 'License'));
         }
 
@@ -100,14 +103,19 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         $db = $this->_db;
 
         if (version_compare($oldVersion, '2.4', '<')) {
-            $elementSetName = get_option('universalviewer_manifest_elementset');
-            $elementName = get_option('universalviewer_manifest_element');
-            $element = !empty($elementSetName) && !empty($elementName)
-                ? json_encode(array($elementSetName, $elementName))
-                : '';
-            set_option('universalviewer_alternative_manifest_element', $element);
-            delete_option('universalviewer_manifest_elementset');
-            delete_option('universalviewer_manifest_element');
+            if (plugin_is_active('DublinCoreExtended')) {
+                $element = json_encode(array('Dublin Core', 'Bibliographic Citation'));
+            } else {
+                $element = '';
+            }
+            set_option('universalviewer_manifest_description_element', $element);
+            set_option('universalviewer_manifest_description_default', $this->_options['universalviewer_manifest_description_default']);
+
+            set_option('universalviewer_manifest_attribution_element', $this->_options['universalviewer_manifest_attribution_element']);
+
+            $value = get_option('universalviewer_attribution');
+            set_option('universalviewer_manifest_attribution_default', $value);
+            delete_option('universalviewer_attribution');
 
             if (plugin_is_active('DublinCoreExtended')) {
                 $element = json_encode(array('Dublin Core', 'License'));
@@ -120,11 +128,14 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             set_option('universalviewer_manifest_license_default', $value);
             delete_option('universalviewer_licence');
 
-            set_option('universalviewer_manifest_attribution_element', $this->_options['universalviewer_manifest_attribution_element']);
-
-            $value = get_option('universalviewer_attribution');
-            set_option('universalviewer_manifest_attribution_default', $value);
-            delete_option('universalviewer_attribution');
+            $elementSetName = get_option('universalviewer_manifest_elementset');
+            $elementName = get_option('universalviewer_manifest_element');
+            $element = !empty($elementSetName) && !empty($elementName)
+                ? json_encode(array($elementSetName, $elementName))
+                : '';
+            set_option('universalviewer_alternative_manifest_element', $element);
+            delete_option('universalviewer_manifest_elementset');
+            delete_option('universalviewer_manifest_element');
         }
     }
 
@@ -172,8 +183,9 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         $elementTable = $this->_db->getTable('Element');
         $elementIds = array();
         foreach (array(
-                'universalviewer_manifest_license_element' => 'license',
+                'universalviewer_manifest_description_element' => 'description',
                 'universalviewer_manifest_attribution_element' => 'attribution',
+                'universalviewer_manifest_license_element' => 'license',
                 'universalviewer_alternative_manifest_element' => 'manifest',
             ) as $option => $name) {
             $element = get_option($option);
@@ -209,8 +221,9 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
 
         // Get the element set names and the element names from the element ids.
         foreach (array(
-                'universalviewer_manifest_license_element',
+                'universalviewer_manifest_description_element',
                 'universalviewer_manifest_attribution_element',
+                'universalviewer_manifest_license_element',
                 'universalviewer_alternative_manifest_element',
             ) as $option) {
             $elementId = $post[$option];

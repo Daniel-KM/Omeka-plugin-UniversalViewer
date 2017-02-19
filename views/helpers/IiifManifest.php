@@ -92,11 +92,18 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             ? $elementTexts['Dublin Core']['Title'][0]
             : __('[Untitled]');
 
-        // An issue may occur with a contributed item (not fixed upstream yet).
-        try {
-            $description = metadata($record, 'citation', array('no_escape' => true));
-        } catch (Exception $e) {
-            $description = metadata($record, 'citation', array('no_escape' => true, 'no_filter' => true));
+        $description = '';
+        $descriptionElement = get_option('universalviewer_manifest_description_element');
+        if ($descriptionElement) {
+            $description = metadata($record, json_decode($descriptionElement, true));
+        }
+        if (empty($description) && get_option('universalviewer_manifest_description_default')) {
+            // An issue may occur with a contributed item (not fixed upstream yet).
+            try {
+                $description = metadata($record, 'citation', array('no_escape' => true));
+            } catch (Exception $e) {
+                $description = metadata($record, 'citation', array('no_escape' => true, 'no_filter' => true));
+            }
         }
 
         $licenseElement = get_option('universalviewer_manifest_license_element');
