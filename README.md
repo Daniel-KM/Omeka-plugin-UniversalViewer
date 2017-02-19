@@ -77,11 +77,18 @@ to supply the manifest to the Universal Viewer. In this case, no images are host
 in the Omeka record, but one of the metadata fields has the URL of the manifest
 hosted on another server.
 
-For example, you could set Manifest Element Set to "Dublin Core" and 
-Manifest Element to "Has Format" in the plugin configuration, and then put a URL
-like "https://example.com/iiif/HI-SK20161207-0009/manifest" in the "Has Element"
-field of a record. The Universal Viewer included on that record's display page will
-use that manifest URL to retrieve images and metadata for the viewer.
+For example, you could set the alternative manifest element to "Dublin Core:Has Format"
+in the plugin configuration, and then put a URL like "https://example.com/iiif/HI-SK20161207-0009/manifest"
+in the specified element of a record. The Universal Viewer included on that
+record's display page will use that manifest URL to retrieve images and metadata
+for the viewer.
+
+* Filtering data of manifests
+
+The plugin creates manifests with all the metadata of each record. The filter
+`uv_manifest` can be used to modify the exposed data of a manifest for items and
+collections. For example, it is possible to modify the citation, to remove some
+metadata or to change the thumbnail.
 
 
 Usage
@@ -90,7 +97,8 @@ Usage
 The viewer is always available at `http://www.example.com/collections/play/{collection id}`
 and `http://www.example.com/items/play/{item id}`. Furthermore, it is
 automatically embedded in "collections/show/{id}" and "items/show/{id}" pages.
-This can be disabled in the config of the plugin.
+This can be disabled in the config of the plugin. Finally, a layout is available
+to add the viewer for an item in an exhibit page.
 
 All routes for the player and the IIIF server are defined in the file "routes.ini".
 
@@ -259,13 +267,13 @@ Copyright
 Widget [UniversalViewer]:
 
 * Copyright Wellcome Library, 2013
-* Copyright British Library, 2015-2016
-* Copyright National Library of Wales, 2015-2016
-* Copyright [Edward Silverton] 2013-2016
+* Copyright British Library, 2015-2017
+* Copyright National Library of Wales, 2015-2017
+* Copyright [Edward Silverton] 2013-2017
 
 Plugin Universal Viewer for Omeka:
 
-* Copyright Daniel Berthereau, 2015-2016
+* Copyright Daniel Berthereau, 2015-2017
 
 
 [Universal Viewer]: https://github.com/Daniel-KM/UniversalViewer4Omeka
