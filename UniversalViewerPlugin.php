@@ -21,6 +21,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      */
     protected $_hooks = array(
         'install',
+        'upgrade',
         'uninstall',
         'initialize',
         'config_form',
@@ -44,19 +45,20 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * @var array Options and their default values.
      */
     protected $_options = array(
+        'universalviewer_manifest_license_element' => '["Dublin Core", "Rights"]',
+        'universalviewer_manifest_license_default' => 'http://www.example.org/license.html',
+        'universalviewer_manifest_attribution_element' => '',
+        'universalviewer_manifest_attribution_default' => 'Provided by Example Organization',
+        'universalviewer_alternative_manifest_element' => '',
         'universalviewer_append_collections_show' => true,
         'universalviewer_append_items_show' => true,
-        'universalviewer_max_dynamic_size' => 50000000,
-        'universalviewer_force_https' => false,
-        'universalviewer_licence' => 'http://www.example.org/license.html',
-        'universalviewer_attribution' => 'Provided by Example Organization',
         'universalviewer_class' => '',
         'universalviewer_width' => '95%',
         'universalviewer_height' => '600px',
         'universalviewer_locale' => 'en-GB:English (GB),fr-FR:French',
         'universalviewer_iiif_creator' => 'Auto',
-        'universalviewer_manifest_elementset' => '',
-        'universalviewer_manifest_element' => '',
+        'universalviewer_max_dynamic_size' => 10000000,
+        'universalviewer_force_https' => false,
     );
 
     /**
@@ -81,7 +83,49 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
                 '<a href="https://github.com/Daniel-KM/UniversalViewer4Omeka#installation">', '</a>'));
         }
 
+        if (plugin_is_active('DublinCoreExtended')) {
+            $this->_options['universalviewer_manifest_license_element'] = json_encode(array('Dublin Core', 'License'));
+        }
+
         $this->_installOptions();
+    }
+
+    /**
+     * Upgrade the plugin.
+     */
+    public function hookUpgrade($args)
+    {
+        $oldVersion = $args['old_version'];
+        $newVersion = $args['new_version'];
+        $db = $this->_db;
+
+        if (version_compare($oldVersion, '2.4', '<')) {
+            $elementSetName = get_option('universalviewer_manifest_elementset');
+            $elementName = get_option('universalviewer_manifest_element');
+            $element = !empty($elementSetName) && !empty($elementName)
+                ? json_encode(array($elementSetName, $elementName))
+                : '';
+            set_option('universalviewer_alternative_manifest_element', $element);
+            delete_option('universalviewer_manifest_elementset');
+            delete_option('universalviewer_manifest_element');
+
+            if (plugin_is_active('DublinCoreExtended')) {
+                $element = json_encode(array('Dublin Core', 'License'));
+            } else {
+                $element = json_encode(array('Dublin Core', 'Rights'));
+            }
+            set_option('universalviewer_manifest_license_element', $element);
+
+            $value = get_option('universalviewer_licence');
+            set_option('universalviewer_manifest_license_default', $value);
+            delete_option('universalviewer_licence');
+
+            set_option('universalviewer_manifest_attribution_element', $this->_options['universalviewer_manifest_attribution_element']);
+
+            $value = get_option('universalviewer_attribution');
+            set_option('universalviewer_manifest_attribution_default', $value);
+            delete_option('universalviewer_attribution');
+        }
     }
 
     /**
@@ -125,10 +169,30 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             echo flash();
         }
 
+        $elementTable = $this->_db->getTable('Element');
+        $elementIds = array();
+        foreach (array(
+                'universalviewer_manifest_license_element' => 'license',
+                'universalviewer_manifest_attribution_element' => 'attribution',
+                'universalviewer_alternative_manifest_element' => 'manifest',
+            ) as $option => $name) {
+            $element = get_option($option);
+            if ($element) {
+                $element = json_decode($element, true);
+                $element = $elementTable
+                    ->findByElementSetNameAndElementName($element[0], $element[1]);
+                if ($element) {
+                    $element = $element->id;
+                }
+            }
+            $elementIds[$name] = $element;
+        }
+
         echo $view->partial(
             'plugins/universal-viewer-config-form.php',
             array(
                 'processors' => $processors,
+                'element_ids' => $elementIds,
             )
         );
     }
@@ -142,6 +206,23 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
     public function hookConfig($args)
     {
         $post = $args['post'];
+
+        // Get the element set names and the element names from the element ids.
+        foreach (array(
+                'universalviewer_manifest_license_element',
+                'universalviewer_manifest_attribution_element',
+                'universalviewer_alternative_manifest_element',
+            ) as $option) {
+            $elementId = $post[$option];
+            if (!empty($elementId)) {
+                $element = get_record_by_id('Element', $elementId);
+                $post[$option] = json_encode(array(
+                    $element->getElementSet()->name,
+                    $element->name,
+                ));
+            }
+        }
+
         foreach ($this->_options as $optionKey => $optionValue) {
             if (isset($post[$optionKey])) {
                 set_option($optionKey, $post[$optionKey]);

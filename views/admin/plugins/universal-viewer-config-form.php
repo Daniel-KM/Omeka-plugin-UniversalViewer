@@ -1,4 +1,89 @@
-<fieldset id="fieldset-universalviewer-general"><legend><?php echo __('General parameters'); ?></legend>
+<?php
+$elements = get_table_options('Element', null, array(
+    'record_types' => array(null, 'All'),
+    'sort' => 'alphaBySet',
+));
+?>
+<fieldset id="fieldset-universalviewer-metadata"><legend><?php echo __('Metadata'); ?></legend>
+    <p class="explanation">
+        <?php echo __('The plugin creates a manifest for the viewer with elements from each record (item or collection).'); ?>
+        <?php echo __('The elements below are used when some metadata are missing.'); ?>
+    </p>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_license_element', __('Element to use for License')); ?>
+        </div>
+        <div class='inputs five columns omega'>
+            <?php
+                echo $this->formSelect('universalviewer_manifest_license_element',
+                    $element_ids['license'],
+                    array(),
+                    $elements);
+            ?>
+            <p class="explanation">
+                <?php echo __('If any, the first metadata of the record will be added in all manifests and viewers to indicate the rights.'); ?>
+                <?php echo __('It’s recommended to use "Dublin Core:Rights" (or "Dublin Core:License" when the plugin Dublin Core Extended is enabled).'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_license_default', __('Default License')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formText('universalviewer_manifest_license_default', get_option('universalviewer_manifest_license_default'), null); ?>
+            <p class="explanation">
+                <?php echo __('If any, and if there is no metadata for the element above, this text will be added in all manifests and viewers to indicate the rights.'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_attribution_element', __('Element to use for Attribution')); ?>
+        </div>
+        <div class='inputs five columns omega'>
+            <?php
+                echo $this->formSelect('universalviewer_manifest_attribution_element',
+                    $element_ids['attribution'],
+                    array(),
+                    $elements);
+            ?>
+            <p class="explanation">
+                <?php echo __('If any, the first metadata of the record will be added in all manifests and viewers to indicate the attribution.'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_attribution_default', __('Default Attribution')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formText('universalviewer_manifest_attribution_default', get_option('universalviewer_manifest_attribution_default'), null); ?>
+            <p class="explanation">
+                <?php echo __('If any, and if there is no metadata for the element above, this text will be added in all manifests and viewers.'); ?>
+                <?php echo __('It will be used as pop up in the viewer too, if enabled.'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_alternative_manifest_element',
+                __('Alternative Manifest Source')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php
+                echo $this->formSelect('universalviewer_alternative_manifest_element',
+                    $element_ids['manifest'],
+                    array(),
+                    $elements);
+            ?>
+            <p class="explanation">
+                <?php echo __('If any, the element/field supplying the alternative manifest URL for the viewer, for example "Dublin Core:Has Format".'); ?>
+            </p>
+        </div>
+    </div>
+</fieldset>
+<fieldset id="fieldset-universalviewer-embed"><legend><?php echo __('Integration of the viewer'); ?></legend>
     <p class="explanation">
         <?php echo __('If checked, the viewer will be automatically appended to the collections or items show page.'); ?>
         <?php echo __('Else, the viewer can be added via the helper in the theme or the shortcode in any page.'); ?>
@@ -23,90 +108,7 @@
                 array('checked' => (boolean) get_option('universalviewer_append_items_show'))); ?>
         </div>
     </div>
-    <div class="field">
-        <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_max_dynamic_size',
-                __('Max dynamic size for images')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_max_dynamic_size', get_option('universalviewer_max_dynamic_size'), null); ?>
-            <p class="explanation">
-                <?php echo __('Set the maximum size in bytes for the dynamic processing of images.'); ?>
-                <?php echo __('Beyond this limit, the plugin will require a tiled image, for example made by OpenLayersZoom.'); ?>
-                <?php echo __('Let empty to allow processing of any image.'); ?>
-            </p>
-        </div>
-    </div>
-    <div class="field">
-        <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_force_https',
-                __('Force https')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formCheckbox('universalviewer_force_https', true,
-                array('checked' => (boolean) get_option('universalviewer_force_https'))); ?>
-            <p class="explanation">
-                <?php echo __('In some cases, the json files (manifest and info) on a secured site (https) contains some urls with the scheme "http".'); ?>
-                <?php echo __('This option forces all Omeka absolute urls in these files to start with the scheme "https".'); ?>
-                <?php echo __('Of course, this should be unchecked on a http-only site.'); ?>
-            </p>
-        </div>
-    </div>
-</fieldset>
-<fieldset id="fieldset-universalviewer-manifestsource"><legend><?php echo __('Manifest source'); ?></legend>
-    <div class="field">
-        <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_manifest_elementset',
-                __('Manifest Element Set')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_manifest_elementset', get_option('universalviewer_manifest_elementset'), null); ?>
-            <p class="explanation">
-                <?php echo __('The element set of the field supplying the alternative manifest URL for the viewer (for example, "Dublin Core").'); ?>
-            </p>
-        </div>
-    </div>
-    <div class="field">
-        <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_manifest_element',
-                __('Manifest Element')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_manifest_element', get_option('universalviewer_manifest_element'), null); ?>
-            <p class="explanation">
-                <?php echo __('The element/field supplying the alternative manifest URL for the viewer (for example, "Has Format").'); ?>
-            </p>
-        </div>
-    </div>
-</fieldset>
-<fieldset id="fieldset-universalviewer-info"><legend><?php echo __('Common infos'); ?></legend>
-    <div class="field">
-        <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_licence',
-                __('Licence')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_licence', get_option('universalviewer_licence'), null); ?>
-            <p class="explanation">
-                <?php echo __('If any, this link will be added in all manifests and viewers to indicate the rights.'); ?>
-            </p>
-        </div>
-    </div>
-    <div class="field">
-        <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_attribution',
-                __('Attribution')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_attribution', get_option('universalviewer_attribution'), null); ?>
-            <p class="explanation">
-                <?php echo __('If any, this text will be added in all manifests and viewers.'); ?>
-            </p>
-        </div>
-    </div>
-</fieldset>
-<fieldset id="fieldset-universalviewer-embed"><legend><?php echo __('Integration of the viewer'); ?></legend>
-    <p>
+    <p class="explanation">
         <?php echo __('These values allows to parameter the integration of the viewer in Omeka pages.'); ?>
         <?php echo __('The viewer itself can be configured via the file "config.json" and the helper.'); ?>
     </p>
@@ -169,6 +171,37 @@
                 <?php echo __('Select the one to use.'); ?>
                 <?php echo __('Generally, GD is quicker than ImageMagick, but ImageMagick manages more formats.'); ?>
                 <?php echo __('Nevertheless, the performance depends on your installation and your server.'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_iiif_max_size',
+                __('Max dynamic size for images')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formText('universalviewer_iiif_max_size', get_option('universalviewer_iiif_max_size'), null); ?>
+            <p class="explanation">
+                <?php echo __('Set the maximum size in bytes for the dynamic processing of images.'); ?>
+                <?php echo __('Beyond this limit, the plugin will require a tiled image, for example made by OpenLayersZoom.'); ?>
+                <?php echo __('Let empty to allow processing of any image.'); ?>
+            </p>
+        </div>
+    </div>
+</fieldset>
+<fieldset id="fieldset-universalviewer-various"><legend><?php echo __('Various parameters'); ?></legend>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_force_https',
+                __('Force https')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formCheckbox('universalviewer_force_https', true,
+                array('checked' => (boolean) get_option('universalviewer_force_https'))); ?>
+            <p class="explanation">
+                <?php echo __('In some cases, the json files (manifest and info) on a secured site (https) contains some urls with the scheme "http".'); ?>
+                <?php echo __('This option forces all Omeka absolute urls in these files to start with the scheme "https".'); ?>
+                <?php echo __('Of course, this should be unchecked on a http-only site.'); ?>
             </p>
         </div>
     </div>

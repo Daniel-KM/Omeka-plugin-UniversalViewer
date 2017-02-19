@@ -30,13 +30,11 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
             return '';
         }
 
-        // determine if we should get the manifest from a field in the metadata
-        $manifestES = get_option('universalviewer_manifest_elementset');
-        $manifestE = get_option('universalviewer_manifest_element');
+        // Determine if we should get the manifest from a field in the metadata.
         $urlManifest = '';
-
-        if ($manifestES != '' and $manifestE != '') {
-            $urlManifest = metadata($record, array($manifestES, $manifestE));
+        $manifestElement = get_option('universalviewer_alternative_manifest_element');
+        if ($manifestElement) {
+            $urlManifest = metadata($record, json_decode($manifestElement, true));
         }
 
         // Some specific checks.

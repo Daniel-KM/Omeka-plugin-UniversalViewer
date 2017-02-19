@@ -91,9 +91,26 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $title = isset($elementTexts['Dublin Core']['Title'][0])
             ? $elementTexts['Dublin Core']['Title'][0]
             : __('[Untitled]');
+
         $description = metadata($record, 'citation', array('no_escape' => true));
-        $licence = apply_filters('uv_item_manifest_licence', get_option('universalviewer_licence'), array('record' => $record));
-        $attribution = apply_filters('uv_item_manifest_attribution', get_option('universalviewer_attribution'), array('record' => $record));
+
+        $licenseElement = get_option('universalviewer_manifest_license_element');
+        if ($licenseElement) {
+            $license = metadata($record, json_decode($licenseElement, true));
+        }
+        if (empty($license)) {
+            $license = get_option('universalviewer_manifest_license_default');
+        }
+        $license = apply_filters('uv_item_manifest_licence', $license, array('record' => $record));
+
+        $attributionElement = get_option('universalviewer_manifest_attribution_element');
+        if ($attributionElement) {
+            $attribution = metadata($record, json_decode($attributionElement, true));
+        }
+        if (empty($attribution)) {
+            $attribution = get_option('universalviewer_manifest_attribution_default');
+        }
+        $attribution = apply_filters('uv_item_manifest_attribution', $attribution, array('record' => $record));
 
         // TODO To parameter or to extract from metadata.
         $service = '';
@@ -357,8 +374,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         if ($thumbnail) {
             $manifest['thumbnail'] = $thumbnail;
         }
-        if ($licence) {
-            $manifest['license'] = $licence;
+        if ($license) {
+            $manifest['license'] = $license;
         }
         if ($attribution) {
             $manifest['attribution'] = $attribution;

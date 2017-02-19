@@ -48,10 +48,6 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
      */
     protected function _buildManifestCollection($collection)
     {
-        $description = strip_formatting(metadata($collection, array('Dublin Core', 'Description'), array('no_filter' => true)));
-        $licence = get_option('universalviewer_licence');
-        $attribution = get_option('universalviewer_attribution');
-
         $elementTexts = get_view()->allElementTexts($collection, array(
             'show_empty_elements' => false,
             // 'show_element_sets' => array('Dublin Core'),
@@ -64,10 +60,28 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
                 $metadata[] = (object) array(
                     'label' => $elementName,
                     'value' => count($values) > 1
-                       ? $values
-                       :  reset($values),
+                        ? $values
+                        : reset($values),
                 );
             }
+        }
+
+        $description = strip_formatting(metadata($collection, array('Dublin Core', 'Description')));
+
+        $licenseElement = get_option('universalviewer_manifest_license_element');
+        if ($licenseElement) {
+            $license = metadata($record, json_decode($licenseElement, true));
+        }
+        if (empty($license)) {
+            $license = get_option('universalviewer_manifest_license_default');
+        }
+
+        $attributionElement = get_option('universalviewer_manifest_attribution_element');
+        if ($attributionElement) {
+            $attribution = metadata($record, json_decode($attributionElement, true));
+        }
+        if (empty($attribution)) {
+            $attribution = get_option('universalviewer_manifest_attribution_default');
         }
 
         $collections = array();
@@ -106,8 +120,8 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         if ($description) {
            $manifest['description'] = $description;
         }
-        if ($licence) {
-            $manifest['license'] = $licence;
+        if ($license) {
+            $manifest['license'] = $license;
         }
         if ($attribution) {
             $manifest['attribution'] = $attribution;
