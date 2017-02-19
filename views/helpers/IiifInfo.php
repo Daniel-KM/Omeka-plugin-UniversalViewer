@@ -213,74 +213,75 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
     {
         static $sizeConstraints = array();
 
+        // Check if this is an image.
+        if (empty($file) || strpos($file->mime_type, 'image/') === false) {
+            return array(
+                'width' => null,
+                'height' => null,
+            );
+        }
+
         if (!isset($sizeConstraints[$imageType])) {
-            $sizeConstraints[$imageType] = get_option($imageType . '_constraint');
+            $sizeConstraints[$imageType] = (integer) get_option($imageType . '_constraint');
         }
         $sizeConstraint = $sizeConstraints[$imageType];
 
-        // Check if this is an image.
-        if (empty($file) || strpos($file->mime_type, 'image/') !== 0) {
-            $width = null;
-            $height = null;
-        }
-
         // This is an image.
-        else {
-            $metadata = json_decode($file->metadata, true);
-            if (empty($metadata['video']['resolution_x']) || empty($metadata['video']['resolution_y'])) {
-                $msg = __('The image #%d ("%s") is not stored correctly.', $file->id, $file->original_filename);
-                _log($msg, Zend_Log::NOTICE);
+        $metadata = json_decode($file->metadata, true);
+        if (empty($metadata['video']['resolution_x']) || empty($metadata['video']['resolution_y'])) {
+            $msg = __('The image #%d ("%s") is not stored correctly.', $file->id, $file->original_filename);
+            _log($msg, Zend_Log::NOTICE);
 
-                if (isset($metadata['video']['resolution_x']) || isset($metadata['video']['resolution_y'])) {
-                    throw new Exception($msg);
-                }
-
-                // Get the resolution directly.
-                // The storage adapter should be checked for external storage.
-                $storageAdapter = $file->getStorage()->getAdapter();
-                $filepath = get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem'
-                    ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($imageType)
-                    : $file->getWebPath($imageType);
-                list($width, $height, $type, $attr) = getimagesize($filepath);
-                if (empty($width) || empty($height)) {
-                    throw new Exception($msg);
-                }
+            if (isset($metadata['video']['resolution_x']) || isset($metadata['video']['resolution_y'])) {
+                throw new Exception($msg);
             }
 
-            // Calculate the size.
-            else {
-                $sourceWidth = $metadata['video']['resolution_x'];
-                $sourceHeight = $metadata['video']['resolution_y'];
+            // Get the resolution directly.
+            // The storage adapter should be checked for external storage.
+            $storageAdapter = $file->getStorage()->getAdapter();
+            $filepath = get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem'
+                ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($imageType)
+                : $file->getWebPath($imageType);
+            list($width, $height, $type, $attr) = getimagesize($filepath);
+            if (empty($width) || empty($height)) {
+                throw new Exception($msg);
+            }
+        }
 
-                // Use the original size when possible.
-                if ($imageType == 'original') {
-                    $width = $sourceWidth;
-                    $height = $sourceHeight;
+        // Calculate the size.
+        else {
+            $sourceWidth = $metadata['video']['resolution_x'];
+            $sourceHeight = $metadata['video']['resolution_y'];
+
+            // Use the original size when possible.
+            if ($imageType == 'original') {
+                $width = $sourceWidth;
+                $height = $sourceHeight;
+            }
+            // This supposes that the option has not changed before.
+            else {
+                // Source is landscape.
+                if ($sourceWidth > $sourceHeight) {
+                    $width = $sizeConstraint;
+                    $height = round($sourceHeight * $sizeConstraint / $sourceWidth);
                 }
-                // This supposes that the option has not changed before.
+                // Source is portrait.
+                elseif ($sourceWidth < $sourceHeight) {
+                    $width = round($sourceWidth * $sizeConstraint / $sourceHeight);
+                    $height = $sizeConstraint;
+                }
+                // Source is square.
                 else {
-                    // Source is landscape.
-                    if ($sourceWidth > $sourceHeight) {
-                        $width = $sizeConstraint;
-                        $height = round($sourceHeight * $sizeConstraint / $sourceWidth);
-                    }
-                    // Source is portrait.
-                    elseif ($sourceWidth < $sourceHeight) {
-                        $width = round($sourceWidth * $sizeConstraint / $sourceHeight);
-                        $height = $sizeConstraint;
-                    }
-                    // Source is square.
-                    else {
-                        $width = $sizeConstraint;
-                        $height = $sizeConstraint;
-                    }
+                    $width = $sizeConstraint;
+                    $height = $sizeConstraint;
                 }
             }
         }
 
         return array(
-            'width' => $width,
-            'height' => $height,
+            // The cast avoids to set a string or a float.
+            'width' => (integer) $width,
+            'height' => (integer) $height,
         );
     }
 }
