@@ -250,9 +250,6 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             $response->setHeader('Link', '<http://iiif.io/api/image/2/level2.json>;rel="profile"');
             $response->setHeader('Content-Type', $transform['format']['feature']);
 
-            $dtNow = time();
-            $response->setHeader('ETag:', $dtNow);
-
             $response->clearBody();
             $response->setBody($output);
         }
