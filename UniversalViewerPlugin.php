@@ -39,6 +39,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
     protected $_filters = array(
         // It's a checkbox, so no error can be done.
         // 'items_batch_edit_error',
+        'exhibit_layouts',
     );
 
     /**
@@ -426,6 +427,15 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             $args['view'] = get_view();
         }
         echo $args['view']->universalViewer($args);
+    }
+
+    public function filterExhibitLayouts($layouts)
+    {
+        $layouts['universal-viewer'] = array(
+            'name' => __('Universal Viewer'),
+            'description' => __('Show the specified record in the Universal Viewer'),
+        );
+        return $layouts;
     }
 
     /**
