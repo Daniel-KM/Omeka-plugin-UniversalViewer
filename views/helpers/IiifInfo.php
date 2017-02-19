@@ -65,6 +65,8 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
 
             $profile = array();
             $profile[] = 'http://iiif.io/api/image/2/level2.json';
+            // Temporary fix. See https://github.com/UniversalViewer/universalviewer/issues/438.
+            $profile[] = array();
             // According to specifications, the profile details should be omitted,
             // because only default formats, qualities and supports are supported
             // currently.
