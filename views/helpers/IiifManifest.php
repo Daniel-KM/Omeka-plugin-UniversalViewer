@@ -28,6 +28,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     /**
      * Get the IIIF manifest for the specified item.
      *
+     * @todo Use a representation/context with a getResource(), a toString()
+     * that removes empty values and a standard json() without ld.
      * @todo Replace all data by standard classes.
      * @todo Replace web root by routes, even if main ones are only urn.
      *
@@ -370,8 +372,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         if ($isThreejs) {
             $manifest['@context'] = array(
-                "http://iiif.io/api/presentation/2/context.json",
-                "http://files.universalviewer.io/ld/ixif/0/context.json",
+                'http://iiif.io/api/presentation/2/context.json',
+                'http://files.universalviewer.io/ld/ixif/0/context.json',
             );
         }
         // For images, the normalized context.
@@ -392,7 +394,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         // Remove all empty values (there is no "0" or "null" at first level).
         $manifest = array_filter($manifest);
-        return (object) $manifest;
+
+        $manifest = (object) $manifest;
+        return $manifest;
     }
 
     /**
@@ -401,12 +405,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @param File $file
      * @return Standard object|null
      */
-    protected function _iiifThumbnail(File $file)
+    protected function _iiifThumbnail(File $file = null)
     {
-        if (empty($file)) {
-            return;
-        }
-
         $imageSize = $this->_getImageSize($file, 'thumbnail');
         list($width, $height) = array_values($imageSize);
         if (empty($width) || empty($height)) {
@@ -646,9 +646,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $mediaSequenceElement['label'] = $values['label'];
         $mediaSequenceElement['metadata'] = $values['metadata'];
         if ($file->hasThumbnail()) {
-            $mseThumbnail = $file->getWebPath('thumbnail');
-            if ($mseThumbnail) {
-                $mediaSequenceElement['thumbnail'] = $mseThumbnail;
+            $thumbnailUrl = $file->getWebPath('thumbnail');
+            if ($thumbnailUrl) {
+                $mediaSequenceElement['thumbnail'] = $thumbnailUrl;
             }
         }
         $mediaSequencesService = array();
@@ -686,9 +686,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $mediaSequenceElement['label'] = $values['label'];
         $mediaSequenceElement['metadata'] = $values['metadata'];
         if ($file->hasThumbnail()) {
-            $mseThumbnail = $file->getWebPath('thumbnail');
-            if ($mseThumbnail) {
-                $mediaSequenceElement['thumbnail'] = $mseThumbnail;
+            $thumbnailUrl = $file->getWebPath('thumbnail');
+            if ($thumbnailUrl) {
+                $mediaSequenceElement['thumbnail'] = $thumbnailUrl;
             }
         }
         // A place holder is recommended for media.
@@ -745,9 +745,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $mediaSequenceElement['label'] = $values['label'];
         $mediaSequenceElement['metadata'] = $values['metadata'];
         if ($file->hasThumbnail()) {
-            $mseThumbnail = $file->getWebPath('thumbnail');
-            if ($mseThumbnail) {
-                $mediaSequenceElement['thumbnail'] = $mseThumbnail;
+            $thumbnailUrl = $file->getWebPath('thumbnail');
+            if ($thumbnailUrl) {
+                $mediaSequenceElement['thumbnail'] = $thumbnailUrl;
             }
         }
         // A place holder is recommended for medias.
@@ -811,9 +811,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         foreach ($values['files'] as $imageFile) {
             if ($imageFile->original_filename == 'thumb.jpg') {
                 // The original is used, because this is already a thumbnail.
-                $mseThumbnail = $imageFile->getWebPath('original');
-                if ($mseThumbnail) {
-                    $mediaSequenceElement['thumbnail'] = $mseThumbnail;
+                $thumbnailUrl = $imageFile->getWebPath('original');
+                if ($thumbnailUrl) {
+                    $mediaSequenceElement['thumbnail'] = $thumbnailUrl;
                 }
                 break;
             }
@@ -869,6 +869,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $files = $table->findBy(array(
                 'item_id' => $record->id,
                 'has_derivative_image' => 1,
+                // TODO Check only the base name for imported records.
                 'original_filename' => 'thumb.jpg',
             ), 1);
             if ($files) {
@@ -882,7 +883,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $file = $table->findWithImages($record->id, 1);
         }
 
-        return $this->_iiifThumbnail($file);
+        if ($file) {
+            return $this->_iiifThumbnail($file);
+        }
     }
 
     /**

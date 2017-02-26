@@ -109,11 +109,11 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
         else {
             $info = array();
             $info['@context'] = array(
-                    'http://iiif.io/api/presentation/2/context.json',
-                    // See MediaController::contextAction()
-                    'http://wellcomelibrary.org/ld/ixif/0/context.json',
-                    // WEB_ROOT . '/ld/ixif/0/context.json',
-                );
+                'http://iiif.io/api/presentation/2/context.json',
+                // See MediaController::contextAction()
+                'http://wellcomelibrary.org/ld/ixif/0/context.json',
+                // WEB_ROOT . '/ld/ixif/0/context.json',
+            );
             $fileUrl = absolute_url(array(
                     'id' => $file->id,
                 ), 'universalviewer_media');

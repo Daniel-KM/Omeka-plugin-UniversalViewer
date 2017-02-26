@@ -81,7 +81,7 @@ $elements = get_table_options('Element', null, array(
                     $elements);
             ?>
             <p class="explanation">
-                <?php echo __('If any, the first metadata of the record will be added in all manifests and viewers to indicate the rights.'); ?>
+                <?php echo __('If any, the first metadata of the record will be added in all manifests and viewers to indicate the license.'); ?>
                 <?php echo __('It’s recommended to use "Dublin Core:Rights" (or "Dublin Core:License" when the plugin Dublin Core Extended is enabled).'); ?>
             </p>
         </div>
@@ -93,7 +93,7 @@ $elements = get_table_options('Element', null, array(
         <div class="inputs five columns omega">
             <?php echo $this->formText('universalviewer_manifest_license_default', get_option('universalviewer_manifest_license_default'), null); ?>
             <p class="explanation">
-                <?php echo __('If any, and if there is no metadata for the element above, this text will be added in all manifests and viewers to indicate the rights.'); ?>
+                <?php echo __('If any, and if there is no metadata for the element above, this text will be added in all manifests and viewers to indicate the license.'); ?>
             </p>
         </div>
     </div>

@@ -24,6 +24,6 @@
     "run-sequence": "^1.2.2"
   },
   "dependencies": {
-    "universalviewer": "github:universalviewer/universalviewer#dev"
+    "universalviewer": "github:universalviewer/universalviewer#master"
   }
 }

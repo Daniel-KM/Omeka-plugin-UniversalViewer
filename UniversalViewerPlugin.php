@@ -62,7 +62,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_append_items_browse' => false,
         'universalviewer_class' => '',
         'universalviewer_style' => 'background-color: #000; height: 600px;',
-        'universalviewer_locale' => 'en-GB:English (GB),fr-FR:French',
+        'universalviewer_locale' => 'en-GB:English (GB),fr:French',
         'universalviewer_iiif_creator' => 'Auto',
         'universalviewer_max_dynamic_size' => 10000000,
         'universalviewer_force_https' => false,
@@ -201,7 +201,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
 
         $flash = Zend_Controller_Action_HelperBroker::getStaticHelper('FlashMessenger');
         if (count($processors) == 1) {
-            $flash->addMessage(__("Warning: No graphic library is installed: Universaliewer can't work.",
+            $flash->addMessage(__('Warning: No graphic library is installed: Universal Viewer can’t work.',
                 '<strong>', '</strong>'), 'error');
             echo flash();
         }
@@ -428,7 +428,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * Hook to display viewer.
      *
      * @param array $args
-     *
      * @return void
      */
     public function hookPublicCollectionsShow($args)
@@ -446,7 +445,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * Hook to display viewer.
      *
      * @param array $args
-     *
      * @return void
      */
     public function hookPublicItemsShow($args)
