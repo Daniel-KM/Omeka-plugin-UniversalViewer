@@ -1,35 +1,20 @@
 <?php
 /**
- * Helper to get a IIIF manifest for a collection.
+ * Helper to get a IIIF Collection manifest for a collection.
  */
 class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstract
 {
     /**
      * Get the IIIF manifest for the specified collection.
      *
-     * @param Record|integer|null $record Collection
+     * @param Collection $collection
      * @param boolean $asJson Return manifest as object or as a json string.
      * @return Object|string|null. The object or the json string corresponding to the
      * manifest.
      */
-    public function iiifCollection($record = null, $asJson = true)
+    public function iiifCollection(Collection $collection, $asJson = true)
     {
-        if (is_null($record)) {
-            $record = get_current_record('collection');
-        }
-        elseif (is_numeric($record)) {
-            $record = get_record_by_id('Collection', (integer) $record);
-        }
-
-        if (empty($record)) {
-            return null;
-        }
-
-        $recordClass = get_class($record);
-        if ($recordClass != 'Collection') {
-            return null;
-        }
-        $result = $this->_buildManifestCollection($record);
+        $result = $this->_buildManifestCollection($collection);
 
         if ($asJson) {
             return version_compare(phpversion(), '5.4.0', '<')
@@ -43,10 +28,14 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
     /**
      * Get the IIIF manifest for the specified collection.
      *
-     * @param Collection $record Collection
+     * @todo Use a representation/context with a getResource(), a toString()
+     * that removes empty values and a standard json() without ld.
+     * @see IiifManifest
+     *
+     * @param Collection $collection
      * @return Object|null. The object corresponding to the collection.
      */
-    protected function _buildManifestCollection($record)
+    protected function _buildManifestCollection(Collection $collection)
     {
         // Prepare values needed for the manifest. Empty values will be removed.
         // Some are required.
@@ -72,11 +61,11 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
             'manifests' => array(),
         );
 
-        $manifest = array_merge($manifest, $this->_buildManifestBase($record, false));
+        $manifest = array_merge($manifest, $this->_buildManifestBase($collection, false));
 
         // Prepare the metadata of the record.
-        // TODO Manage filter and escape or use $record->getAllElementTexts()?
-        $elementTexts = get_view()->allElementTexts($record, array(
+        // TODO Manage filter and escape or use $collection->getAllElementTexts()?
+        $elementTexts = get_view()->allElementTexts($collection, array(
             'show_empty_elements' => false,
             // 'show_element_sets' => array('Dublin Core'),
             'return_type' => 'array',
@@ -97,12 +86,12 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
 
         // There is no citation for collections.
         // TODO Use option universalviewer_manifest_description_element?
-        $description = strip_formatting(metadata($record, array('Dublin Core', 'Description')));
+        $description = strip_formatting(metadata($collection, array('Dublin Core', 'Description')));
         $manifest['description'] = $description;
 
         $licenseElement = get_option('universalviewer_manifest_license_element');
         if ($licenseElement) {
-            $license = metadata($record, json_decode($licenseElement, true));
+            $license = metadata($collection, json_decode($licenseElement, true));
         }
         if (empty($license)) {
             $license = get_option('universalviewer_manifest_license_default');
@@ -111,7 +100,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
 
         $attributionElement = get_option('universalviewer_manifest_attribution_element');
         if ($attributionElement) {
-            $attribution = metadata($record, json_decode($attributionElement, true));
+            $attribution = metadata($collection, json_decode($attributionElement, true));
         }
         if (empty($attribution)) {
             $attribution = get_option('universalviewer_manifest_attribution_default');
@@ -132,14 +121,14 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         $collections = array();
         // Hierarchical list of collections.
         if (plugin_is_active('CollectionTree')) {
-            $collectionTree = get_db()->getTable('CollectionTree')->getDescendantTree($record->id);
+            $collectionTree = get_db()->getTable('CollectionTree')->getDescendantTree($collection->id);
             $collections = $this->_buildManifestCollectionTree($collectionTree);
         }
         // Flat list of collections.
         else {
             $collectionsList = get_records('Collection', array(), 0);
             foreach ($collectionsList as $collectionRecord) {
-                if ($collectionRecord->id != $record->id) {
+                if ($collectionRecord->id != $collection->id) {
                     $collections[] = $this->_buildManifestBase($collectionRecord);
                 }
             }
@@ -149,13 +138,13 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
 
         // List of manifests inside the collection.
         $manifests = array();
-        $items = get_records('Item', array('collection_id' => $record->id), 0);
+        $items = get_records('Item', array('collection_id' => $collection->id), 0);
         foreach ($items as $item) {
             $manifests[] = $this->_buildManifestBase($item);
         }
         $manifest['manifests'] = $manifests;
 
-        $manifest = apply_filters('uv_manifest', $manifest, array('record' => $record));
+        $manifest = apply_filters('uv_manifest', $manifest, array('record' => $collection));
 
         // Remove all empty values (there is no "0" or "null" at first level).
         $manifest = array_filter($manifest);

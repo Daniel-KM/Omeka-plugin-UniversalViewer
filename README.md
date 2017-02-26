@@ -106,8 +106,7 @@ They follow the recommandations of the [iiif specifications].
 
 To embed the Universal Viewer with more control, three mechanisms are provided.
 So, according to your needs, you may add this code in the `items/show.php` file
-of your theme or anywhere else, as long a record is defined (as variable or as
-current record 'collection' or 'item').
+of your theme or anywhere else.
 
 * Helper (recommended)
 

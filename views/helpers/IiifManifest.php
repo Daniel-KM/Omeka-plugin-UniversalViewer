@@ -10,24 +10,13 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     /**
      * Get the IIIF manifest for the specified record.
      *
-     * @param Record|integer|null $record
+     * @param Record $record
      * @param boolean $asJson Return manifest as object or as a json string.
      * @return Object|string|null. The object or the json string corresponding to the
      * manifest.
      */
-    public function iiifManifest($record = null, $asJson = true)
+    public function iiifManifest(Omeka_Record_AbstractRecord $record, $asJson = true)
     {
-        if (is_null($record)) {
-            $record = get_current_record('item');
-        }
-        elseif (is_numeric($record)) {
-            $record = get_record_by_id('Item', (integer) $record);
-        }
-
-        if (empty($record)) {
-            return null;
-        }
-
         $recordClass = get_class($record);
         if ($recordClass == 'Item') {
             $result = $this->_buildManifestItem($record);
@@ -54,10 +43,10 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @todo Replace all data by standard classes.
      * @todo Replace web root by routes, even if main ones are only urn.
      *
-     * @param Record $record Item
+     * @param Item $item
      * @return Object|null. The object corresponding to the manifest.
      */
-    protected function _buildManifestItem($record)
+    protected function _buildManifestItem(Item $item)
     {
         // Prepare values needed for the manifest. Empty values will be removed.
         // Some are required.
@@ -84,7 +73,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         );
 
         $url = absolute_url(array(
-                'id' => $record->id,
+                'id' => $item->id,
             ), 'universalviewer_presentation_item');
         $url = $this->view->uvForceHttpsIfRequired($url);
         $manifest['@id'] = $url;
@@ -93,8 +82,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $this->_baseUrl = dirname($url);
 
         // Prepare the metadata of the record.
-        // TODO Manage filter and escape or use $record->getAllElementTexts()?
-        $elementTexts = $this->view->allElementTexts($record, array(
+        // TODO Manage filter and escape or use $item->getAllElementTexts()?
+        $elementTexts = $this->view->allElementTexts($item, array(
             'show_empty_elements' => false,
             // 'show_element_sets' => array('Dublin Core'),
             'return_type' => 'array',
@@ -122,21 +111,21 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $description = '';
         $descriptionElement = get_option('universalviewer_manifest_description_element');
         if ($descriptionElement) {
-            $description = metadata($record, json_decode($descriptionElement, true));
+            $description = metadata($item, json_decode($descriptionElement, true));
         }
         if (empty($description) && get_option('universalviewer_manifest_description_default')) {
             // An issue may occur with a contributed item (not fixed upstream yet).
             try {
-                $description = metadata($record, 'citation', array('no_escape' => true));
+                $description = metadata($item, 'citation', array('no_escape' => true));
             } catch (Exception $e) {
-                $description = metadata($record, 'citation', array('no_escape' => true, 'no_filter' => true));
+                $description = metadata($item, 'citation', array('no_escape' => true, 'no_filter' => true));
             }
         }
         $manifest['description'] = $description;
 
         $licenseElement = get_option('universalviewer_manifest_license_element');
         if ($licenseElement) {
-            $license = metadata($record, json_decode($licenseElement, true));
+            $license = metadata($item, json_decode($licenseElement, true));
         }
         if (empty($license)) {
             $license = get_option('universalviewer_manifest_license_default');
@@ -145,7 +134,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         $attributionElement = get_option('universalviewer_manifest_attribution_element');
         if ($attributionElement) {
-            $attribution = metadata($record, json_decode($attributionElement, true));
+            $attribution = metadata($item, json_decode($attributionElement, true));
         }
         if (empty($attribution)) {
             $attribution = get_option('universalviewer_manifest_attribution_default');
@@ -171,9 +160,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         );
         */
 
-        if ($record->collection_id) {
+        if ($item->collection_id) {
             $within = absolute_url(array(
-                    'id' => $record->collection_id,
+                    'id' => $item->collection_id,
                 ), 'universalviewer_presentation_collection');
             $within = $this->view->uvForceHttpsIfRequired($within);
             $metadata['within'] = $within;
@@ -182,7 +171,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $canvases = array();
 
         // Get all images and non-images and detect json files (for 3D model).
-        $files = $record->getFiles();
+        $files = $item->getFiles();
         $images = array();
         $nonImages = array();
         $jsonFiles = array();
@@ -317,7 +306,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         }
 
         // Thumbnail of the whole work.
-        $manifest['thumbnail'] = $this->_mainThumbnail($record, $isThreejs);
+        $manifest['thumbnail'] = $this->_mainThumbnail($item, $isThreejs);
 
         // Prepare sequences.
         $sequences = array();
@@ -411,7 +400,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             );
         }
 
-        $manifest = apply_filters('uv_manifest', $manifest, array('record' => $record));
+        $manifest = apply_filters('uv_manifest', $manifest, array('record' => $item));
 
         // Remove all empty values (there is no "0" or "null" at first level).
         $manifest = array_filter($manifest);
@@ -424,7 +413,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @param File $file
      * @return Standard object|null
      */
-    protected function _iiifThumbnail($file)
+    protected function _iiifThumbnail(File $file)
     {
         if (empty($file)) {
             return;
@@ -475,7 +464,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @param integer $height If not set, will be calculated.
      * @return Standard object|null
      */
-    protected function _iiifImage($file, $index, $canvasUrl, $width = null, $height = null)
+    protected function _iiifImage(File $file, $index, $canvasUrl, $width = null, $height = null)
     {
         if (empty($file)) {
             return;
@@ -574,7 +563,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @param integer $index Used to set the standard name of the image.
      * @return Standard object|null
      */
-    protected function _iiifCanvasImage($file, $index)
+    protected function _iiifCanvasImage(File $file, $index)
     {
         $canvas = array();
 
@@ -656,7 +645,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @param array $values
      * @return Standard object|null
      */
-    protected function _iiifMediaSequencePdf($file, $values)
+    protected function _iiifMediaSequencePdf(File $file, $values)
     {
         $mediaSequenceElement = array();
         $mediaSequenceElement['@id'] = $file->getWebPath('original');
@@ -695,7 +684,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @param array $values
      * @return Standard object|null
      */
-    protected function _iiifMediaSequenceAudio($file, $values)
+    protected function _iiifMediaSequenceAudio(File $file, $values)
     {
         $mediaSequenceElement = array();
         $mediaSequenceElement['@id'] = $file->getWebPath('original') . '/element/e0';
@@ -754,7 +743,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @param array $values
      * @return Standard object|null
      */
-    protected function _iiifMediaSequenceVideo($file, $values)
+    protected function _iiifMediaSequenceVideo(File $file, $values)
     {
         $mediaSequenceElement = array();
         $mediaSequenceElement['@id'] = $file->getWebPath('original') . '/element/e0';
@@ -817,7 +806,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @param array $values
      * @return Standard object|null
      */
-    protected function _iiifMediaSequenceThreejs($file, $values)
+    protected function _iiifMediaSequenceThreejs(File $file, $values)
     {
         $mediaSequenceElement = array();
         $mediaSequenceElement['@id'] = $file->getWebPath('original');
@@ -917,7 +906,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @return Standard object or null if no tile.
      * @see UniversalViewer_View_Helper_IiifInfo::_iiifTile()
      */
-    protected function _iiifTile($file)
+    protected function _iiifTile(File $file)
     {
         $tile = array();
 
@@ -948,10 +937,11 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     /**
      * Return the properties of a tiled file.
      *
+     * @param File $file
      * @return array|null
      * @see UniversalViewer_ImageController::_getTileProperties()
      */
-    protected function _getTileProperties($file)
+    protected function _getTileProperties(File $file)
     {
         $olz = new OpenLayersZoom_Creator();
         $dirpath = $olz->useIIPImageServer()
@@ -986,7 +976,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @see UniversalViewer_ImageController::_getImageSize()
      * @todo Refactorize.
      */
-    protected function _getImageSize($file, $imageType = 'original')
+    protected function _getImageSize(File $file, $imageType = 'original')
     {
         // Check if this is an image.
         if (empty($file) || strpos($file->mime_type, 'image/') === false) {
