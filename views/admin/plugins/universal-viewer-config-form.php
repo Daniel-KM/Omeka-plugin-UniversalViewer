@@ -158,34 +158,26 @@ $elements = get_table_options('Element', null, array(
     <div class="field">
         <div class="two columns alpha">
             <?php echo $this->formLabel('universalviewer_class',
-                __('Class of inline frame')); ?>
+                __('Class of main div')); ?>
         </div>
         <div class="inputs five columns omega">
             <?php echo $this->formText('universalviewer_class', get_option('universalviewer_class'), null); ?>
             <p class="explanation">
-                <?php echo __('Class to add to the inline frame.'); ?>
+                <?php echo __('Class to add to the main div.'); ?>
             </p>
         </div>
     </div>
     <div class="field">
         <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_width',
-                __('Width of the inline frame')); ?>
+            <?php echo $this->formLabel('universalviewer_style',
+                __('Inline Style')); ?>
         </div>
         <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_width', get_option('universalviewer_width'), null); ?>
+            <?php echo $this->formText('universalviewer_style', get_option('universalviewer_style'), null); ?>
             <p class="explanation">
-                <?php echo __('Keep this field blank to avoid an issue with some themes.'); ?>
+                <?php echo __('If any, this style will be added to the main div of the Universal Viewer.'); ?>
+                <?php echo __('The height may be required.'); ?>
             </p>
-        </div>
-    </div>
-    <div class="field">
-        <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_height',
-                __('Height of the inline frame')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_height', get_option('universalviewer_height'), null); ?>
         </div>
     </div>
     <div class="field">

@@ -57,8 +57,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_append_collections_show' => true,
         'universalviewer_append_items_show' => true,
         'universalviewer_class' => '',
-        'universalviewer_width' => '95%',
-        'universalviewer_height' => '600px',
+        'universalviewer_style' => 'background-color: #000; height: 600px;',
         'universalviewer_locale' => 'en-GB:English (GB),fr-FR:French',
         'universalviewer_iiif_creator' => 'Auto',
         'universalviewer_max_dynamic_size' => 10000000,
@@ -111,9 +110,11 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
                 $element = '';
             }
             set_option('universalviewer_manifest_description_element', $element);
-            set_option('universalviewer_manifest_description_default', $this->_options['universalviewer_manifest_description_default']);
+            set_option('universalviewer_manifest_description_default',
+                $this->_options['universalviewer_manifest_description_default']);
 
-            set_option('universalviewer_manifest_attribution_element', $this->_options['universalviewer_manifest_attribution_element']);
+            set_option('universalviewer_manifest_attribution_element',
+                $this->_options['universalviewer_manifest_attribution_element']);
 
             $value = get_option('universalviewer_attribution');
             set_option('universalviewer_manifest_attribution_default', $value);
@@ -141,7 +142,22 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         }
 
         if (version_compare($oldVersion, '2.4.2', '<')) {
-            set_option('universalviewer_manifest_logo_default', $this->_options['universalviewer_manifest_logo_default']);
+            set_option('universalviewer_manifest_logo_default',
+                $this->_options['universalviewer_manifest_logo_default']);
+
+            $style = $this->_options['universalviewer_style'];
+            $width = get_option('universalviewer_width') ?: '';
+            if (!empty($width)) {
+                $width = ' width:' . $width . ';';
+            }
+            $height = get_option('universalviewer_height') ?: '';
+            if (!empty($height)) {
+                $style = strtok($style, ';');
+                $height = ' height:' . $height . ';';
+            }
+            set_option('universalviewer_style', $style . $width . $height);
+            delete_option('universalviewer_width');
+            delete_option('universalviewer_height');
         }
     }
 

@@ -16,9 +16,8 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
      *   - (integer|Collection) collection
      *   - (integer|File) file
      *   - (string) class
-     *   - (string) width
-     *   - (string) height
      *   - (string) locale
+     *   - (string) style
      *   - (string) config
      * The only one record is defined according to the priority above.
      * @return string. The html string corresponding to the UniversalViewer.
@@ -69,23 +68,17 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         if (!empty($class)) {
             $class = ' ' . $class;
         }
-        $width = isset($args['width'])
-            ? $args['width']
-            : get_option('universalviewer_width');
-        if (!empty($width)) {
-            $width = ' width:' . $width . ';';
-        }
-        $height = isset($args['height'])
-            ? $args['height']
-            : get_option('universalviewer_height');
-        if (!empty($height)) {
-            $height = ' height:' . $height . ';';
-        }
         $locale = isset($args['locale'])
             ? $args['locale']
             : get_option('universalviewer_locale');
         if (!empty($locale)) {
             $locale = ' data-locale="' . $locale . '"';
+        }
+        $style = isset($args['style'])
+            ? $args['style']
+            : get_option('universalviewer_style');
+        if (!empty($style)) {
+            $style = ' style="' . $style . '"';
         }
 
         // Default configuration file.
@@ -94,13 +87,12 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
             : $args['config'];
         $urlJs = src('embed', 'javascripts/uv/lib', 'js');
 
-        $html = sprintf('<div class="uv%s" data-config="%s" data-uri="%s"%s style="background-color: #000;%s%s"></div>',
+        $html = sprintf('<div class="uv%s" data-config="%s" data-uri="%s"%s%s></div>',
             $class,
             $config,
             $urlManifest,
             $locale,
-            $width,
-            $height);
+            $style);
         $html .= sprintf('<script type="text/javascript" id="embedUV" src="%s"></script>', $urlJs);
         $html .= '<script type="text/javascript">/* wordpress fix */</script>';
         return $html;
