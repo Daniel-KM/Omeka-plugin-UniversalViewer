@@ -8,28 +8,24 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
     /**
      * Get the specified UniversalViewer.
      *
-     * @param array $args Associative array of optional values:
-     *   - (string) id: The unique main id.
-     *   - (integer|Record) record: The record is the item if it's an integer.
-     *   - (string) type: Type of record if record is integer (item by default).
-     *   - (integer|Item) item
-     *   - (integer|Collection) collection
-     *   - (integer|File) file
+     * @param Record $record
+     * @param array $options Associative array of optional values:
      *   - (string) class
      *   - (string) locale
      *   - (string) style
      *   - (string) config
-     * The only one record is defined according to the priority above.
      * @return string. The html string corresponding to the UniversalViewer.
      */
-    public function universalViewer($args = array())
+    public function universalViewer($record, $options = array())
     {
-        $record = $this->_getRecord($args);
         if (empty($record)) {
             return '';
         }
 
         $recordClass = get_class($record);
+        if (!in_array($recordClass, array('Item', 'Collection'))) {
+            return '';
+        }
 
         // Determine if we should get the manifest from a field in the metadata.
         $urlManifest = '';
@@ -65,29 +61,41 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
             $urlManifest = $this->view->uvForceHttpsIfRequired($urlManifest);
         }
 
-        $class = isset($args['class'])
-            ? $args['class']
+        return $this->_display($urlManifest, $options);
+    }
+
+    /**
+     * Render a universal viewer for a url, according to options.
+     *
+     * @param string $urlManifest
+     * @param array $options
+     * @return string
+     */
+    protected function _display($urlManifest, $options = array())
+    {
+        $class = isset($options['class'])
+            ? $options['class']
             : get_option('universalviewer_class');
         if (!empty($class)) {
             $class = ' ' . $class;
         }
-        $locale = isset($args['locale'])
-            ? $args['locale']
+        $locale = isset($options['locale'])
+            ? $options['locale']
             : get_option('universalviewer_locale');
         if (!empty($locale)) {
             $locale = ' data-locale="' . $locale . '"';
         }
-        $style = isset($args['style'])
-            ? $args['style']
+        $style = isset($options['style'])
+            ? $options['style']
             : get_option('universalviewer_style');
         if (!empty($style)) {
             $style = ' style="' . $style . '"';
         }
 
         // Default configuration file.
-        $config = empty($args['config'])
+        $config = empty($options['config'])
             ? src('config', 'universal-viewer', 'json')
-            : $args['config'];
+            : $options['config'];
         $urlJs = src('embed', 'javascripts/uv/lib', 'js');
 
         $html = sprintf('<div class="uv%s" data-config="%s" data-uri="%s"%s%s></div>',
@@ -99,69 +107,5 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         $html .= sprintf('<script type="text/javascript" id="embedUV" src="%s"></script>', $urlJs);
         $html .= '<script type="text/javascript">/* wordpress fix */</script>';
         return $html;
-    }
-
-    protected function _getRecord($args)
-    {
-        $record = null;
-        if (!empty($args['id'])) {
-            // Currently only item.
-            $record = get_record_by_id('Item', (integer) $args['id']);
-        }
-        elseif (!empty($args['record'])) {
-            if (is_numeric($args['record'])) {
-                if (isset($args['record'])
-                        && in_array(ucfirst($args['record']), array('Item', 'Collection', 'File'))
-                    ) {
-                    $record = get_record_by_id(ucfirst($args['type']), (integer) $args['record']);
-                }
-            }
-            elseif (in_array(get_class($args['record']), array('Item', 'Collection', 'File'))) {
-                $record = $args['record'];
-            }
-        }
-        elseif (!empty($args['item'])) {
-            if (is_numeric($args['item'])) {
-                $record = get_record_by_id('Item', (integer) $args['item']);
-            }
-            else {
-                $record = $args['item'];
-            }
-        }
-        elseif (!empty($args['collection'])) {
-            if (is_numeric($args['collection'])) {
-                $record = get_record_by_id('Collection', (integer) $args['collection']);
-            }
-            else {
-                $record = $args['collection'];
-            }
-        }
-        elseif (!empty($args['file'])) {
-            if (is_numeric($args['file'])) {
-                $record = get_record_by_id('File', (integer) $args['file']);
-            }
-            else {
-                $record = $args['file'];
-            }
-        }
-        else {
-            try {
-                $record = get_current_record('item');
-            } catch (Exception $e) {
-            }
-            if (empty($record)) {
-                try {
-                    $record = get_current_record('collection');
-                } catch (Exception $e) {
-                }
-                if (empty($record)) {
-                    try {
-                        $record = get_current_record('file');
-                    } catch (Exception $e) {
-                    }
-                }
-            }
-        }
-        return $record;
     }
 }

@@ -10,8 +10,7 @@
     ));
 ?>
 <?php
-    echo $this->universalViewer(array(
-        'record' => $record,
+    echo $this->universalViewer($record, array(
         'style' => 'height: 600px;' . get_option('universalviewer_style'),
     ));
 ?>

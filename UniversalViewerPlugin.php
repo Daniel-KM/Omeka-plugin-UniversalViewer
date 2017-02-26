@@ -429,7 +429,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         if (!isset($args['view'])) {
             $args['view'] = get_view();
         }
-        echo $args['view']->universalViewer($args);
+        echo $this->_displayUniversalViewer($args);
     }
 
     /**
@@ -447,7 +447,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         if (!isset($args['view'])) {
             $args['view'] = get_view();
         }
-        echo $args['view']->universalViewer($args);
+        echo $this->_displayUniversalViewer($args);
     }
 
     public function filterExhibitLayouts($layouts)
@@ -469,7 +469,76 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
     public static function shortcodeUniversalViewer($args, $view)
     {
         $args['view'] = $view;
-        return $view->universalViewer($args);
+        return $this->_displayUniversalViewer($args);
+    }
+
+    /**
+     * Helper to clean the args to display the universal viewer for a record.
+     *
+     * @param array $args
+     * @return string
+     */
+    protected function _displayUniversalViewer($args)
+    {
+        $record = null;
+        if (!empty($args['id'])) {
+            // Currently only item.
+            $record = get_record_by_id('Item', (integer) $args['id']);
+            unset($args['id']);
+        }
+        elseif (!empty($args['record'])) {
+            if (is_numeric($args['record'])) {
+                if (isset($args['type'])
+                       && in_array(ucfirst($args['type']), array('Item', 'Collection', 'File'))
+                    ) {
+                    $record = get_record_by_id(ucfirst($args['type']), (integer) $args['record']);
+                }
+                unset($args['record']);
+                unset($args['type']);
+            }
+            elseif (is_object($args['record']) && in_array(get_class($args['record']), array('Item', 'Collection', 'File'))) {
+                $record = $args['record'];
+                unset($args['record']);
+            }
+        }
+        elseif (!empty($args['item'])) {
+            if (is_numeric($args['item'])) {
+                $record = get_record_by_id('Item', (integer) $args['item']);
+            }
+            else {
+                $record = $args['item'];
+            }
+            unset($args['record']);
+        }
+        elseif (!empty($args['collection'])) {
+            if (is_numeric($args['collection'])) {
+                $record = get_record_by_id('Collection', (integer) $args['collection']);
+            }
+            else {
+                $record = $args['collection'];
+            }
+            unset($args['collection']);
+        }
+        elseif (!empty($args['file'])) {
+            if (is_numeric($args['file'])) {
+                $record = get_record_by_id('File', (integer) $args['file']);
+            }
+            else {
+                $record = $args['file'];
+            }
+            unset($args['file']);
+        }
+        else {
+            $record = get_current_record('item', false);
+            if (empty($record)) {
+                $record = get_current_record('collection', false);
+                if (empty($record)) {
+                    $record = get_current_record('file', false);
+                }
+            }
+        }
+
+        return $args['view']->universalViewer($record, $args);
     }
 
     /**

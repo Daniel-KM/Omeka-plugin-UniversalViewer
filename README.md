@@ -115,8 +115,7 @@ current record 'collection' or 'item').
     echo $this->universalViewer();
 
     // Display the viewer with the specified item and specified config.
-    echo $this->universalViewer(array(
-        'item' => $item,
+    echo $this->universalViewer($item, array(
         'config' => 'https://example.com/my/specific/config.json',
     ));
 ```
@@ -139,9 +138,7 @@ current record 'collection' or 'item').
     ));
 ```
 
-All mechanisms share the same arguments and all of them are optional. For the
-selection of the record, the order of priority is: "id", "record" / "type",
-"item", "collection", current record.
+All mechanisms share the same arguments and all of them are optional.
 
 If collections are organized hierarchically with the plugin [CollectionTree], it
 will be used to build manifests for collections.
