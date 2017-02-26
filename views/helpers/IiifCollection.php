@@ -175,9 +175,8 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         foreach ($collectionTree as $collection) {
             $manifest = array();
             $manifest['@id'] = absolute_url(array(
-                'recordtype' => 'collections',
                 'id' => $collection['id'],
-            ), 'universalviewer_presentation_manifest');
+            ), 'universalviewer_presentation_collection');
             $manifest['@id'] = $this->view->uvForceHttpsIfRequired($manifest['@id']);
             $manifest['@type'] = 'sc:Collection';
             $manifest['label'] = $collection['name'] ?: __('[Untitled]');
@@ -196,14 +195,24 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         $recordClass = get_class($record);
         $manifest = array();
 
-        $url = absolute_url(array(
-            'recordtype' => Inflector::tableize($recordClass),
-            'id' => $record->id,
-        ), 'universalviewer_presentation_manifest');
+        if ($recordClass == 'Collection') {
+            $url = absolute_url(array(
+                'id' => $record->id,
+            ), 'universalviewer_presentation_collection');
+
+            $type = 'sc:Collection';
+        } else {
+            $url = absolute_url(array(
+                'id' => $record->id,
+            ), 'universalviewer_presentation_item');
+
+            $type = 'sc:Manifest';
+        }
+
         $url = $this->view->uvForceHttpsIfRequired($url);
         $manifest['@id'] = $url;
 
-        $manifest['@type'] = $recordClass == 'Collection' ? 'sc:Collection' : 'sc:Manifest';
+        $manifest['@type'] = $type;
 
         $label = strip_formatting(metadata($record, array('Dublin Core', 'Title'), array('no_filter' => true))) ?: __('[Untitled]');
         $manifest['label'] = $label;

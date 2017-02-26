@@ -25,8 +25,39 @@ class UniversalViewer_PresentationController extends Omeka_Controller_AbstractAc
             throw new Omeka_Controller_Exception_404;
         }
 
-        $recordType = $this->getParam('recordtype');
-        $record = get_record_by_id(Inflector::classify($recordType), $id);
+        if (strtok($id, '/') == 'collection') {
+            $this->setParam('id', strtok('/'));
+            $this->collectionAction();
+        } else {
+            $this->itemAction();
+        }
+    }
+
+    public function collectionAction()
+    {
+        $id = $this->getParam('id');
+        if (empty($id)) {
+            throw new Omeka_Controller_Exception_404;
+        }
+
+        $record = get_record_by_id('Collection', $id);
+        if (empty($record)) {
+            throw new Omeka_Controller_Exception_404;
+        }
+
+        $manifest = get_view()->iiifCollection($record, false);
+
+        $this->_sendJson($manifest);
+    }
+
+    public function itemAction()
+    {
+        $id = $this->getParam('id');
+        if (empty($id)) {
+            throw new Omeka_Controller_Exception_404;
+        }
+
+        $record = get_record_by_id('Item', $id);
         if (empty($record)) {
             throw new Omeka_Controller_Exception_404;
         }

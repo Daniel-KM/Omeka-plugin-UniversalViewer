@@ -29,6 +29,8 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
             return '';
         }
 
+        $recordClass = get_class($record);
+
         // Determine if we should get the manifest from a field in the metadata.
         $urlManifest = '';
         $manifestElement = get_option('universalviewer_alternative_manifest_element');
@@ -37,7 +39,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         }
 
         // Some specific checks.
-        switch (get_class($record)) {
+        switch ($recordClass) {
             case 'Item':
                 // Currently, item without files is unprocessable.
                 if ($record->fileCount() == 0 and $urlManifest == '') {
@@ -53,12 +55,13 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
                 break;
         }
 
-        // if manifest not provided in metadata, point to manifest created from Omeka files
-        if ($urlManifest == '') {
+        // If manifest not provided in metadata, point to manifest created from
+        // Omeka files.
+        if (empty($urlManifest)) {
+            $route = 'universalviewer_presentation_' . strtolower($recordClass);
             $urlManifest = absolute_url(array(
-                    'recordtype' => Inflector::tableize(get_class($record)),
-                    'id' => $record->id,
-                ), 'universalviewer_presentation_manifest');
+                'id' => $record->id,
+            ), $route);
             $urlManifest = $this->view->uvForceHttpsIfRequired($urlManifest);
         }
 

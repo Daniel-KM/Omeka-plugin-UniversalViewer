@@ -16,7 +16,7 @@ of the [British Library] and the [National Library of Wales], then open sourced
 which is sold to its partners).
 
 See a [demo] on the [Bibliothèque patrimoniale] of [Mines ParisTech], or you can
-set the url "https://patrimoine.mines-paristech.fr/collections/presentation/7/manifest"
+set the url "https://patrimoine.mines-paristech.fr/iiif/collection/7/manifest"
 in the official [example server], because this is fully interoperable.
 
 
@@ -100,12 +100,13 @@ automatically embedded in "collections/show/{id}" and "items/show/{id}" pages.
 This can be disabled in the config of the plugin. Finally, a layout is available
 to add the viewer for an item in an exhibit page.
 
-All routes for the player and the IIIF server are defined in the file "routes.ini".
+All routes for the player and the IIIF server are defined in the file `routes.ini`.
+They follow the recommandations of the [iiif specifications].
 
 To embed the Universal Viewer with more control, three mechanisms are provided.
 So, according to your needs, you may add this code in the `items/show.php` file
 of your theme or anywhere else, as long a record is defined (as variable or as
-current record'collection' or 'item').
+current record 'collection' or 'item').
 
 * Helper (recommended)
 
@@ -126,7 +127,7 @@ current record'collection' or 'item').
   - In the theme:
 
 ```php
-    echo $this->shortcodes('[uv record=1 type=collection]');
+    echo $this->shortcodes('[uv collection=1]');
 ```
 
 * Hook
@@ -293,6 +294,7 @@ Plugin Universal Viewer for Omeka:
 [example server]: http://universalviewer.io/examples/
 [wiki]: https://github.com/UniversalViewer/universalviewer/wiki/Configuration
 [online]: http://universalviewer.io/examples/
+[iiif specifications]: http://iiif.io/api/
 [official release]: https://github.com/UniversalViewer/universalviewer/releases
 [distribution]: https://github.com/UniversalViewer/universalviewer/tree/master/dist
 [OpenLayersZoom]: https://github.com/Daniel-KM/OpenLayersZoom

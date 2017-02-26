@@ -84,9 +84,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         );
 
         $url = absolute_url(array(
-                'recordtype' => 'items',
                 'id' => $record->id,
-            ), 'universalviewer_presentation_manifest');
+            ), 'universalviewer_presentation_item');
         $url = $this->view->uvForceHttpsIfRequired($url);
         $manifest['@id'] = $url;
 
@@ -174,9 +173,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         if ($record->collection_id) {
             $within = absolute_url(array(
-                    'recordtype' => 'collections',
                     'id' => $record->collection_id,
-                ), 'universalviewer_presentation_manifest');
+                ), 'universalviewer_presentation_collection');
             $within = $this->view->uvForceHttpsIfRequired($within);
             $metadata['within'] = $within;
         }
