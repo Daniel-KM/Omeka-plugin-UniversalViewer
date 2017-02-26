@@ -201,20 +201,18 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
     /**
      * Get an array of the width and height of the image file.
      *
-     * @internal The process uses the saved constraints. It they are changed but
-     * the derivative haven't been rebuilt, the return will be wrong (but
-     * generally without consequences for BookReader).
-     *
      * @param File $file
      * @param string $imageType
      * @return array Associative array of width and height of the image file.
      * If the file is not an image, the width and the height will be null.
+     *
      * @see UniversalViewer_View_Helper_IiifManifest::_getImageSize()
+     * @see UniversalViewer_View_Helper_IiifInfo::_getImageSize()
+     * @see UniversalViewer_ImageController::_getImageSize()
+     * @todo Refactorize.
      */
-    protected function _getImageSize($file, $imageType = 'original')
+    protected function _getImageSize(File $file, $imageType = 'original')
     {
-        static $sizeConstraints = array();
-
         // Check if this is an image.
         if (empty($file) || strpos($file->mime_type, 'image/') === false) {
             return array(
@@ -223,67 +221,48 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             );
         }
 
-        if (!isset($sizeConstraints[$imageType])) {
-            $sizeConstraints[$imageType] = (integer) get_option($imageType . '_constraint');
+        // This is an image, so get the resolution directly, because sometime
+        // the resolution is not stored and because the size may be lower than
+        // the derivative constraint, in particular when the original image size
+        // is lower than the derivative constraint, or when the constraint
+        // changed.
+
+        // The storage adapter should be checked for external storage.
+        $storageAdapter = $file->getStorage()->getAdapter();
+        $filepath = get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem'
+            ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($imageType)
+            : $file->getWebPath($imageType);
+        $result = $this->_getWidthAndHeight($filepath);
+
+        if (empty($result['width']) || empty($result['height'])) {
+            $msg = __('Failed to get resolution of image #%d ("%s").', $file->id, $filepath);
+            throw new Exception($msg);
         }
-        $sizeConstraint = $sizeConstraints[$imageType];
 
-        // This is an image.
-        $metadata = json_decode($file->metadata, true);
-        if (empty($metadata['video']['resolution_x']) || empty($metadata['video']['resolution_y'])) {
-            $msg = __('The image #%d ("%s") is not stored correctly.', $file->id, $file->original_filename);
-            _log($msg, Zend_Log::NOTICE);
+        return $result;
+    }
 
-            if (isset($metadata['video']['resolution_x']) || isset($metadata['video']['resolution_y'])) {
-                throw new Exception($msg);
-            }
-
-            // Get the resolution directly.
-            // The storage adapter should be checked for external storage.
-            $storageAdapter = $file->getStorage()->getAdapter();
-            $filepath = get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem'
-                ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($imageType)
-                : $file->getWebPath($imageType);
+    /**
+     * Helper to get width and height of an image.
+     *
+     * @param string $filepath This should be an image (no check here).
+     * @return array Associative array of width and height of the image file.
+     * If the file is not an image, the width and the height will be null.
+     * @see UniversalViewer_ImageController::_getWidthAndHeight()
+     */
+    protected function _getWidthAndHeight($filepath)
+    {
+        if (file_exists($filepath)) {
             list($width, $height, $type, $attr) = getimagesize($filepath);
-            if (empty($width) || empty($height)) {
-                throw new Exception($msg);
-            }
-        }
-
-        // Calculate the size.
-        else {
-            $sourceWidth = $metadata['video']['resolution_x'];
-            $sourceHeight = $metadata['video']['resolution_y'];
-
-            // Use the original size when possible.
-            if ($imageType == 'original') {
-                $width = $sourceWidth;
-                $height = $sourceHeight;
-            }
-            // This supposes that the option has not changed before.
-            else {
-                // Source is landscape.
-                if ($sourceWidth > $sourceHeight) {
-                    $width = $sizeConstraint;
-                    $height = round($sourceHeight * $sizeConstraint / $sourceWidth);
-                }
-                // Source is portrait.
-                elseif ($sourceWidth < $sourceHeight) {
-                    $width = round($sourceWidth * $sizeConstraint / $sourceHeight);
-                    $height = $sizeConstraint;
-                }
-                // Source is square.
-                else {
-                    $width = $sizeConstraint;
-                    $height = $sizeConstraint;
-                }
-            }
+            return array(
+                'width' => $width,
+                'height' => $height,
+            );
         }
 
         return array(
-            // The cast avoids to set a string or a float.
-            'width' => (integer) $width,
-            'height' => (integer) $height,
+            'width' => null,
+            'height' => null,
         );
     }
 }
