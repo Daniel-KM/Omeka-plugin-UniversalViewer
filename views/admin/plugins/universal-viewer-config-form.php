@@ -128,7 +128,7 @@ $elements = get_table_options('Element', null, array(
 </fieldset>
 <fieldset id="fieldset-universalviewer-embed"><legend><?php echo __('Integration of the viewer'); ?></legend>
     <p class="explanation">
-        <?php echo __('If checked, the viewer will be automatically appended to the collections or items show page.'); ?>
+        <?php echo __('If checked, the viewer will be automatically appended to the collections or items pages.'); ?>
         <?php echo __('Else, the viewer can be added via the helper in the theme or the shortcode in any page.'); ?>
     </p>
     <div class="field">
@@ -149,6 +149,26 @@ $elements = get_table_options('Element', null, array(
         <div class="inputs five columns omega">
             <?php echo $this->formCheckbox('universalviewer_append_items_show', true,
                 array('checked' => (boolean) get_option('universalviewer_append_items_show'))); ?>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_append_collections_browse',
+                __('Append to "Collections browse"')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formCheckbox('universalviewer_append_collections_browse', true,
+                array('checked' => (boolean) get_option('universalviewer_append_collections_browse'))); ?>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_append_items_browse',
+                __('Append to "Items browse"')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formCheckbox('universalviewer_append_items_browse', true,
+                array('checked' => (boolean) get_option('universalviewer_append_items_browse'))); ?>
         </div>
     </div>
     <p class="explanation">

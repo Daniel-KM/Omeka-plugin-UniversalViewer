@@ -22,6 +22,18 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
             return '';
         }
 
+        // Prepare the url of the manifest for a dynamic collection.
+        if (is_array($record)) {
+            $identifier = $this->_buildIdentifierForList($record);
+            $route = 'universalviewer_presentation_collection_list';
+            $urlManifest = absolute_url(array(
+                 'id' => $identifier,
+            ), $route);
+            $urlManifest = $this->view->uvForceHttpsIfRequired($urlManifest);
+            return $this->_display($urlManifest, $options);
+        }
+
+        // Prepare the url for the manifest of a record after additional checks.
         $recordClass = get_class($record);
         if (!in_array($recordClass, array('Item', 'Collection'))) {
             return '';
@@ -32,36 +44,79 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         $manifestElement = get_option('universalviewer_alternative_manifest_element');
         if ($manifestElement) {
             $urlManifest = metadata($record, json_decode($manifestElement, true));
+            if ($urlManifest) {
+                return $this->_display($urlManifest, $options);
+            }
+            // If manifest not provided in metadata, point to manifest created
+            // from Omeka files.
         }
 
         // Some specific checks.
         switch ($recordClass) {
             case 'Item':
-                // Currently, item without files is unprocessable.
-                if ($record->fileCount() == 0 and $urlManifest == '') {
+                // Currently, an item without files is unprocessable.
+                if ($record->fileCount() == 0) {
                     // return __('This item has no files and is not displayable.');
                     return '';
                 }
+                $route = 'universalviewer_presentation_item';
                 break;
             case 'Collection':
-                if ($record->totalItems() == 0 and $urlManifest == '') {
+                if ($record->totalItems() == 0) {
                     // return __('This collection has no item and is not displayable.');
                     return '';
                 }
+                $route = 'universalviewer_presentation_collection';
                 break;
         }
 
-        // If manifest not provided in metadata, point to manifest created from
-        // Omeka files.
-        if (empty($urlManifest)) {
-            $route = 'universalviewer_presentation_' . strtolower($recordClass);
-            $urlManifest = absolute_url(array(
-                'id' => $record->id,
-            ), $route);
-            $urlManifest = $this->view->uvForceHttpsIfRequired($urlManifest);
-        }
+        $urlManifest = absolute_url(array(
+            'id' => $record->id,
+        ), $route);
+        $urlManifest = $this->view->uvForceHttpsIfRequired($urlManifest);
 
         return $this->_display($urlManifest, $options);
+    }
+
+    /**
+     * Helper to create an identifier from a list of records.
+     *
+     * The dynamic identifier is a flat list of ids: "c-5i-1,i-2,c-3".
+     * If there is only one id, a comma is added to avoid to have the same route
+     * than the collection itself.
+     * If there are only items, the most common case, the dynamic identifier is
+     * simplified: "1,2,6". In all cases the order of records is kept.
+     *
+     * @todo Merge with UniversalViewer_View_Helper_IiifCollectionList::_buildIdentifierForList()
+     *
+     * @param array $records
+     * @return string
+     */
+    protected function _buildIdentifierForList($records)
+    {
+        $map = array(
+            'Item' => 'i-',
+            'Collection' => 'c-',
+            'File' => 'm-',
+        );
+
+        $identifiers = array();
+        foreach ($records as $record) {
+            $identifiers[] = $map[get_class($record)] . $record->id;
+        }
+
+        $identifier = implode(',', $identifiers);
+
+        if (count($identifiers) == 1) {
+            $identifier .= ',';
+        }
+
+        // Simplify the identifier: remove the "i-" if there are only items.
+        if (strpos($identifier, 'c') === false && strpos($identifier, 'm') === false) {
+            $identifier = str_replace('i-', '', $identifier);
+        }
+
+        return $identifier;
     }
 
     /**
@@ -79,12 +134,14 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         if (!empty($class)) {
             $class = ' ' . $class;
         }
+
         $locale = isset($options['locale'])
             ? $options['locale']
             : get_option('universalviewer_locale');
         if (!empty($locale)) {
             $locale = ' data-locale="' . $locale . '"';
         }
+
         $style = isset($options['style'])
             ? $options['style']
             : get_option('universalviewer_style');

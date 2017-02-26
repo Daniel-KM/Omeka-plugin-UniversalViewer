@@ -31,6 +31,8 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'items_batch_edit_custom',
         'public_collections_show',
         'public_items_show',
+        'public_items_browse',
+        'public_collections_browse',
     );
 
     /**
@@ -56,6 +58,8 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_alternative_manifest_element' => '',
         'universalviewer_append_collections_show' => true,
         'universalviewer_append_items_show' => true,
+        'universalviewer_append_collections_browse' => false,
+        'universalviewer_append_items_browse' => false,
         'universalviewer_class' => '',
         'universalviewer_style' => 'background-color: #000; height: 600px;',
         'universalviewer_locale' => 'en-GB:English (GB),fr-FR:French',
@@ -144,6 +148,12 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         if (version_compare($oldVersion, '2.4.2', '<')) {
             set_option('universalviewer_manifest_logo_default',
                 $this->_options['universalviewer_manifest_logo_default']);
+
+            set_option('universalviewer_append_items_browse',
+                $this->_options['universalviewer_append_items_browse']);
+
+            set_option('universalviewer_append_collections_browse',
+                $this->_options['universalviewer_append_collections_browse']);
 
             $style = $this->_options['universalviewer_style'];
             $width = get_option('universalviewer_width') ?: '';
@@ -450,6 +460,40 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         echo $this->_displayUniversalViewer($args);
     }
 
+    /**
+     * Hook to display viewer.
+     *
+     * @param array $args
+     * @return void
+     */
+    public function hookPublicItemsBrowse($args)
+    {
+        if (!get_option('universalviewer_append_items_browse')) {
+            return;
+        }
+        if (!isset($args['view'])) {
+            $args['view'] = get_view();
+        }
+        echo $this->_displayUniversalViewer($args);
+    }
+
+    /**
+     * Hook to display viewer.
+     *
+     * @param array $args
+     * @return void
+     */
+    public function hookPublicCollectionsBrowse($args)
+    {
+        if (!get_option('universalviewer_append_collections_browse')) {
+            return;
+        }
+        if (!isset($args['view'])) {
+            $args['view'] = get_view();
+        }
+        echo $this->_displayUniversalViewer($args);
+    }
+
     public function filterExhibitLayouts($layouts)
     {
         $layouts['universal-viewer'] = array(
@@ -480,6 +524,28 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      */
     protected function _displayUniversalViewer($args)
     {
+        $records = array();
+        foreach (array(
+                'records' => 'Item',
+                'items' => 'Item',
+                'collections' => 'Collection',
+                'files' => 'File',
+                'medias' => 'File',
+            ) as $type => $recordType) {
+            if (isset($args[$type])) {
+                $recs = is_array($args[$type]) ? $args[$type] : explode(',', $args[$type]);
+                foreach ($recs as $record) {
+                    $records[] = is_object($record)
+                        ? $record
+                        : get_record_by_id($recordType, (integer) $record);
+                }
+                unset($args[$type]);
+            }
+        }
+        if (!empty($records)) {
+            return $args['view']->universalViewer($records, $args);
+        }
+
         $record = null;
         if (!empty($args['id'])) {
             // Currently only item.

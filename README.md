@@ -5,7 +5,8 @@ Universal Viewer (plugin for Omeka)
 in order to serve images like an [IIPImage] server, and the [UniversalViewer], a
 unified online player for any file. It can display books, images, maps, audio,
 movies, pdf, 3D, and anything else as long as the appropriate extension is
-installed. Rotation, zoom, inside search, etc. may be managed too.
+installed. Rotation, zoom, inside search, etc. may be managed too. Dynamic lists
+of records may be used, for example for browse pages.
 
 The full specification of the "International Image Interoperability Framework"
 standard is supported (level 2), so any other widget that supports it can use it.
@@ -143,6 +144,16 @@ All mechanisms share the same arguments and all of them are optional.
 If collections are organized hierarchically with the plugin [CollectionTree], it
 will be used to build manifests for collections.
 
+The display of multiple records (items or collections) is supported:
+
+```php
+    // Array of multiple records with the helper.
+    echo $this->universalViewer($records);
+
+    // Multiple records with the shortcode.
+    echo $this->shortcodes('[uv collections=1,2 items=1,3]');
+```
+
 
 Notes
 -----
@@ -172,6 +183,13 @@ A form in the batch edit can be used to process them automatically: check the
 items in the "admin/items/browse" view, then click the button "Edit", then the
 checkbox "Rebuild metadata when missing". The viewer will work without these
 metadata, but the display will be slower.
+
+
+TODO / Bugs
+-----------
+
+- When a collection contains non image items, the left panel with the index is
+  displayed only when the first item contains an image.
 
 
 3D models

@@ -1,8 +1,10 @@
 <?php
-if (!empty($attachments)):
-    $attachment = reset($attachments);
+$records = array();
+foreach ($attachments as $attachment) {
     $item = $attachment->getItem();
-    // Display the viewer with the specified item and specified config.
-    echo $this->universalViewer($item);
-endif;
-?>
+    if ($item) {
+        $records[] = $item;
+    }
+}
+// Display the viewer with the specified item.
+echo $this->universalViewer($records);
