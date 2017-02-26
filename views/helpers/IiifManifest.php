@@ -11,30 +11,18 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * Get the IIIF manifest for the specified record.
      *
      * @param Record $record
-     * @param boolean $asJson Return manifest as object or as a json string.
-     * @return Object|string|null. The object or the json string corresponding to the
-     * manifest.
+     * @return Object|null
      */
-    public function iiifManifest(Omeka_Record_AbstractRecord $record, $asJson = true)
+    public function iiifManifest(Omeka_Record_AbstractRecord $record)
     {
         $recordClass = get_class($record);
         if ($recordClass == 'Item') {
-            $result = $this->_buildManifestItem($record);
-        }
-        elseif ($recordClass == 'Collection') {
-            return $this->view->iiifCollection($record, $asJson);
-        }
-        else {
-            return null;
+            return $this->_buildManifestItem($record);
         }
 
-        if ($asJson) {
-            return version_compare(phpversion(), '5.4.0', '<')
-                ? json_encode($result)
-                : json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($recordClass == 'Collection') {
+            return $this->view->iiifCollection($record);
         }
-        // Return as array
-        return $result;
     }
 
     /**

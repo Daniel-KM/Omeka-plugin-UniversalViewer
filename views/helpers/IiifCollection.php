@@ -5,37 +5,16 @@
 class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstract
 {
     /**
-     * Get the IIIF manifest for the specified collection.
-     *
-     * @param Collection $collection
-     * @param boolean $asJson Return manifest as object or as a json string.
-     * @return Object|string|null. The object or the json string corresponding to the
-     * manifest.
-     */
-    public function iiifCollection(Collection $collection, $asJson = true)
-    {
-        $result = $this->_buildManifestCollection($collection);
-
-        if ($asJson) {
-            return version_compare(phpversion(), '5.4.0', '<')
-                ? json_encode($result)
-                : json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        }
-        // Return as array
-        return $result;
-    }
-
-    /**
-     * Get the IIIF manifest for the specified collection.
+     * Get the IIIF Collection manifest for the specified collection.
      *
      * @todo Use a representation/context with a getResource(), a toString()
      * that removes empty values and a standard json() without ld.
      * @see IiifManifest
      *
      * @param Collection $collection
-     * @return Object|null. The object corresponding to the collection.
+     * @return Object|null
      */
-    protected function _buildManifestCollection(Collection $collection)
+    public function iiifCollection(Collection $collection)
     {
         // Prepare values needed for the manifest. Empty values will be removed.
         // Some are required.
@@ -61,7 +40,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
             'manifests' => array(),
         );
 
-        $manifest = array_merge($manifest, $this->_buildManifestBase($collection, false));
+        $manifest = array_merge($manifest, $this->_buildManifestBase($collection));
 
         // Prepare the metadata of the record.
         // TODO Manage filter and escape or use $collection->getAllElementTexts()?
@@ -186,7 +165,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         return $result;
     }
 
-    protected function _buildManifestBase($record, $asObject = true)
+    protected function _buildManifestBase($record)
     {
         $recordClass = get_class($record);
         $manifest = array();
@@ -213,6 +192,6 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         $label = strip_formatting(metadata($record, array('Dublin Core', 'Title'), array('no_filter' => true))) ?: __('[Untitled]');
         $manifest['label'] = $label;
 
-        return $asObject ? (object) $manifest : $manifest;
+        return $manifest;
     }
 }
