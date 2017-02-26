@@ -16,6 +16,9 @@ of the [British Library] and the [National Library of Wales], then open sourced
 (unlike the viewer of [Gallica], the public digital library built by the [Bibliothèque Nationale de France],
 which is sold to its partners).
 
+This plugin is upgradable to [Omeka S] via the plugin [Upgrade to Omeka S], that
+installs the module [Universal Viewer for Omeka S].
+
 See a [demo] on the [Bibliothèque patrimoniale] of [Mines ParisTech], or you can
 set the url "https://patrimoine.mines-paristech.fr/iiif/collection/7/manifest"
 in the official [example server], because this is fully interoperable.
@@ -72,7 +75,7 @@ Details of the config options can be found on the [wiki] and tested [online].
 
 * Using externally supplied IIIF manifest and images
 
-If you are harvesting data (via OAI-PMH, for instance) from another system where 
+If you are harvesting data (via OAI-PMH, for instance) from another system where
 images are hosted and exposed via IIIF, you can use a configurable metadata field
 to supply the manifest to the Universal Viewer. In this case, no images are hosted
 in the Omeka record, but one of the metadata fields has the URL of the manifest
@@ -111,11 +114,13 @@ of your theme or anywhere else.
 * Helper (recommended)
 
 ```php
-    // Display the viewer with the current record and default parameters.
-    echo $this->universalViewer();
+    // Display the viewer with the specified collection.
+    echo $this->universalViewer($collection);
 
-    // Display the viewer with the specified item and specified config.
+    // Display the viewer with the specified item and specified options.
     echo $this->universalViewer($item, array(
+        'class' => 'my-class',
+        'style' => 'width: 40%; height: 400px;',
         'config' => 'https://example.com/my/specific/config.json',
     ));
 ```
@@ -138,12 +143,13 @@ of your theme or anywhere else.
     ));
 ```
 
-All mechanisms share the same arguments and all of them are optional.
+Arguments may be "class", "style", "locale" and "config". All mechanisms share
+the same arguments and all of them are optional.
 
 If collections are organized hierarchically with the plugin [CollectionTree], it
 will be used to build manifests for collections.
 
-The display of multiple records (items or collections) is supported:
+The display of multiple records (items and/or collections) is supported:
 
 ```php
     // Array of multiple records with the helper.
@@ -158,30 +164,24 @@ Notes
 -----
 
 - A batch edit is provided to sort images before other files (pdf, xml...) that
-are associated to an item (Items > check box items > edit button).
+  are associated to an item (Items > check box items > edit button).
 - The plugin works fine for a standard usage, but the images server may be
-improved for requests made outside of the Universal Viewer when OpenLayersZoom
-is used. Without it, a configurable limit should be set (10 MB by default).
+  improved for requests made outside of the Universal Viewer when OpenLayersZoom
+  is used. Without it, a configurable limit should be set (10 MB by default).
 - If an item has no file, the viewer is not able to display it, so a check is
-automatically done.
+  automatically done.
 - Media: Currently, no image should be available in the same item.
 - Audio/Video: the format should be supported by the browser of the user. In
-fact, only open, free and/or common codecs are really supported: "mp3" and "ogg"
-for audio and "webm" and "ogv" for video. They can be modified in the file
-"routes.ini".
+  fact, only open, free and/or common codecs are really supported: "mp3" and
+  "ogg" for audio and "webm" and "ogv" for video. They can be modified in the
+  file "routes.ini".
+- The Universal Viewer cannot display empty collections, so an empty view may
+  appear when multiple records are displayed.
 
 *Warning*
 
 PHP should be installed with the extension "exif" in order to get the size of
 images. This is the case for all major distributions and providers.
-
-If technical metadata are missing for some images, in particular when the
-extension "exif" is not installed or when images are not fully compliant with
-the standards, they should be rebuilt. A notice is added in the error log.
-A form in the batch edit can be used to process them automatically: check the
-items in the "admin/items/browse" view, then click the button "Edit", then the
-checkbox "Rebuild metadata when missing". The viewer will work without these
-metadata, but the display will be slower.
 
 
 TODO / Bugs
@@ -210,6 +210,8 @@ images are referenced in the json files with a full url.
 
 * Example
 
+  - Allow the extension `json` and the media type `application/json` in the
+    global settings > Security.
   - Install the plugin [Archive Repertory].
   - Download the next three files from the official examples:
     - http://files.universalviewer.io/manifests/foundobjects/thekiss/thumb.jpg
@@ -292,6 +294,7 @@ Plugin Universal Viewer for Omeka:
 
 
 [Universal Viewer]: https://github.com/Daniel-KM/UniversalViewer4Omeka
+[Omeka S]: https://omeka.org/s
 [Omeka]: https://omeka.org
 [IIIF]: http://iiif.io
 [IIPImage]: http://iipimage.sourceforge.net
@@ -306,6 +309,8 @@ Plugin Universal Viewer for Omeka:
 [Bibliothèque patrimoniale]: https://patrimoine.mines-paristech.fr
 [Mines ParisTech]: http://mines-paristech.fr
 [example server]: http://universalviewer.io/examples/
+[Upgrade to Omeka S]: https://github.com/Daniel-KM/UpgradeToOmekaS
+[Universal Viewer for Omeka S]: https://github.com/Daniel-KM/Omeka-S-module-UniversalViewer
 [wiki]: https://github.com/UniversalViewer/universalviewer/wiki/Configuration
 [online]: http://universalviewer.io/examples/
 [iiif specifications]: http://iiif.io/api/
