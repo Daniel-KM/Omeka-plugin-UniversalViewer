@@ -809,7 +809,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         // $mediaSequenceElement['metadata'] = $values['metadata'];
         // Check if there is a "thumb.jpg" that can be managed as a thumbnail.
         foreach ($values['files'] as $imageFile) {
-            if ($imageFile->original_filename == 'thumb.jpg') {
+            if (basename($imageFile->original_filename) == 'thumb.jpg') {
                 // The original is used, because this is already a thumbnail.
                 $thumbnailUrl = $imageFile->getWebPath('original');
                 if ($thumbnailUrl) {
@@ -866,15 +866,12 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         // Threejs is an exception, because the thumbnail may be a true file
         // named "thumb.js".
         if ($isThreejs) {
-            $files = $table->findBy(array(
-                'item_id' => $record->id,
-                'has_derivative_image' => 1,
-                // TODO Check only the base name for imported records.
-                'original_filename' => 'thumb.jpg',
-            ), 1);
-            if ($files) {
-                $file = reset($files);
-            }
+            $select = $table->getSelect()
+                ->where('item_id = ?', $record->id)
+                ->where('has_derivative_image = 1')
+                ->where('original_filename LIKE "%thumb.jpg"')
+                ->order('id ASC');
+            $file = $table->fetchObject($select);
         }
 
         // Standard record.
