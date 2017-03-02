@@ -83,7 +83,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         foreach ($elementTexts as $elementSetName => $elements) {
             foreach ($elements as $elementName => $values) {
                 $metadata[] = (object) array(
-                    'label' => $elementName,
+                    'label' => __($elementName),
                     'value' => count($values) > 1
                         ? $values
                         : reset($values),
