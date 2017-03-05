@@ -363,7 +363,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             // Set a default render if needed.
             /*
             if (empty($rendering)) {
-                $placeholder = 'images/placeholder-unsupported.jpg';
+                $placeholder = 'images/placeholder-default.jpg';
                 $render = array();
                 $render['@id'] = src($placeholder);
                 $render['format'] = 'image/jpeg';
@@ -609,7 +609,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $canvas['@type'] = 'sc:Canvas';
         $canvas['label'] = __('Placeholder image');
 
-        $placeholder = 'images/placeholder.jpg';
+        $placeholder = 'images/thumbnails/placeholder-image.jpg';
         $canvas['thumbnail'] = src($placeholder);
 
         $imageSize = $this->_getWidthAndHeight(physical_path_to($placeholder));
