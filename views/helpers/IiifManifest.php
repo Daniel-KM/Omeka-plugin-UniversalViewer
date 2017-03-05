@@ -271,7 +271,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 }
 
                 $values = array(
-                    'label' => metadata($file, 'display_title'),
+                    'label' => version_compare(OMEKA_VERSION, '2.5', '>=')
+                        ? metadata($file, 'display_title')
+                        : (metadata($file, array('Dublin Core', 'Title')) ?: __('[Untitled]')),
                     'metadata' => $fileMetadata,
                 );
 
