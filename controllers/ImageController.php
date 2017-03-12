@@ -933,7 +933,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             + $tile['y'] * $tierSizeInTiles[$tile['level']][0]
             + $tileCountUpToTier[$tile['level']];
         $tileGroup = ($tileIndex / $tile['size']) ?: 0;
-        return $tileGroup;
+        return (integer) $tileGroup;
     }
 
     /**
