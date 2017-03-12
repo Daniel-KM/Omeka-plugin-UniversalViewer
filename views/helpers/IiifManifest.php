@@ -1019,7 +1019,18 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      */
     protected function _getWidthAndHeight($filepath)
     {
-        if (file_exists($filepath)) {
+        if (strpos($filepath, 'https://') === 0 || strpos($filepath, 'http://') === 0) {
+            $tempname = tempnam(sys_get_temp_dir(), 'uv_');
+            $result = file_put_contents($tempname, $filepath);
+            if ($result !== false) {
+                list($width, $height, $type, $attr) = getimagesize($filepath);
+                unlink($tempname);
+                return array(
+                    'width' => $width,
+                    'height' => $height,
+                );
+            }
+        } elseif (file_exists($filepath)) {
             list($width, $height, $type, $attr) = getimagesize($filepath);
             return array(
                 'width' => $width,
