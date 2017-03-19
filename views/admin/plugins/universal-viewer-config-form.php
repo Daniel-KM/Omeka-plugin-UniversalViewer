@@ -236,7 +236,7 @@ $elements = get_table_options('Element', null, array(
             <?php echo $this->formText('universalviewer_iiif_max_size', get_option('universalviewer_iiif_max_size'), null); ?>
             <p class="explanation">
                 <?php echo __('Set the maximum size in bytes for the dynamic processing of images.'); ?>
-                <?php echo __('Beyond this limit, the plugin will require a tiled image, for example made by OpenLayersZoom.'); ?>
+                <?php echo __('Beyond this limit, the plugin will require a tiled image, for example made with the plugin OpenLayers Zoom.'); ?>
                 <?php echo __('Let empty to allow processing of any image.'); ?>
             </p>
         </div>

@@ -57,7 +57,7 @@ class UniversalViewer_MediaController extends Omeka_Controller_AbstractActionCon
             throw new Omeka_Controller_Exception_404;
         }
 
-        $info = get_view()->iiifInfo($record, false);
+        $info = get_view()->iiifInfo($record);
 
         $this->_sendJson($info);
     }

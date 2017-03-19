@@ -10,11 +10,9 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
      * @todo Replace all data by standard classes.
      *
      * @param Record|integer|null $record
-     * @param boolean $asJson Return manifest as object or as a json string.
-     * @return Object|string|null. The object or the json string corresponding
-     * to the manifest.
+     * @return Object|null
      */
-    public function iiifInfo($record = null, $asJson = true)
+    public function iiifInfo($record = null)
     {
         if (is_null($record)) {
             $record = get_current_record('file');
@@ -102,7 +100,6 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             $info['profile'] = $profile;
             // Useless currently.
             // $info['service'] = $service;
-            $info = (object) $info;
         }
 
         // Else non-image file.
@@ -121,15 +118,9 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             $info['@id'] = $fileUrl;
             // See MediaController::contextAction()
             $info['protocol'] = 'http://wellcomelibrary.org/ld/ixif';
-            $info = (object) $info;
         }
 
-        if ($asJson) {
-            return version_compare(phpversion(), '5.4.0', '<')
-                ? json_encode($info)
-                : json_encode($info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        }
-        // Return as array
+        $info = (object) $info;
         return $info;
     }
 

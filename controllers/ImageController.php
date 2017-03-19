@@ -2,7 +2,7 @@
 /**
  * The Image controller class.
  *
- * @todo Move all OpenLayersZoom stuff in OpenLayersZoom.
+ * @todo Move all image processing stuff in Image Server.
  *
  * @package UniversalViewer
  */
@@ -59,7 +59,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             throw new Omeka_Controller_Exception_404;
         }
 
-        $info = get_view()->iiifInfo($record, false);
+        $info = get_view()->iiifInfo($record);
 
         $this->_sendJson($info);
     }
