@@ -196,7 +196,7 @@ class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
     }
 
     /**
-     * GD uses multiple functions to load an image, so this one manages all.
+     * Load an image from anywhere.
      *
      * @param string $source Path of the managed image file
      * @return false|GD image ressource

@@ -72,12 +72,16 @@ class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreat
             return $processor->transform($args);
         }
 
-        // Else use the extension ImageMagick, that manages more formats.
+        // Else use the extension Imagick, that manages more formats.
         if (!empty($this->_imagickMimeTypes[$args['source']['mime_type']])
                 && !empty($this->_imagickMimeTypes[$args['format']['feature']])
             ) {
             $processor = new UniversalViewer_IiifCreator_Imagick();
             return $processor->transform($args);
         }
+
+        // Else use the command line convert, if available.
+        $processor = new ImageMagick();
+        return $processor->transform($args);
     }
 }

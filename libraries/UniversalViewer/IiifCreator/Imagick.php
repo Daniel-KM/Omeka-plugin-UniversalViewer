@@ -137,10 +137,10 @@ class UniversalViewer_IiifCreator_Imagick extends UniversalViewer_AbstractIiifCr
     }
 
     /**
-     * GD uses multiple functions to load an image, so this one manages all.
+     * Load an image from anywhere.
      *
      * @param string $source Path of the managed image file
-     * @return false|GD image ressource
+     * @return Imagick|false
      */
     protected function _loadImageResource($source)
     {

@@ -218,13 +218,11 @@ $elements = get_table_options('Element', null, array(
         </div>
         <div class="inputs five columns omega">
             <?php
-                $processors['Auto'] = __('Automatic (GD when possible, else ImageMagick)');
                 echo $this->formSelect('universalviewer_iiif_creator', get_option('universalviewer_iiif_creator'), array(), $processors);
             ?>
             <p class="explanation">
                 <?php echo __('Images may be processed internally before to be sent to browser.'); ?>
-                <?php echo __('Select the one to use.'); ?>
-                <?php echo __('Generally, GD is quicker than ImageMagick, but ImageMagick manages more formats.'); ?>
+                <?php echo __('Generally, GD is a little faster than ImageMagick, but ImageMagick manages more formats.'); ?>
                 <?php echo __('Nevertheless, the performance depends on your installation and your server.'); ?>
             </p>
         </div>

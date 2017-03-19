@@ -73,11 +73,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      */
     public function hookInstall()
     {
-        $processors = $this->_getProcessors();
-        if (count($processors) == 1) {
-            throw new Omeka_Plugin_Installer_Exception(__('At least one graphic processor (GD or ImageMagick) is required to use the UniversalViewer.'));
-        }
-
         $js = dirname(__FILE__)
             . DIRECTORY_SEPARATOR . 'views'
             . DIRECTORY_SEPARATOR . 'shared'
@@ -198,19 +193,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         $view = get_view();
 
         $processors = $this->_getProcessors();
-
-        $flash = Zend_Controller_Action_HelperBroker::getStaticHelper('FlashMessenger');
-        if (count($processors) == 1) {
-            $flash->addMessage(__('Warning: No graphic library is installed: Universal Viewer can’t work.',
-                '<strong>', '</strong>'), 'error');
-            echo flash();
-        }
-
-        if (!isset($processors['Imagick'])) {
-            $flash->addMessage(__('Warning: Imagick is not installed: Only standard images (jpg, png, gif and webp) will be processed.',
-                '<strong>', '</strong>'), 'info');
-            echo flash();
-        }
 
         $elementTable = $this->_db->getTable('Element');
         $elementIds = array();
@@ -612,16 +594,16 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      */
     protected function _getProcessors()
     {
-        $processors = array(
-            'Auto' => __('Automatic'),
-        );
+        $processors = array();
+        $processors['Auto'] = 'Automatic (GD when possible, else Imagick, else command line)';
         if (extension_loaded('gd')) {
-            $processors['GD'] = 'GD';
+            $processors['GD'] = 'GD (php extension)';
         }
         if (extension_loaded('imagick')) {
-            $processors['Imagick'] = 'ImageMagick';
+            $processors['Imagick'] = 'Imagick (php extension)';
         }
-
+        // TODO Check if available.
+        $processors['ImageMagick'] = 'ImageMagick (command line)';
         return $processors;
     }
 }
