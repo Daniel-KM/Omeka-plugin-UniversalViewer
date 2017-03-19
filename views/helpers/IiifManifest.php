@@ -485,9 +485,13 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         // There is only one image (parallel is not managed currently).
         $imageResource = array();
-        if (plugin_is_active('OpenLayersZoom')
-                && $this->view->openLayersZoom()->isZoomed($file)
-            ) {
+
+        $helper = new UniversalViewer_Controller_Action_Helper_TileInfo();
+        $tilingData = $helper->tileInfo($file);
+        $iiifTileInfo = $tilingData ? $this->_iiifTileInfo($tilingData) : null;
+
+        // This is a tiled image.
+        if ($iiifTileInfo) {
             $fullsize = $this->_getImageSize($file, 'fullsize');
             list($widthFullsize, $heightFullsize) = array_values($fullsize);
             $imageUrl = absolute_url(array(
@@ -518,12 +522,10 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $imageResourceService['width'] = $width;
             $imageResourceService['height'] = $height;
 
-            $tile = $this->_iiifTile($file);
-            if ($tile) {
-                $tiles = array();
-                $tiles[] = $tile;
-                $imageResourceService['tiles'] = $tiles;
-            }
+            $tiles = array();
+            $tiles[] = $iiifTileInfo;
+            $imageResourceService['tiles'] = $tiles;
+
             $imageResourceService = (object) $imageResourceService;
 
             $imageResource['service'] = $imageResourceService;
@@ -610,7 +612,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $canvas['@type'] = 'sc:Canvas';
         $canvas['label'] = __('Placeholder image');
 
-        $placeholder = 'images/thumbnails/placeholder-image.jpg';
+        $placeholder = 'images/thumbnails/placeholder-image.png';
         $canvas['thumbnail'] = src($placeholder);
 
         $imageSize = $this->_getWidthAndHeight(physical_path_to($placeholder));
@@ -902,22 +904,14 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     }
 
     /**
-     * Create an IIIF tile object for a place holder.
+     * Create the data for a IIIF tile object.
      *
-     * @internal The method uses the Zoomify format of OpenLayersZoom.
-     *
-     * @param File $file
-     * @return Standard object or null if no tile.
-     * @see UniversalViewer_View_Helper_IiifInfo::_iiifTile()
+     * @param array $tileInfo
+     * @return array|null
      */
-    protected function _iiifTile(File $file)
+    protected function _iiifTileInfo($tileInfo)
     {
         $tile = array();
-
-        $tileProperties = $this->_getTileProperties($file);
-        if (empty($tileProperties)) {
-            return;
-        }
 
         $squaleFactors = array();
         $maxSize = max($tileProperties['source']['width'], $tileProperties['source']['height']);
@@ -934,37 +928,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         $tile['width'] = $tileSize;
         $tile['scaleFactors'] = $squaleFactors;
-        $tile = (object) $tile;
         return $tile;
-    }
-
-    /**
-     * Return the properties of a tiled file.
-     *
-     * @param File $file
-     * @return array|null
-     * @see UniversalViewer_ImageController::_getTileProperties()
-     */
-    protected function _getTileProperties(File $file)
-    {
-        $olz = new OpenLayersZoom_Creator();
-        $dirpath = $olz->useIIPImageServer()
-            ? $olz->getZDataWeb($file)
-            : $olz->getZDataDir($file);
-        $properties = simplexml_load_file($dirpath . '/ImageProperties.xml', 'SimpleXMLElement', LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_PARSEHUGE);
-        if ($properties === false) {
-            return;
-        }
-        $properties = $properties->attributes();
-        $properties = reset($properties);
-
-        // Standardize the properties.
-        $result = array();
-        $result['size'] = (integer) $properties['TILESIZE'];
-        $result['total'] = (integer) $properties['NUMTILES'];
-        $result['source']['width'] = (integer) $properties['WIDTH'];
-        $result['source']['height'] = (integer) $properties['HEIGHT'];
-        return $result;
     }
 
     /**
