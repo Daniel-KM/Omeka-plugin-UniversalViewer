@@ -65,6 +65,7 @@ class UniversalViewer_IiifCreator_Imagick extends UniversalViewer_AbstractIiifCr
             $args['source']['height'] = $imagick->getImageHeight();
         }
 
+        // Region + Size.
         $extraction = $this->_prepareExtraction();
         if (!$extraction) {
             $imagick->clear();
@@ -86,6 +87,31 @@ class UniversalViewer_IiifCreator_Imagick extends UniversalViewer_AbstractIiifCr
         $imagick->cropImage($sourceWidth, $sourceHeight, $sourceX, $sourceY);
         $imagick->thumbnailImage($destinationWidth, $destinationHeight);
         $imagick->setImagePage($destinationWidth, $destinationHeight, 0, 0);
+
+        // Mirror.
+        switch ($args['mirror']['feature']) {
+            case 'mirror':
+            case 'horizontal':
+                $imagick->flopImage();
+                break;
+
+            case 'vertical':
+                $imagick->flipImage();
+                break;
+
+            case 'both':
+                $imagick->flopImage();
+                $imagick->flipImage();
+                break;
+
+            case 'default':
+                // Nothing to do.
+                break;
+
+            default:
+                $imagick->clear();
+                return;
+        }
 
         // Rotation.
         switch ($args['rotation']['feature']) {
@@ -112,7 +138,7 @@ class UniversalViewer_IiifCreator_Imagick extends UniversalViewer_AbstractIiifCr
                 break;
 
             case 'gray':
-                $imagick->transformImageColorspace(imagick::COLORSPACE_GRAY);
+                $imagick->transformImageColorspace(Imagick::COLORSPACE_GRAY);
                 break;
 
             case 'bitonal':

@@ -129,6 +129,31 @@ class UniversalViewer_IiifCreator_ImageMagick extends UniversalViewer_AbstractIm
         $params[] = '-thumbnail ' . escapeshellarg(sprintf('%sx%s', $destinationWidth, $destinationHeight));
         $params[] = '-page ' . escapeshellarg(sprintf('%sx%s+0+0', $destinationWidth, $destinationHeight));
 
+        // Mirror.
+        switch ($args['mirror']['feature']) {
+            case 'mirror':
+            case 'horizontal':
+                $params[] = '-flop';
+                break;
+
+            case 'vertical':
+                $params[] = '-flip';
+                break;
+
+            case 'both':
+                $params[] = '-flop';
+                $params[] = '-flip';
+                break;
+
+            case 'default':
+                // Nothing to do.
+                break;
+
+            default:
+                $this->_destroyIfFetched($image);
+                return;
+        }
+
         // Rotation.
         switch ($args['rotation']['feature']) {
             case 'noRotation':
