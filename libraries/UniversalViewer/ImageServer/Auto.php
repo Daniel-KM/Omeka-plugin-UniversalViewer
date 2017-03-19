@@ -4,7 +4,7 @@
  *
  * @package UniversalViewer
  */
-class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreator
+class UniversalViewer_ImageServer_Auto extends UniversalViewer_AbstractImageServer
 {
     protected $_gdMimeTypes = array();
     protected $_imagickMimeTypes = array();
@@ -68,7 +68,7 @@ class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreat
                 // The arbitrary rotation is not managed currently.
                 && $args['rotation']['feature'] != 'rotationArbitrary'
             ) {
-            $processor = new UniversalViewer_IiifCreator_GD();
+            $processor = new UniversalViewer_ImageServer_GD();
             return $processor->transform($args);
         }
 
@@ -76,7 +76,7 @@ class UniversalViewer_IiifCreator_Auto extends UniversalViewer_AbstractIiifCreat
         if (!empty($this->_imagickMimeTypes[$args['source']['mime_type']])
                 && !empty($this->_imagickMimeTypes[$args['format']['feature']])
             ) {
-            $processor = new UniversalViewer_IiifCreator_Imagick();
+            $processor = new UniversalViewer_ImageServer_Imagick();
             return $processor->transform($args);
         }
 

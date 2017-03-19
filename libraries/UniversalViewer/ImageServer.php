@@ -4,7 +4,7 @@
  *
  * @package UniversalViewer
  */
-class UniversalViewer_IiifCreator
+class UniversalViewer_ImageServer
 {
     protected $_creator;
     protected $_args = array();
@@ -12,7 +12,7 @@ class UniversalViewer_IiifCreator
     public function __construct()
     {
         $creatorClass = get_option('universalviewer_iiif_creator') ?: 'Auto';
-        $this->setCreator('UniversalViewer_IiifCreator_' . $creatorClass);
+        $this->setCreator('UniversalViewer_ImageServer_' . $creatorClass);
     }
 
     public function setCreator($creatorClass)

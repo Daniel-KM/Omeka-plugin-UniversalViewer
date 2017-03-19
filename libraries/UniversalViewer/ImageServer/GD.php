@@ -4,7 +4,7 @@
  *
  * @package UniversalViewer
  */
-class UniversalViewer_IiifCreator_GD extends UniversalViewer_AbstractIiifCreator
+class UniversalViewer_ImageServer_GD extends UniversalViewer_AbstractImageServer
 {
     // List of managed IIIF media types.
     protected $_supportedFormats = array(

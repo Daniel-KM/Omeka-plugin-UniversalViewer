@@ -32,7 +32,7 @@
  *
  * @package IiifServer
  */
-class UniversalViewer_IiifCreator_ImageMagick extends UniversalViewer_AbstractImageServer
+class UniversalViewer_ImageServer_ImageMagick extends UniversalViewer_AbstractImageServer
 {
     /**
      * Path to the ImageMagick "convert" command.

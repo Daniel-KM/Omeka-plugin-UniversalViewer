@@ -269,7 +269,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
     /**
      * Check, clean and optimize the request for quicker transformation.
      *
-     * @todo Move the maximum of checks in ImageCreator/UniversalViewer_AbstractIiifCreator.
+     * @todo Move the maximum of checks in the Image Server.
      *
      * @param File $file
      * @return array|null Array of cleaned requested image, else null.
@@ -1013,8 +1013,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
      */
     protected function _transformImage($args)
     {
-        $creator = new UniversalViewer_IiifCreator();
-        return $creator->transform($args);
+        $imageServer = new UniversalViewer_ImageServer();
+        return $imageServer->transform($args);
     }
 
     /**
