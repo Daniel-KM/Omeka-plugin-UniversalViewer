@@ -155,11 +155,11 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                         || $transform['mirror']['feature'] != 'default'
                         || $transform['rotation']['feature'] != 'noRotation'
                         || $transform['quality']['feature'] != 'default'
-                        || $transform['format']['feature'] != $pretiled['mime_type']
+                        || $transform['format']['feature'] != $pretiled['media_type']
                     ) {
                     $args = $transform;
                     $args['source']['filepath'] = $pretiled['filepath'];
-                    $args['source']['mime_type'] = $pretiled['mime_type'];
+                    $args['source']['media_type'] = $pretiled['media_type'];
                     $args['source']['width'] = $pretiled['width'];
                     $args['source']['height'] = $pretiled['height'];
                     $args['region']['feature'] = 'full';
@@ -185,11 +185,11 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                     if ($transform['mirror']['feature'] != 'default'
                             || $transform['rotation']['feature'] != 'noRotation'
                             || $transform['quality']['feature'] != 'default'
-                            || $transform['format']['feature'] != $pretiled['mime_type']
+                            || $transform['format']['feature'] != $pretiled['media_type']
                         ) {
                         $args = $transform;
                         $args['source']['filepath'] = $pretiled['filepath'];
-                        $args['source']['mime_type'] = $pretiled['mime_type'];
+                        $args['source']['media_type'] = $pretiled['media_type'];
                         $args['source']['width'] = $pretiled['width'];
                         $args['source']['height'] = $pretiled['height'];
                         $args['region']['feature'] = 'full';
@@ -279,7 +279,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         $transform = array();
 
         $transform['source']['filepath'] = $this->_getImagePath($file, 'original');
-        $transform['source']['mime_type'] = $file->mime_type;
+        $transform['source']['media_type'] = $file->mime_type;
 
         list($sourceWidth, $sourceHeight) = array_values($this->_getImageSize($file, 'original'));
         $transform['source']['width'] = $sourceWidth;
@@ -441,7 +441,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                                 // TODO Check the format?
                                 if ($imageType != 'original') {
                                     $transform['source']['filepath'] = $filepath;
-                                    $transform['source']['mime_type'] = 'image/jpeg';
+                                    $transform['source']['media_type'] = 'image/jpeg';
                                     $transform['source']['width'] = $testWidth;
                                     $transform['source']['height'] = $testHeight;
                                 }
@@ -530,7 +530,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
         // Determine the format.
         // The regex in route checks it.
-        $mimeTypes = array(
+        $mediaTypes = array(
             'jpg' => 'image/jpeg',
             'png' => 'image/png',
             'tif' => 'image/tiff',
@@ -539,7 +539,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             'jp2' => 'image/jp2',
             'webp' => 'image/webp',
         );
-        $transform['format']['feature'] = $mimeTypes[$format];
+        $transform['format']['feature'] = $mediaTypes[$format];
 
         return $transform;
     }
@@ -615,7 +615,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             return array(
                 'filepath' => $derivativePath,
                 'derivativeType' => $derivativeType,
-                'mime_type' => 'image/jpeg',
+                'media_type' => 'image/jpeg',
                 'width' => $derivativeWidth,
                 'height' => $derivativeHeight,
             );
@@ -700,7 +700,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             'fileurl' => $imageUrl,
             'filepath' => $imagePath,
             'derivativeType' => $derivativeType,
-            'mime_type' => 'image/jpeg',
+            'media_type' => 'image/jpeg',
             'width' => $tileWidth,
             'height' => $tileHeight,
         );

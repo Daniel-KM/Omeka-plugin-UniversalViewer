@@ -54,7 +54,7 @@ class UniversalViewer_ImageServer_GD extends UniversalViewer_AbstractImageServer
         $this->_args = $args;
         $args = &$this->_args;
 
-        if (!$this->checkMediaType($args['source']['mime_type'])
+        if (!$this->checkMediaType($args['source']['media_type'])
                 || !$this->checkMediaType($args['format']['feature'])
             ) {
             return;

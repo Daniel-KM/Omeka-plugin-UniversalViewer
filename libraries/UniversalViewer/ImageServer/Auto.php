@@ -6,8 +6,8 @@
  */
 class UniversalViewer_ImageServer_Auto extends UniversalViewer_AbstractImageServer
 {
-    protected $_gdMimeTypes = array();
-    protected $_imagickMimeTypes = array();
+    protected $_gdMediaTypes = array();
+    protected $_imagickMediaTypes = array();
 
     /**
      * Check for the imagick extension at creation.
@@ -20,7 +20,7 @@ class UniversalViewer_ImageServer_Auto extends UniversalViewer_AbstractImageServ
 
         // If available, use GD when source and destination formats are managed.
         if (extension_loaded('gd')) {
-            $this->_gdMimeTypes = array(
+            $this->_gdMediaTypes = array(
                 'image/jpeg' => true,
                 'image/png' => true,
                 'image/tiff' => false,
@@ -31,15 +31,15 @@ class UniversalViewer_ImageServer_Auto extends UniversalViewer_AbstractImageServ
             );
             $gdInfo = gd_info();
             if (empty($gdInfo['GIF Read Support']) || empty($gdInfo['GIF Create Support'])) {
-                $this->_gdMimeTypes['image/gif'] = false;
+                $this->_gdMediaTypes['image/gif'] = false;
             }
             if (empty($gdInfo['WebP Support'])) {
-                $this->_gdMimeTypes['image/webp'] = false;
+                $this->_gdMediaTypes['image/webp'] = false;
             }
         }
 
         if (extension_loaded('imagick')) {
-            $iiifMimeTypes = array(
+            $iiifMediaTypes = array(
                 'image/jpeg' => 'JPG',
                 'image/png' => 'PNG',
                 'image/tiff' => 'TIFF',
@@ -48,7 +48,7 @@ class UniversalViewer_ImageServer_Auto extends UniversalViewer_AbstractImageServ
                 'image/jp2' => 'JP2',
                 'image/webp' => 'WEBP',
             );
-            $this->_imagickMimeTypes = array_intersect($iiifMimeTypes, Imagick::queryFormats());
+            $this->_imagickMediaTypes = array_intersect($iiifMediaTypes, Imagick::queryFormats());
         }
     }
 
@@ -63,8 +63,8 @@ class UniversalViewer_ImageServer_Auto extends UniversalViewer_AbstractImageServ
     public function transform(array $args = array())
     {
         // GD seems to be 15% speeder, so it is used first if available.
-        if (!empty($this->_gdMimeTypes[$args['source']['mime_type']])
-                && !empty($this->_gdMimeTypes[$args['format']['feature']])
+        if (!empty($this->_gdMediaTypes[$args['source']['media_type']])
+                && !empty($this->_gdMediaTypes[$args['format']['feature']])
                 // The arbitrary rotation is not managed currently.
                 && $args['rotation']['feature'] != 'rotationArbitrary'
             ) {
@@ -73,8 +73,8 @@ class UniversalViewer_ImageServer_Auto extends UniversalViewer_AbstractImageServ
         }
 
         // Else use the extension Imagick, that manages more formats.
-        if (!empty($this->_imagickMimeTypes[$args['source']['mime_type']])
-                && !empty($this->_imagickMimeTypes[$args['format']['feature']])
+        if (!empty($this->_imagickMediaTypes[$args['source']['media_type']])
+                && !empty($this->_imagickMediaTypes[$args['format']['feature']])
             ) {
             $processor = new UniversalViewer_ImageServer_Imagick();
             return $processor->transform($args);
