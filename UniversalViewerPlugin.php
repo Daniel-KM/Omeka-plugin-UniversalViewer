@@ -20,10 +20,10 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * @var array Hooks for the plugin.
      */
     protected $_hooks = array(
+        'initialize',
         'install',
         'upgrade',
         'uninstall',
-        'initialize',
         'config_form',
         'config',
         'define_routes',
@@ -67,6 +67,15 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_max_dynamic_size' => 10000000,
         'universalviewer_force_https' => false,
     );
+
+    /**
+     * Initialize the plugin.
+     */
+    public function hookInitialize()
+    {
+        add_translation_source(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'languages');
+        add_shortcode('uv', array($this, 'shortcodeUniversalViewer'));
+    }
 
     /**
      * Installs the plugin.
@@ -172,15 +181,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
     public function hookUninstall()
     {
         $this->_uninstallOptions();
-    }
-
-    /**
-     * Initialize the plugin.
-     */
-    public function hookInitialize()
-    {
-        add_translation_source(dirname(__FILE__) . '/languages');
-        add_shortcode('uv', array($this, 'shortcodeUniversalViewer'));
     }
 
     /**
