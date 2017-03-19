@@ -4,7 +4,6 @@
  */
 class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstract
 {
-
     /**
      * Get the specified UniversalViewer.
      *

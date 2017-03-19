@@ -42,7 +42,7 @@ class UniversalViewer_ImageServer_ImageMagick extends UniversalViewer_AbstractIm
     protected $convertPath;
 
     // List of managed IIIF media types.
-    protected $_supportedFormats = [
+    protected $_supportedFormats = array(
         'image/jpeg' => 'JPG',
         'image/png' => 'PNG',
         'image/tiff' => 'TIFF',
@@ -50,7 +50,7 @@ class UniversalViewer_ImageServer_ImageMagick extends UniversalViewer_AbstractIm
         'application/pdf' => 'PDF',
         'image/jp2' => 'JP2',
         'image/webp' => 'WEBP',
-    ];
+    );
 
     protected $convertDir;
 
@@ -79,7 +79,7 @@ class UniversalViewer_ImageServer_ImageMagick extends UniversalViewer_AbstractIm
      * @param array $args List of arguments for the transformation.
      * @return string|null The filepath to the temp image if success.
      */
-    public function transform(array $args = [])
+    public function transform(array $args = array())
     {
         if (empty($args)) {
             return;
@@ -119,7 +119,7 @@ class UniversalViewer_ImageServer_ImageMagick extends UniversalViewer_AbstractIm
             $destinationWidth,
             $destinationHeight) = $extraction;
 
-        $params = [];
+        $params = array();
         // The background is normally useless, but it's costless.
         $params[] = '-background black';
         $params[] = '+repage';

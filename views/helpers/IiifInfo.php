@@ -9,15 +9,14 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
      *
      * @todo Replace all data by standard classes.
      *
-     * @param Record|integer|null $record
+     * @param Record|int|null $record
      * @return Object|null
      */
     public function iiifInfo($record = null)
     {
         if (is_null($record)) {
             $record = get_current_record('file');
-        }
-        elseif (is_numeric($record)) {
+        } elseif (is_numeric($record)) {
             $record = get_record_by_id('File', (integer) $record);
         }
 

@@ -185,8 +185,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
 
     /**
      * Shows plugin configuration page.
-     *
-     * @return void
      */
     public function hookConfigForm($args)
     {
@@ -227,7 +225,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * Processes the configuration form.
      *
      * @param array Options set in the config form.
-     * @return void
      */
     public function hookConfig($args)
     {
@@ -259,8 +256,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
 
     /**
      * Defines public routes.
-     *
-     * @return void
      */
     public function hookDefineRoutes($args)
     {
@@ -273,8 +268,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
 
     /**
      * Add a partial batch edit form.
-     *
-     * @return void
      */
     public function hookAdminItemsBatchEditForm($args)
     {
@@ -286,8 +279,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
 
     /**
      * Process the partial batch edit form.
-     *
-     * @return void
      */
     public function hookItemsBatchEditCustom($args)
     {
@@ -309,8 +300,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * Sort all files of an item by name and eventually sort images first.
      *
      * @param Item $item
-     * @param boolean $mixImages
-     * @return void
+     * @param bool $mixImages
      */
     protected function _sortFiles($item, $mixImages = false)
     {
@@ -320,7 +310,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
 
         $list = $item->Files;
         // Make a sort by name before sort by type.
-        usort($list, function($fileA, $fileB) {
+        usort($list, function ($fileA, $fileB) {
             return strcmp($fileA->original_filename, $fileB->original_filename);
         });
         // The sort by type doesn't remix all filenames.
@@ -368,11 +358,10 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         $db->query($sql);
     }
 
-   /**
+    /**
      * Rebuild missing metadata of files.
      *
      * @param Item $item
-     * @return void
      */
     protected function _checkImageSize($item)
     {
@@ -410,7 +399,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * Hook to display viewer.
      *
      * @param array $args
-     * @return void
      */
     public function hookPublicCollectionsShow($args)
     {
@@ -427,7 +415,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * Hook to display viewer.
      *
      * @param array $args
-     * @return void
      */
     public function hookPublicItemsShow($args)
     {
@@ -444,7 +431,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * Hook to display viewer.
      *
      * @param array $args
-     * @return void
      */
     public function hookPublicItemsBrowse($args)
     {
@@ -461,7 +447,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      * Hook to display viewer.
      *
      * @param array $args
-     * @return void
      */
     public function hookPublicCollectionsBrowse($args)
     {
@@ -531,8 +516,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             // Currently only item.
             $record = get_record_by_id('Item', (integer) $args['id']);
             unset($args['id']);
-        }
-        elseif (!empty($args['record'])) {
+        } elseif (!empty($args['record'])) {
             if (is_numeric($args['record'])) {
                 if (isset($args['type'])
                        && in_array(ucfirst($args['type']), array('Item', 'Collection', 'File'))
@@ -541,40 +525,32 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
                 }
                 unset($args['record']);
                 unset($args['type']);
-            }
-            elseif (is_object($args['record']) && in_array(get_class($args['record']), array('Item', 'Collection', 'File'))) {
+            } elseif (is_object($args['record']) && in_array(get_class($args['record']), array('Item', 'Collection', 'File'))) {
                 $record = $args['record'];
                 unset($args['record']);
             }
-        }
-        elseif (!empty($args['item'])) {
+        } elseif (!empty($args['item'])) {
             if (is_numeric($args['item'])) {
                 $record = get_record_by_id('Item', (integer) $args['item']);
-            }
-            else {
+            } else {
                 $record = $args['item'];
             }
             unset($args['record']);
-        }
-        elseif (!empty($args['collection'])) {
+        } elseif (!empty($args['collection'])) {
             if (is_numeric($args['collection'])) {
                 $record = get_record_by_id('Collection', (integer) $args['collection']);
-            }
-            else {
+            } else {
                 $record = $args['collection'];
             }
             unset($args['collection']);
-        }
-        elseif (!empty($args['file'])) {
+        } elseif (!empty($args['file'])) {
             if (is_numeric($args['file'])) {
                 $record = get_record_by_id('File', (integer) $args['file']);
-            }
-            else {
+            } else {
                 $record = $args['file'];
             }
             unset($args['file']);
-        }
-        else {
+        } else {
             $record = get_current_record('item', false);
             if (empty($record)) {
                 $record = get_current_record('collection', false);

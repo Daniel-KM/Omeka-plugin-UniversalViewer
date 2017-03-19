@@ -15,7 +15,7 @@ abstract class UniversalViewer_AbstractImageServer
      * Check if a media type is supported.
      *
      * @param string $mediaType
-     * @return boolean
+     * @return bool
      */
     public function checkMediaType($mediaType)
     {

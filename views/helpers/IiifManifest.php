@@ -187,7 +187,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 }
             }
         }
-        unset ($files);
+        unset($files);
         $totalImages = count($images);
         $totalJsonFiles = count($jsonFiles);
 
@@ -392,7 +392,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             );
         }
         // For images, the normalized context.
-        elseif($totalImages) {
+        elseif ($totalImages) {
             $manifest['@context'] = 'http://iiif.io/api/presentation/2/context.json';
         }
         // For other non standard iiif files.
@@ -461,10 +461,10 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * Create an IIIF image object from an Omeka file.
      *
      * @param File $file
-     * @param integer $index Used to set the standard name of the image.
+     * @param int $index Used to set the standard name of the image.
      * @param string $canvasUrl Used to set the value for "on".
-     * @param integer $width If not set, will be calculated.
-     * @param integer $height If not set, will be calculated.
+     * @param int $width If not set, will be calculated.
+     * @param int $height If not set, will be calculated.
      * @return Standard object|null
      */
     protected function _iiifImage(File $file, $index, $canvasUrl, $width = null, $height = null)
@@ -564,7 +564,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * Create an IIIF canvas object for an image.
      *
      * @param File $file
-     * @param integer $index Used to set the standard name of the image.
+     * @param int $index Used to set the standard name of the image.
      * @return Standard object|null
      */
     protected function _iiifCanvasImage(File $file, $index)
@@ -871,7 +871,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * Get the representative thumbnail of the whole work.
      *
      * @param Record $record
-     * @param boolean $isThreejs Manage an exception.
+     * @param bool $isThreejs Manage an exception.
      * @return object The iiif thumbnail.
      */
     protected function _mainThumbnail($record, $isThreejs)

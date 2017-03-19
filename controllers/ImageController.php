@@ -89,7 +89,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         else {
             $response->setHeader('Content-Type', 'application/json; charset=utf-8', true);
             $response->setHeader('Link', '<http://iiif.io/api/image/2/context.json>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"', true);
-       }
+        }
 
         // Header for CORS, required for access of IIIF.
         $response->setHeader('access-control-allow-origin', '*');
@@ -688,13 +688,13 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             ? $dirWeb
             : $olz->getZDataDir($file);
         $path = sprintf('/TileGroup%d/%d-%d-%d.jpg',
-            $tileGroup, $data['level'], $data['x'] , $data['y']);
+            $tileGroup, $data['level'], $data['x'], $data['y']);
         // The imageUrl is used when there is no transformation.
         $imageUrl = $dirWeb . $path;
         $imagePath = $dirpath . $path;
         $derivativeType = 'zoom_tiles';
 
-        list($tileWidth, $tileHeight) = array_values($this-> _getWidthAndHeight($imagePath));
+        list($tileWidth, $tileHeight) = array_values($this->_getWidthAndHeight($imagePath));
 
         $return = array(
             'fileurl' => $imageUrl,
@@ -849,7 +849,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                     $tileFactor = $reversedFactor * $tileProperties['size'];
                     $countX = (integer) ceil($source['width'] / $tileFactor);
                     $countY = (integer) ceil($source['height'] / $tileFactor);
-                    $lastRegionWidth = $source['width'] - (($countX -1) * $tileFactor);
+                    $lastRegionWidth = $source['width'] - (($countX - 1) * $tileFactor);
                     $lastRegionHeight = $source['height'] - (($countY - 1) * $tileFactor);
                     $lastRegionX = $source['width'] - $lastRegionWidth;
                     $lastRegionY = $source['height'] - $lastRegionHeight;
@@ -894,7 +894,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
      *
      * @param array $image
      * @param array $tile
-     * @return integer|null
+     * @return int|null
      */
     protected function _getTileGroup($image, $tile)
     {
@@ -988,9 +988,9 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
      *
      * @internal The tile may be cropped.
      * @param File $file
-     * @param integer $tileSize This is the standard size, not cropped.
-     * @param integer $tilePropertiesSize
-     * @return boolean
+     * @param int $tileSize This is the standard size, not cropped.
+     * @param int $tilePropertiesSize
+     * @return bool
      */
     protected function _checkTileSize($file, $tileSize, $tilePropertiesSize = null)
     {

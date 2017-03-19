@@ -166,7 +166,7 @@ class UniversalViewer_MediaController extends Omeka_Controller_AbstractActionCon
         else {
             $response->setHeader('Content-Type', 'application/json; charset=utf-8', true);
             $response->setHeader('Link', '<http://iiif.io/api/image/2/context.json>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"', true);
-       }
+        }
 
         // Header for CORS, required for access of IIIF.
         $response->setHeader('access-control-allow-origin', '*');

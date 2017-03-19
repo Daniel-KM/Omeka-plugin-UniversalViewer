@@ -4,11 +4,10 @@
  */
 class UniversalViewer_View_Helper_UvForceHttpsIfRequired extends Zend_View_Helper_Abstract
 {
-
     /**
      * Set the option to force https or not.
      *
-     * @var boolean
+     * @var bool
      */
     protected $_forceHttps;
 
