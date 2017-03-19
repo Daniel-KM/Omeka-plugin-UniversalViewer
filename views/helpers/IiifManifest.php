@@ -488,30 +488,31 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         if (plugin_is_active('OpenLayersZoom')
                 && $this->view->openLayersZoom()->isZoomed($file)
             ) {
-            $sizeFile = $this->_getImageSize($file, 'fullsize');
-            list($widthFullsize, $heightFullsize) = array_values($sizeFile);
+            $fullsize = $this->_getImageSize($file, 'fullsize');
+            list($widthFullsize, $heightFullsize) = array_values($fullsize);
             $imageUrl = absolute_url(array(
                     'id' => $file->id,
                     'region' => 'full',
-                    'size' => $width . ',' . $height,
+                    'size' => $widthFullsize . ',' . $heightFullsize,
                     'rotation' => 0,
                     'quality' => 'default',
                     'format' => 'jpg',
                 ), 'universalviewer_image_url');
             $imageUrl = $this->view->uvForceHttpsIfRequired($imageUrl);
+
             $imageResource['@id'] = $imageUrl;
             $imageResource['@type'] = 'dctypes:Image';
             $imageResource['format'] = $file->mime_type;
-            $imageResource['width'] = $widthFullsize;
-            $imageResource['height'] = $heightFullsize;
+            $imageResource['width'] = $width;
+            $imageResource['height'] = $height;
+
+            $imageUrl = absolute_url(array(
+                'id' => $file->id,
+            ), 'universalviewer_image');
+            $imageUrl = $this->view->uvForceHttpsIfRequired($imageUrl);
 
             $imageResourceService = array();
             $imageResourceService['@context'] = 'http://iiif.io/api/image/2/context.json';
-
-            $imageUrl = absolute_url(array(
-                    'id' => $file->id,
-                ), 'universalviewer_image');
-            $imageUrl = $this->view->uvForceHttpsIfRequired($imageUrl);
             $imageResourceService['@id'] = $imageUrl;
             $imageResourceService['profile'] = 'http://iiif.io/api/image/2/level2.json';
             $imageResourceService['width'] = $width;
