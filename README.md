@@ -2,14 +2,20 @@ Universal Viewer (plugin for Omeka)
 ===================================
 
 [Universal Viewer] is a plugin for [Omeka] that adds the [IIIF] specifications
-in order to serve images like an [IIPImage] server, and the [UniversalViewer], a
-unified online player for any file. It can display books, images, maps, audio,
+in order to serve images like a simple [IIP Image] server, and the [UniversalViewer],
+a unified online player for any file. It can display books, images, maps, audio,
 movies, pdf, 3D, and anything else as long as the appropriate extension is
 installed. Rotation, zoom, inside search, etc. may be managed too. Dynamic lists
 of records may be used, for example for browse pages.
 
-The full specification of the "International Image Interoperability Framework"
-standard is supported (level 2), so any other widget that supports it can use it.
+The full specifications of the [International Image Interoperability Framework]
+standard are supported (level 2), so any widget that supports it can use it.
+
+The Universal Viewer supports the IXIF media extension too, so manifests can be
+served for any type of file. For non-images files, it is recommended to use a
+specific viewer or the [Universal Viewer], a widget that can display books,
+images, maps, audio, movies, pdf, 3D, and anything else as long as the
+appropriate extension is installed.
 
 The Universal Viewer was firstly developed by [Digirati] for the [Wellcome Library]
 of the [British Library] and the [National Library of Wales], then open sourced
@@ -27,9 +33,19 @@ in the official [example server], because this is fully interoperable.
 Installation
 ------------
 
+PHP should be installed with the extension `exif` in order to get the size of
+images. This is the case for all major distributions and providers. At least one
+of the php extensions `[GD]` or `[Imagick]` are recommended. They are installed
+by default in most servers. If not, the image server will use the command line
+[ImageMagick] tool `convert`.
+
 Uncompress files and rename plugin folder "UniversalViewer".
 
 Then install it like any other Omeka plugin.
+
+
+Notes
+-----
 
 Some options can be set:
 - Options for the integration of the player can be changed in the config page.
@@ -53,16 +69,16 @@ used: the IIIF server is provided directly by the plugin itself.
 
 * Processing of images
 
-Images are transformed internally via the GD or the ImageMagick libraries. GD is
-generally a little quicker, but ImageMagick manages many more formats. An option
+Images are transformed internally via the GD or the Imagick libraries. GD is
+generally a little quicker, but Imagick manages many more formats. An option
 allows to select the library to use according to your server and your documents.
 So at least one of the php libraries ("php-gd" and "php-imagick" on Debian)
-should be installed.
+should be installed, or the command line tool [ImageMagick] `convert`.
 
 * Display of big images
 
 If your images are big (more than 10 to 50 MB, according to your server and your
-public), it's highly recommended to tile them with a plugin such [OpenLayersZoom].
+public), it's highly recommended to tile them with a plugin such [OpenLayers Zoom].
 Then, tiles will be automatically displayed by Universal Viewer.
 
 * Adaptation of the Universal Viewer config
@@ -95,17 +111,44 @@ collections. For example, it is possible to modify the citation, to remove some
 metadata or to change the thumbnail.
 
 
-Usage
------
+IIIF Server
+-----------
+
+All routes for the player and the IIIF server are defined in the file `routes.ini`.
+They follow the recommandations of the [IIIF specifications].
+
+To view the json-ld manifests created for each resources of Omeka S, simply try
+these urls (replace :id by a true id):
+
+- https://example.org/iiif/collection/:id for item sets;
+- https://example.org/iiif/collection/:id,:id,:id,:id... for multiple resources;
+- https://example.org/iiif/:id/manifest for items;
+- https://example.org/iiif-img/:id/info.json for images files;
+- https://example.org/iiif-img/:id/:region/:size/:rotation/:quality.:format for
+  images, for example: https://example.org/iiif-img/1/full/full/270/gray.png;
+- https://example.org/ixif-media/:id/info.json for other files;
+- https://example.org/ixif-media/:id.:format for the files.
+
+By default, ids are the internal ids of Omeka, but it is recommended to use
+your own single and permanent identifiers that don’t depend on an internal
+pointer in a database. The term `Dublin Core Identifier` is designed for that
+and a record can have multiple single identifiers. There are many possibilities:
+named number like in a library or a museum, isbn for books, or random id like
+with ark, noid, doi, etc. They can be displayed in the public url with the
+modules [Ark & Noid] and/or [Clean Url].
+
+If item sets are organized hierarchically with the plugin [Collection Tree], it
+will be used to build manifests for item sets.
+
+
+Viewer
+------
 
 The viewer is always available at `http://www.example.com/collections/play/{collection id}`
 and `http://www.example.com/items/play/{item id}`. Furthermore, it is
 automatically embedded in "collections/show/{id}" and "items/show/{id}" pages.
 This can be disabled in the config of the plugin. Finally, a layout is available
 to add the viewer for an item in an exhibit page.
-
-All routes for the player and the IIIF server are defined in the file `routes.ini`.
-They follow the recommandations of the [iiif specifications].
 
 To embed the Universal Viewer with more control, three mechanisms are provided.
 So, according to your needs, you may add this code in the `items/show.php` file
@@ -146,8 +189,8 @@ of your theme or anywhere else.
 Arguments may be "class", "style", "locale" and "config". All mechanisms share
 the same arguments and all of them are optional.
 
-If collections are organized hierarchically with the plugin [CollectionTree], it
-will be used to build manifests for collections.
+If collections are organized hierarchically with the plugin [Collection Tree],
+it will be used to build manifests for collections.
 
 The display of multiple records (items and/or collections) is supported:
 
@@ -177,18 +220,6 @@ Notes
   file "routes.ini".
 - The Universal Viewer cannot display empty collections, so an empty view may
   appear when multiple records are displayed.
-
-*Warning*
-
-PHP should be installed with the extension "exif" in order to get the size of
-images. This is the case for all major distributions and providers.
-
-
-TODO / Bugs
------------
-
-- When a collection contains non image items, the left panel with the index is
-  displayed only when the first item contains an image.
 
 
 3D models
@@ -234,6 +265,22 @@ to upload it first.
 
 Finally, note that 3D models are often heavy, so the user has to wait some
 seconds that the browser loads all files and prepares them to be displayed.
+
+
+TODO / Bugs
+-----------
+
+- When a collection contains non image items, the left panel with the index is
+  displayed only when the first item contains an image.
+
+
+Warning
+-------
+
+Use it at your own risk.
+
+It’s always recommended to backup your files and your databases and to check
+your archives regularly so you can roll back if needed.
 
 
 Troubleshooting
@@ -297,7 +344,8 @@ Plugin Universal Viewer for Omeka:
 [Omeka S]: https://omeka.org/s
 [Omeka]: https://omeka.org
 [IIIF]: http://iiif.io
-[IIPImage]: http://iipimage.sourceforge.net
+[International Image Interoperability Framework]: http://iiif.io
+[IIP Image]: http://iipimage.sourceforge.net
 [UniversalViewer]: https://github.com/UniversalViewer/universalviewer
 [Digirati]: http://digirati.co.uk
 [British Library]: http://bl.uk
@@ -313,11 +361,13 @@ Plugin Universal Viewer for Omeka:
 [Universal Viewer for Omeka S]: https://github.com/Daniel-KM/Omeka-S-module-UniversalViewer
 [wiki]: https://github.com/UniversalViewer/universalviewer/wiki/Configuration
 [online]: http://universalviewer.io/examples/
-[iiif specifications]: http://iiif.io/api/
+[IIIF specifications]: http://iiif.io/api/
 [official release]: https://github.com/UniversalViewer/universalviewer/releases
 [distribution]: https://github.com/UniversalViewer/universalviewer/tree/master/dist
-[OpenLayersZoom]: https://github.com/Daniel-KM/OpenLayersZoom
-[CollectionTree]: https://github.com/Daniel-KM/CollectionTree
+[OpenLayers Zoom]: https://github.com/Daniel-KM/OpenLayersZoom
+[Ark & Noid]: https://github.com/Daniel-KM/ArkAndNoid4Omeka
+[Clean Url]: https://github.com/Daniel-KM/CleanUrl
+[Collection Tree]: https://github.com/Daniel-KM/CollectionTree
 [threejs]: https://threejs.org
 [Archive Repertory]: https://omeka.org/add-ons/plugins/archive-repertory
 [plugin issues]: https://github.com/Daniel-KM/UniversalViewer4Omeka/issues

@@ -210,7 +210,7 @@ $elements = get_table_options('Element', null, array(
         </div>
     </div>
 </fieldset>
-<fieldset id="fieldset-universalviewer-background"><legend><?php echo __('Background parameters'); ?></legend>
+<fieldset id="fieldset-universalviewer-background"><legend><?php echo __('Image Server'); ?></legend>
     <div class="field">
         <div class="two columns alpha">
             <?php echo $this->formLabel('universalviewer_iiif_creator',

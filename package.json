@@ -1,6 +1,6 @@
 {
   "name": "universalviewer4omeka",
-  "version": "1.0.0",
+  "version": "2.4.3",
   "description": "Universal Viewer (plugin for Omeka)",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "url": "git+https://github.com/Daniel-KM/UniversalViewer4Omeka"
   },
   "author": "",
-  "license": "MIT",
+  "license": "CECILL-2.1",
   "bugs": {
     "url": "https://github.com/Daniel-KM/UniversalViewer4Omeka/issues"
   },
