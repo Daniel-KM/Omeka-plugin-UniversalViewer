@@ -271,7 +271,7 @@ class UniversalViewer_ImageServer_ImageMagick extends UniversalViewer_AbstractIm
      */
     protected function _getConvertPath()
     {
-        $path = $this->getOption('path_to_convert');
+        $path = get_option('path_to_convert');
         if ($path && ($pathClean = realpath($path)) && is_dir($pathClean)) {
             $pathClean = rtrim($pathClean, DIRECTORY_SEPARATOR);
             $this->convertPath = $pathClean
