@@ -230,7 +230,7 @@ class UniversalViewer_ImageServer_ImageMagick extends UniversalViewer_AbstractIm
                 if (!is_readable($source)) {
                     return false;
                 }
-                $imagick = new Imagick($source);
+                $image = $source;
             }
             // When the storage is external, the file should be fetched before.
             else {
