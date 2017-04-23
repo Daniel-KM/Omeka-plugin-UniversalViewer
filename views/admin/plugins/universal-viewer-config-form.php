@@ -258,4 +258,18 @@ $elements = get_table_options('Element', null, array(
             </p>
         </div>
     </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_force_strict_json',
+                __('Force standard json')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formCheckbox('universalviewer_force_strict_json', true,
+                array('checked' => (boolean) get_option('universalviewer_force_strict_json'))); ?>
+            <p class="explanation">
+                <?php echo __('With some servers, the json files (manifest and info) are badly formatted.'); ?>
+                <?php echo __('This option forces Omeka to follow strictly the json standard.'); ?>
+            </p>
+        </div>
+    </div>
 </fieldset>

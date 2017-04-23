@@ -29,7 +29,7 @@ class UniversalViewer_Controller_Action_Helper_JsonLd extends Zend_Controller_Ac
         // Header for CORS, required for access of IIIF.
         $response->setHeader('access-control-allow-origin', '*');
         $response->clearBody();
-        $body = version_compare(phpversion(), '5.4.0', '<')
+        $body = version_compare(phpversion(), '5.4.0', '<') || get_option('universalviewer_force_strict_json')
             ? json_encode($data)
             : json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $response->setBody($body);
