@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/Daniel-KM/UniversalViewer4Omeka#readme",
   "devDependencies": {
-    "async": "^2.1.4",
+    "async": "^2.4.1",
     "del": "^2.2.2",
     "gulp": "^3.9.1",
     "gulp-rename": "^1.2.2",
