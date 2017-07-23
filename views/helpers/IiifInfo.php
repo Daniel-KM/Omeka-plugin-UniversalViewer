@@ -15,7 +15,7 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
     public function iiifInfo($record = null)
     {
         if (is_null($record)) {
-            $record = get_current_record('file');
+            $record = get_current_record('file', false);
         } elseif (is_numeric($record)) {
             $record = get_record_by_id('File', (integer) $record);
         }
