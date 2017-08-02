@@ -229,11 +229,11 @@ $elements = get_table_options('Element', null, array(
     </div>
     <div class="field">
         <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_iiif_max_size',
+            <?php echo $this->formLabel('universalviewer_max_dynamic_size',
                 __('Max dynamic size for images')); ?>
         </div>
         <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_iiif_max_size', get_option('universalviewer_iiif_max_size'), null); ?>
+            <?php echo $this->formText('universalviewer_max_dynamic_size', get_option('universalviewer_max_dynamic_size'), null); ?>
             <p class="explanation">
                 <?php echo __('Set the maximum size in bytes for the dynamic processing of images.'); ?>
                 <?php echo __('Beyond this limit, the plugin will require a tiled image, for example made with the plugin OpenLayers Zoom.'); ?>
