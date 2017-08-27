@@ -181,6 +181,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
      */
     public function hookUninstall()
     {
+        delete_option('universalviewer_iiif_max_size');
         $this->_uninstallOptions();
     }
 
