@@ -43,6 +43,36 @@ Uncompress files and rename plugin folder "UniversalViewer".
 
 Then install it like any other Omeka plugin.
 
+* CORS (Cross-Origin Resource Sharing)
+
+To be able to share manifests and contents with other IIIF servers, the server
+should allow CORS. The header is automatically set for manifests, but you may
+have to allow access for files via the config of the server.
+
+On Apache 2.4, the module "headers" should be enabled:
+
+```sh
+a2enmod headers
+systemctl restart apache2
+```
+
+Then, you have to add the following rules, adapted to your needs, to the file
+`.htaccess` at the root of Omeka S or in the main config of the server:
+
+```
+# CORS access for some files.
+<FilesMatch "\.json$">
+    <IfModule mod_headers.c>
+        Header add Access-Control-Allow-Origin "*"
+        Header add Access-Control-Allow-Headers "origin, x-requested-with, content-type"
+        Header add Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    </IfModule>
+</FilesMatch>
+```
+
+It is recommended to use the main config of the server, for example  with the
+directive `<Directory>`.
+
 
 Notes
 -----
@@ -252,6 +282,9 @@ can't be retrieved by the Universal Viewer.
 
 This plugin is not required when there is no external images or when these
 images are referenced in the json files with a full url.
+
+To share the `json` with other IIIF servers, the server may need to allow CORS
+(see above).
 
 * Example
 
