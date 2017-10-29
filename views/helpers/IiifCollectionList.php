@@ -45,7 +45,7 @@ class UniversalViewer_View_Helper_IiifCollectionList extends Zend_View_Helper_Ab
         $url = absolute_url(array(
             'id' => $identifier,
         ), $route);
-        $url = $this->view->uvForceHttpsIfRequired($url);
+        $url = $this->view->uvForceBaseUrlIfRequired($url);
         $manifest['@id'] = $url;
 
         $label = __('Dynamic List');
@@ -108,7 +108,7 @@ class UniversalViewer_View_Helper_IiifCollectionList extends Zend_View_Helper_Ab
             $type = 'sc:Manifest';
         }
 
-        $url = $this->view->uvForceHttpsIfRequired($url);
+        $url = $this->view->uvForceBaseUrlIfRequired($url);
         $manifest['@id'] = $url;
 
         $manifest['@type'] = $type;

@@ -55,6 +55,9 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_manifest_license_element' => '["Dublin Core", "Rights"]',
         'universalviewer_manifest_license_default' => 'http://www.example.org/license.html',
         'universalviewer_manifest_logo_default' => '',
+        'universalviewer_manifest_force_url_from' => '',
+        'universalviewer_manifest_force_url_to' => '',
+        'universalviewer_force_strict_json' => false,
         'universalviewer_alternative_manifest_element' => '',
         'universalviewer_append_collections_show' => true,
         'universalviewer_append_items_show' => true,
@@ -65,8 +68,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_locale' => 'en-GB:English (GB),fr:French',
         'universalviewer_iiif_creator' => 'Auto',
         'universalviewer_max_dynamic_size' => 10000000,
-        'universalviewer_force_https' => false,
-        'universalviewer_force_strict_json' => false,
     );
 
     /**
@@ -173,6 +174,15 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             set_option('universalviewer_style', $style . $width . $height);
             delete_option('universalviewer_width');
             delete_option('universalviewer_height');
+        }
+
+        if (version_compare($oldVersion, '2.4.6', '<')) {
+            $forceHttps = get_option('universalviewer_force_https');
+            if ($forceHttps) {
+                set_option('universalviewer_manifest_force_url_from', 'http:');
+                set_option('universalviewer_manifest_force_url_to', 'https:');
+            }
+            delete_option('universalviewer_force_https');
         }
     }
 

@@ -65,7 +65,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $url = absolute_url(array(
                 'id' => $item->id,
             ), 'universalviewer_presentation_item');
-        $url = $this->view->uvForceHttpsIfRequired($url);
+        $url = $this->view->uvForceBaseUrlIfRequired($url);
         $manifest['@id'] = $url;
 
         // The base url for some other ids.
@@ -154,7 +154,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $within = absolute_url(array(
                     'id' => $item->collection_id,
                 ), 'universalviewer_presentation_collection');
-            $within = $this->view->uvForceHttpsIfRequired($within);
+            $within = $this->view->uvForceBaseUrlIfRequired($within);
             $metadata['within'] = $within;
         }
 
@@ -438,7 +438,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 'quality' => 'default',
                 'format' => 'jpg',
             ), 'universalviewer_image_url');
-        $imageUrl = $this->view->uvForceHttpsIfRequired($imageUrl);
+        $imageUrl = $this->view->uvForceBaseUrlIfRequired($imageUrl);
         $thumbnail['@id'] = $imageUrl;
 
         $thumbnailService = array();
@@ -446,7 +446,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $thumbnailServiceUrl = absolute_url(array(
                 'id' => $file->id,
             ), 'universalviewer_image');
-        $thumbnailServiceUrl = $this->view->uvForceHttpsIfRequired($thumbnailServiceUrl);
+        $thumbnailServiceUrl = $this->view->uvForceBaseUrlIfRequired($thumbnailServiceUrl);
         $thumbnailService['@id'] = $thumbnailServiceUrl;
         $thumbnailService['profile'] = 'http://iiif.io/api/image/2/level2.json';
         $thumbnailService = (object) $thumbnailService;
@@ -502,7 +502,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     'quality' => 'default',
                     'format' => 'jpg',
                 ), 'universalviewer_image_url');
-            $imageUrl = $this->view->uvForceHttpsIfRequired($imageUrl);
+            $imageUrl = $this->view->uvForceBaseUrlIfRequired($imageUrl);
 
             $imageResource['@id'] = $imageUrl;
             $imageResource['@type'] = 'dctypes:Image';
@@ -513,7 +513,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $imageUrl = absolute_url(array(
                 'id' => $file->id,
             ), 'universalviewer_image');
-            $imageUrl = $this->view->uvForceHttpsIfRequired($imageUrl);
+            $imageUrl = $this->view->uvForceBaseUrlIfRequired($imageUrl);
 
             $imageResourceService = array();
             $imageResourceService['@context'] = 'http://iiif.io/api/image/2/context.json';
@@ -546,7 +546,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $imageUrl = absolute_url(array(
                     'id' => $file->id,
                 ), 'universalviewer_image');
-            $imageUrl = $this->view->uvForceHttpsIfRequired($imageUrl);
+            $imageUrl = $this->view->uvForceBaseUrlIfRequired($imageUrl);
             $imageResourceService['@id'] = $imageUrl;
             $imageResourceService['profile'] = 'http://iiif.io/api/image/2/level2.json';
             $imageResourceService = (object) $imageResourceService;
@@ -673,7 +673,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $mseUrl = absolute_url(array(
             'id' => $file->id,
         ), 'universalviewer_media');
-        $mseUrl = $this->view->uvForceHttpsIfRequired($mseUrl);
+        $mseUrl = $this->view->uvForceBaseUrlIfRequired($mseUrl);
         $mediaSequencesService['@id'] = $mseUrl;
         // See MediaController::contextAction()
         $mediaSequencesService['profile'] = 'http://wellcomelibrary.org/ld/ixif/0/alpha.json';
@@ -732,7 +732,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $mseUrl = absolute_url(array(
             'id' => $file->id,
         ), 'universalviewer_media');
-        $mseUrl = $this->view->uvForceHttpsIfRequired($mseUrl);
+        $mseUrl = $this->view->uvForceBaseUrlIfRequired($mseUrl);
         $mediaSequencesService['@id'] = $mseUrl;
         // See MediaController::contextAction()
         $mediaSequencesService['profile'] = 'http://wellcomelibrary.org/ld/ixif/0/alpha.json';
@@ -791,7 +791,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $mseUrl = absolute_url(array(
             'id' => $file->id,
         ), 'universalviewer_media');
-        $mseUrl = $this->view->uvForceHttpsIfRequired($mseUrl);
+        $mseUrl = $this->view->uvForceBaseUrlIfRequired($mseUrl);
         $mediaSequencesService['@id'] = $mseUrl;
         // See MediaController::contextAction()
         $mediaSequencesService['profile'] = 'http://wellcomelibrary.org/ld/ixif/0/alpha.json';

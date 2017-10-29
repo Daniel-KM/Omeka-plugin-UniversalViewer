@@ -152,7 +152,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
             $manifest['@id'] = absolute_url(array(
                 'id' => $collection['id'],
             ), 'universalviewer_presentation_collection');
-            $manifest['@id'] = $this->view->uvForceHttpsIfRequired($manifest['@id']);
+            $manifest['@id'] = $this->view->uvForceBaseUrlIfRequired($manifest['@id']);
             $manifest['@type'] = 'sc:Collection';
             $manifest['label'] = $collection['name'] ?: __('[Untitled]');
             $children = $this->_buildManifestCollectionTree($collection['children']);
@@ -184,7 +184,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
             $type = 'sc:Manifest';
         }
 
-        $url = $this->view->uvForceHttpsIfRequired($url);
+        $url = $this->view->uvForceBaseUrlIfRequired($url);
         $manifest['@id'] = $url;
 
         $manifest['@type'] = $type;

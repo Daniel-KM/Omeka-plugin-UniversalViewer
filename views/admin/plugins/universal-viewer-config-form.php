@@ -245,21 +245,6 @@ $elements = get_table_options('Element', null, array(
 <fieldset id="fieldset-universalviewer-various"><legend><?php echo __('Various parameters'); ?></legend>
     <div class="field">
         <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_force_https',
-                __('Force https')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formCheckbox('universalviewer_force_https', true,
-                array('checked' => (boolean) get_option('universalviewer_force_https'))); ?>
-            <p class="explanation">
-                <?php echo __('In some cases, the json files (manifest and info) on a secured site (https) contains some urls with the scheme "http".'); ?>
-                <?php echo __('This option forces all Omeka absolute urls in these files to start with the scheme "https".'); ?>
-                <?php echo __('Of course, this should be unchecked on a http-only site.'); ?>
-            </p>
-        </div>
-    </div>
-    <div class="field">
-        <div class="two columns alpha">
             <?php echo $this->formLabel('universalviewer_force_strict_json',
                 __('Force standard json')); ?>
         </div>
@@ -269,6 +254,19 @@ $elements = get_table_options('Element', null, array(
             <p class="explanation">
                 <?php echo __('With some servers, the json files (manifest and info) are badly formatted.'); ?>
                 <?php echo __('This option forces Omeka to follow strictly the json standard.'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_force_url_from', __('Force base of url')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formText('universalviewer_manifest_force_url_from', get_option('universalviewer_manifest_force_url_from'), ['placeholder' => 'example: http:']); ?>
+            <?php echo $this->formText('universalviewer_manifest_force_url_to', get_option('universalviewer_manifest_force_url_to'), ['placeholder' => 'example: https:']); ?>
+            <p class="explanation">
+                <?php echo __('When a proxy or a firewall is used, or when the config is specific, it may be needed to change the base url.'); ?>
+                <?php echo __('For example, when the server is secured, the "http:" urls may be replaced by "https:".'); ?>
             </p>
         </div>
     </div>

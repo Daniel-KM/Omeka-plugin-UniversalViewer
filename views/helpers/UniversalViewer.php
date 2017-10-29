@@ -28,7 +28,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
             $urlManifest = absolute_url(array(
                  'id' => $identifier,
             ), $route);
-            $urlManifest = $this->view->uvForceHttpsIfRequired($urlManifest);
+            $urlManifest = $this->view->uvForceBaseUrlIfRequired($urlManifest);
             return $this->_display($urlManifest, $options);
         }
 
@@ -72,7 +72,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         $urlManifest = absolute_url(array(
             'id' => $record->id,
         ), $route);
-        $urlManifest = $this->view->uvForceHttpsIfRequired($urlManifest);
+        $urlManifest = $this->view->uvForceBaseUrlIfRequired($urlManifest);
 
         return $this->_display($urlManifest, $options);
     }

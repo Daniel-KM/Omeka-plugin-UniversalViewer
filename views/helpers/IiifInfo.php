@@ -48,7 +48,7 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             $imageUrl = absolute_url(array(
                     'id' => $file->id,
                 ), 'universalviewer_image');
-            $imageUrl = $this->view->uvForceHttpsIfRequired($imageUrl);
+            $imageUrl = $this->view->uvForceBaseUrlIfRequired($imageUrl);
 
             $tiles = array();
             $helper = new UniversalViewer_Controller_Action_Helper_TileInfo();
@@ -113,7 +113,7 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
             $fileUrl = absolute_url(array(
                     'id' => $file->id,
                 ), 'universalviewer_media');
-            $fileUrl = $this->view->uvForceHttpsIfRequired($fileUrl);
+            $fileUrl = $this->view->uvForceBaseUrlIfRequired($fileUrl);
             $info['@id'] = $fileUrl;
             // See MediaController::contextAction()
             $info['protocol'] = 'http://wellcomelibrary.org/ld/ixif';
