@@ -206,7 +206,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         // Redirect to the url when an existing file is available.
         if ($imageUrl) {
             // Header for CORS, required for access of IIIF.
-            $response->setHeader('access-control-allow-origin', '*');
+            $response->setHeader('Access-Control-Allow-Origin', '*');
             // Recommanded by feature "profileLinkHeader".
             $response->setHeader('Link', '<http://iiif.io/api/image/2/level2.json>;rel="profile"');
             $response->setHeader('Content-Type', $transform['format']['feature']);
@@ -231,7 +231,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             $this->_helper->viewRenderer->setNoRender();
 
             // Header for CORS, required for access of IIIF.
-            $response->setHeader('access-control-allow-origin', '*');
+            $response->setHeader('Access-Control-Allow-Origin', '*');
             // Recommanded by feature "profileLinkHeader".
             $response->setHeader('Link', '<http://iiif.io/api/image/2/level2.json>;rel="profile"');
             $response->setHeader('Content-Type', $transform['format']['feature']);

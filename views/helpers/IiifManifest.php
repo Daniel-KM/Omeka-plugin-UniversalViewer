@@ -991,15 +991,15 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 list($width, $height, $type, $attr) = getimagesize($filepath);
                 unlink($tempname);
                 return array(
-                    'width' => $width,
-                    'height' => $height,
+                    'width' => (int) $width,
+                    'height' => (int) $height,
                 );
             }
         } elseif (file_exists($filepath)) {
             list($width, $height, $type, $attr) = getimagesize($filepath);
             return array(
-                'width' => $width,
-                'height' => $height,
+                'width' => (int) $width,
+                'height' => (int) $height,
             );
         }
 
