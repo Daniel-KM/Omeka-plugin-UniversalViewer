@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="UniversalViewer4Omeka" basedir=".">
+<project name="UniversalViewer" basedir=".">
     <property name="lang.dir" location="languages" />
     <property name="core.pot" location="../../application/languages/Omeka.pot" />
     <target name="update-pot" description="Update the translation template.">

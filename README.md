@@ -384,10 +384,10 @@ Widget [UniversalViewer]:
 
 Plugin Universal Viewer for Omeka:
 
-* Copyright Daniel Berthereau, 2015-2017
+* Copyright Daniel Berthereau, 2015-2018
 
 
-[Universal Viewer]: https://github.com/Daniel-KM/UniversalViewer4Omeka
+[Universal Viewer]: https://github.com/Daniel-KM/Omeka-plugin-UniversalViewer
 [Omeka S]: https://omeka.org/s
 [Omeka]: https://omeka.org
 [IIIF]: http://iiif.io
@@ -404,20 +404,20 @@ Plugin Universal Viewer for Omeka:
 [Bibliothèque patrimoniale]: https://patrimoine.mines-paristech.fr
 [Mines ParisTech]: http://mines-paristech.fr
 [example server]: http://universalviewer.io/examples/
-[Upgrade to Omeka S]: https://github.com/Daniel-KM/UpgradeToOmekaS
+[Upgrade to Omeka S]: https://github.com/Daniel-KM/Omeka-plugin-UpgradeToOmekaS
 [Universal Viewer for Omeka S]: https://github.com/Daniel-KM/Omeka-S-module-UniversalViewer
 [wiki]: https://github.com/UniversalViewer/universalviewer/wiki/Configuration
 [online]: http://universalviewer.io/examples/
 [IIIF specifications]: http://iiif.io/api/
 [official release]: https://github.com/UniversalViewer/universalviewer/releases
 [distribution]: https://github.com/UniversalViewer/universalviewer/tree/master/dist
-[OpenLayers Zoom]: https://github.com/Daniel-KM/OpenLayersZoom
-[Ark & Noid]: https://github.com/Daniel-KM/ArkAndNoid4Omeka
-[Clean Url]: https://github.com/Daniel-KM/CleanUrl
-[Collection Tree]: https://github.com/Daniel-KM/CollectionTree
+[OpenLayers Zoom]: https://github.com/Daniel-KM/Omeka-plugin-OpenLayersZoom
+[Ark & Noid]: https://github.com/Daniel-KM/Omeka-plugin-ArkAndNoid
+[Clean Url]: https://github.com/Daniel-KM/Omeka-plugin-CleanUrl
+[Collection Tree]: https://github.com/Daniel-KM/Omeka-plugin-CollectionTree
 [threejs]: https://threejs.org
 [Archive Repertory]: https://omeka.org/add-ons/plugins/archive-repertory
-[plugin issues]: https://github.com/Daniel-KM/UniversalViewer4Omeka/issues
+[plugin issues]: https://github.com/Daniel-KM/Omeka-plugin-UniversalViewer/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org

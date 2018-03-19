@@ -251,7 +251,7 @@ class UniversalViewer_ImageServer_GD extends UniversalViewer_AbstractImageServer
      * Load an image from anywhere.
      *
      * @param string $source Path of the managed image file
-     * @return false|GD image ressource
+     * @return false|resource GD image resource.
      */
     protected function _loadImageResource($source)
     {

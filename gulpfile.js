@@ -7,6 +7,10 @@ var glob = require("glob");
 var gulp = require('gulp');
 var rename = require("gulp-rename");
 
+gulp.task('clean', function(done) {
+    return del('views/shared/javascripts/uv');
+});
+
 gulp.task('sync', function(done) {
     async.series([
         function (next) {
@@ -15,10 +19,6 @@ gulp.task('sync', function(done) {
             .on('end', next);
         }
     ], done);
-});
-
-gulp.task('clean', function(done) {
-    return del('views/shared/javascripts/uv');
 });
 
 gulp.task('rename', function(done) {

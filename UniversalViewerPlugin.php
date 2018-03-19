@@ -93,7 +93,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             . DIRECTORY_SEPARATOR . 'embed.js';
         if (!file_exists($js)) {
             throw new Omeka_Plugin_Installer_Exception(__('UniversalViewer library should be installed. See %sReadme%s.',
-                '<a href="https://github.com/Daniel-KM/UniversalViewer4Omeka#installation">', '</a>'));
+                '<a href="https://github.com/Daniel-KM/Omeka-plugin-UniversalViewer#installation">', '</a>'));
         }
 
         if (plugin_is_active('DublinCoreExtended')) {
