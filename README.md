@@ -127,7 +127,7 @@ Then, tiles will be automatically displayed by Universal Viewer.
 
 * Adaptation of the Universal Viewer config
 
-To customize the configuration of the plugin, create a directory `universal-folder`
+To customize the configuration of the plugin, create a directory `universal-viewer`
 in your theme and copy the file `plugins/UniversalViewer/views/public/universal-viewer/config.json`
 inside it: `themes/My_Theme/universal-viewer/config.json`.
 
