@@ -166,19 +166,20 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $nonImages = array();
         $jsonFiles = array();
         foreach ($files as $file) {
+            $mediaType = $file->mime_type;
             // Images files.
             // Internal: has_derivative is not only for images.
-            if (strpos($file->mime_type, 'image/') === 0) {
+            if ($mediaType && strpos($mediaType, 'image/') === 0) {
                 $images[] = $file;
             }
             // Non-images files.
             else {
                 $nonImages[] = $file;
-                if ($file->mime_type == 'application/json') {
+                if ($mediaType == 'application/json') {
                     $jsonFiles[] = $file;
                 }
                 // Check if this is a json file for old Omeka or old imports.
-                elseif ($file->mime_type == 'text/plain') {
+                elseif ($mediaType == 'text/plain') {
                     switch (strtolower($file->getExtension())) {
                         case 'json':
                             $jsonFiles[] = $file;
@@ -226,11 +227,15 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         // download section.
         if ($totalImages || $isThreejs) {
             foreach ($nonImages as $file) {
-                switch ($file->mime_type) {
+                $mediaType = $file->mime_type;
+                switch ($mediaType) {
+                    case '':
+                        break;
+
                     case 'application/pdf':
                         $render = array();
                         $render['@id'] = $file->getWebPath('original');
-                        $render['format'] = $file->mime_type;
+                        $render['format'] = $mediaType;
                         $render['label'] = __('Download as PDF');
                         $render = (object) $render;
                         $rendering[] = $render;
@@ -277,7 +282,11 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     'metadata' => $fileMetadata,
                 );
 
-                switch ($file->mime_type) {
+                $mediaType = $media->mediaType();
+                switch ($mediaType) {
+                    case '':
+                        break;
+
                     case 'application/pdf':
                         $mediaSequenceElement = $this->_iiifMediaSequencePdf($file, $values);
                         $mediaSequencesElements[] = $mediaSequenceElement;
@@ -285,7 +294,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                         // file is already available for download in the pdf viewer.
                         break;
 
-                    case strpos($file->mime_type, 'audio/') === 0:
+                    case strpos($mediaType, 'audio/') === 0:
                     // case 'audio/ogg':
                     // case 'audio/mp3':
                         $mediaSequenceElement = $this->_iiifMediaSequenceAudio($file, $values);
@@ -293,9 +302,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                         // Rendering files are automatically added for download.
                         break;
 
-                    // TODO Check/support the media type "application//octet-stream".
-                    // case 'application//octet-stream':
-                    case strpos($file->mime_type, 'video/') === 0:
+                    // TODO Check/support the media type "application/octet-stream".
+                    // case 'application/octet-stream':
+                    case strpos($mediaType, 'video/') === 0:
                     // case 'video/webm':
                         $mediaSequenceElement = $this->_iiifMediaSequenceVideo($file, $values);
                         $mediaSequencesElements[] = $mediaSequenceElement;
@@ -947,7 +956,15 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     protected function _getImageSize(File $file, $imageType = 'original')
     {
         // Check if this is an image.
-        if (empty($file) || strpos($file->mime_type, 'image/') === false) {
+        if (empty($file)) {
+            return array(
+                'width' => null,
+                'height' => null,
+            );
+        }
+
+        $mediaType = $file->mime_type;
+        if (empty($mediaType) || strpos($mediaType, 'image/') !== 0) {
             return array(
                 'width' => null,
                 'height' => null,
