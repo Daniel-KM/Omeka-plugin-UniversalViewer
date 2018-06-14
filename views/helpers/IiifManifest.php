@@ -282,7 +282,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     'metadata' => $fileMetadata,
                 );
 
-                $mediaType = $media->mediaType();
+                $mediaType = $file->mime_type;
                 switch ($mediaType) {
                     case '':
                         break;
