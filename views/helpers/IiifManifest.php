@@ -10,8 +10,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     /**
      * Get the IIIF manifest for the specified record.
      *
-     * @param Record $record
-     * @return Object|null
+     * @param Omeka_Record_AbstractRecord $record
+     * @return object|null Standard object.
      */
     public function iiifManifest(Omeka_Record_AbstractRecord $record)
     {
@@ -34,7 +34,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @todo Replace web root by routes, even if main ones are only urn.
      *
      * @param Item $item
-     * @return Object|null. The object corresponding to the manifest.
+     * @return object|null. The object corresponding to the manifest.
      */
     protected function _buildManifestItem(Item $item)
     {
@@ -427,7 +427,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * Create an IIIF thumbnail object from an Omeka file.
      *
      * @param File $file
-     * @return Standard object|null
+     * @return object|null Standard object.
      */
     protected function _iiifThumbnail(File $file = null)
     {
@@ -474,7 +474,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * @param string $canvasUrl Used to set the value for "on".
      * @param int $width If not set, will be calculated.
      * @param int $height If not set, will be calculated.
-     * @return Standard object|null
+     * @return object|null Standard object.
      */
     protected function _iiifImage(File $file, $index, $canvasUrl, $width = null, $height = null)
     {
@@ -576,7 +576,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      *
      * @param File $file
      * @param int $index Used to set the standard name of the image.
-     * @return Standard object|null
+     * @return object|null Standard object.
      */
     protected function _iiifCanvasImage(File $file, $index)
     {
@@ -612,7 +612,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     /**
      * Create an IIIF canvas object for a place holder.
      *
-     * @return Standard object
+     * @return object Standard object.
      */
     protected function _iiifCanvasPlaceholder()
     {
@@ -658,7 +658,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      *
      * @param File $file
      * @param array $values
-     * @return Standard object|null
+     * @return object|null Standard object.
      */
     protected function _iiifMediaSequencePdf(File $file, $values)
     {
@@ -697,7 +697,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      *
      * @param File $file
      * @param array $values
-     * @return Standard object|null
+     * @return object|null Standard object.
      */
     protected function _iiifMediaSequenceAudio(File $file, $values)
     {
@@ -756,7 +756,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      *
      * @param File $file
      * @param array $values
-     * @return Standard object|null
+     * @return object|null Standard object.
      */
     protected function _iiifMediaSequenceVideo(File $file, $values)
     {
@@ -819,7 +819,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      *
      * @param File $file
      * @param array $values
-     * @return Standard object|null
+     * @return object|null Standard object.
      */
     protected function _iiifMediaSequenceThreejs(File $file, $values)
     {
@@ -854,7 +854,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      * Create an IIIF sequence object for an unsupported format.
      *
      * @param array $rendering
-     * @return Standard object
+     * @return object Standard object.
      */
     protected function _iiifSequenceUnsupported($rendering = array())
     {
@@ -881,7 +881,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     /**
      * Get the representative thumbnail of the whole work.
      *
-     * @param Record $record
+     * @param Omeka_Record_AbstractRecord $record
      * @param bool $isThreejs Manage an exception.
      * @return object The iiif thumbnail.
      */

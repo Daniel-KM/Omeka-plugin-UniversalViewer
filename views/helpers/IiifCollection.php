@@ -9,7 +9,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
      *
      * @todo Use a representation/context with a getResource(), a toString()
      * that removes empty values and a standard json() without ld.
-     * @see IiifManifest
+     * @see UniversalViewer_View_Helper_IiifManifest
      *
      * @param Collection $collection
      * @return Object|null

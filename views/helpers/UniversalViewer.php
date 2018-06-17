@@ -7,7 +7,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
     /**
      * Get the specified UniversalViewer.
      *
-     * @param Record $record
+     * @param Omeka_Record_AbstractRecord $record
      * @param array $options Associative array of optional values:
      *   - (string) class
      *   - (string) locale

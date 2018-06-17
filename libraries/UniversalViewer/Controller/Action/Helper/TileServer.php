@@ -465,7 +465,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
     /**
      * Helper to get width and height of an image.
      *
-     * @see IiifServer\View\Helper\IiifInfo::getWidthAndHeight()
+     * @see \IiifServer\View\Helper\IiifInfo::getWidthAndHeight()
      *
      * @param string $filepath This should be an image (no check here).
      * @return array Associative array of width and height of the image file.

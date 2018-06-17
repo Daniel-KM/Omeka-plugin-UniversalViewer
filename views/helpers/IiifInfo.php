@@ -9,7 +9,7 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
      *
      * @todo Replace all data by standard classes.
      *
-     * @param Record|int|null $record
+     * @param Omeka_Record_AbstractRecord|int|null $record
      * @return Object|null
      */
     public function iiifInfo($record = null)
