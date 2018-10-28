@@ -81,7 +81,7 @@ class UniversalViewer_ImageServer_Auto extends UniversalViewer_AbstractImageServ
         }
 
         // Else use the command line convert, if available.
-        $processor = new ImageMagick();
+        $processor = new UniversalViewer_ImageServer_ImageMagick();
         return $processor->transform($args);
     }
 }
