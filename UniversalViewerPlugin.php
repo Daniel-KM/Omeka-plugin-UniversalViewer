@@ -300,7 +300,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         $checkImageSize = $args['custom']['universalviewer']['checkImageSize'];
 
         if ($orderByFilename) {
-            $this->_sortFiles($item, (boolean) $mixImages);
+            $this->_sortFiles($item, (bool) $mixImages);
         }
 
         if ($checkImageSize) {
@@ -514,7 +514,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
                 foreach ($recs as $record) {
                     $records[] = is_object($record)
                         ? $record
-                        : get_record_by_id($recordType, (integer) $record);
+                        : get_record_by_id($recordType, (int) $record);
                 }
                 unset($args[$type]);
             }
@@ -526,14 +526,14 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         $record = null;
         if (!empty($args['id'])) {
             // Currently only item.
-            $record = get_record_by_id('Item', (integer) $args['id']);
+            $record = get_record_by_id('Item', (int) $args['id']);
             unset($args['id']);
         } elseif (!empty($args['record'])) {
             if (is_numeric($args['record'])) {
                 if (isset($args['type'])
                        && in_array(ucfirst($args['type']), array('Item', 'Collection', 'File'))
                     ) {
-                    $record = get_record_by_id(ucfirst($args['type']), (integer) $args['record']);
+                    $record = get_record_by_id(ucfirst($args['type']), (int) $args['record']);
                 }
                 unset($args['record']);
                 unset($args['type']);
@@ -543,21 +543,21 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             }
         } elseif (!empty($args['item'])) {
             if (is_numeric($args['item'])) {
-                $record = get_record_by_id('Item', (integer) $args['item']);
+                $record = get_record_by_id('Item', (int) $args['item']);
             } else {
                 $record = $args['item'];
             }
             unset($args['record']);
         } elseif (!empty($args['collection'])) {
             if (is_numeric($args['collection'])) {
-                $record = get_record_by_id('Collection', (integer) $args['collection']);
+                $record = get_record_by_id('Collection', (int) $args['collection']);
             } else {
                 $record = $args['collection'];
             }
             unset($args['collection']);
         } elseif (!empty($args['file'])) {
             if (is_numeric($args['file'])) {
-                $record = get_record_by_id('File', (integer) $args['file']);
+                $record = get_record_by_id('File', (int) $args['file']);
             } else {
                 $record = $args['file'];
             }

@@ -379,8 +379,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         // "!w,h": sizeByWh
         elseif (strpos($size, '!') === 0) {
             $pos = strpos($size, ',');
-            $destinationWidth = (integer) substr($size, 1, $pos);
-            $destinationHeight = (integer) substr($size, $pos + 1);
+            $destinationWidth = (int) substr($size, 1, $pos);
+            $destinationHeight = (int) substr($size, $pos + 1);
             if (empty($destinationWidth) || empty($destinationHeight)) {
                 $this->view->message = __('The IIIF server cannot fulfill the request: the size "%s" is incorrect.', $size);
                 return;
@@ -402,8 +402,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         // "w,h", "w," or ",h".
         else {
             $pos = strpos($size, ',');
-            $destinationWidth = (integer) substr($size, 0, $pos);
-            $destinationHeight = (integer) substr($size, $pos + 1);
+            $destinationWidth = (int) substr($size, 0, $pos);
+            $destinationHeight = (int) substr($size, $pos + 1);
             if (empty($destinationWidth) && empty($destinationHeight)) {
                 $this->view->message = __('The IIIF server cannot fulfill the request: the size "%s" is incorrect.', $size);
                 return;
@@ -484,7 +484,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             $rotation = trim($rotation, '0');
             $rotationDotPos = strpos($rotation, '.');
             if ($rotationDotPos === strlen($rotation)) {
-                $rotation = (integer) trim($rotation, '.');
+                $rotation = (int) trim($rotation, '.');
             } elseif ($rotationDotPos === 0) {
                 $rotation = '0' . $rotation;
             }

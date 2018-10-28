@@ -35,7 +35,7 @@ $elements = get_table_options('Element', null, array(
         </div>
         <div class="inputs five columns omega">
             <?php echo $this->formCheckbox('universalviewer_manifest_description_default', true,
-                array('checked' => (boolean) get_option('universalviewer_manifest_description_default'))); ?>
+                array('checked' => (bool) get_option('universalviewer_manifest_description_default'))); ?>
             <p class="explanation">
                 <?php echo __('If checked, and if there is no metadata for the element above, the Omeka citation will be added in all manifests and viewers as main description.'); ?>
             </p>
@@ -138,7 +138,7 @@ $elements = get_table_options('Element', null, array(
         </div>
         <div class="inputs five columns omega">
             <?php echo $this->formCheckbox('universalviewer_append_collections_show', true,
-                array('checked' => (boolean) get_option('universalviewer_append_collections_show'))); ?>
+                array('checked' => (bool) get_option('universalviewer_append_collections_show'))); ?>
         </div>
     </div>
     <div class="field">
@@ -148,7 +148,7 @@ $elements = get_table_options('Element', null, array(
         </div>
         <div class="inputs five columns omega">
             <?php echo $this->formCheckbox('universalviewer_append_items_show', true,
-                array('checked' => (boolean) get_option('universalviewer_append_items_show'))); ?>
+                array('checked' => (bool) get_option('universalviewer_append_items_show'))); ?>
         </div>
     </div>
     <div class="field">
@@ -158,7 +158,7 @@ $elements = get_table_options('Element', null, array(
         </div>
         <div class="inputs five columns omega">
             <?php echo $this->formCheckbox('universalviewer_append_collections_browse', true,
-                array('checked' => (boolean) get_option('universalviewer_append_collections_browse'))); ?>
+                array('checked' => (bool) get_option('universalviewer_append_collections_browse'))); ?>
         </div>
     </div>
     <div class="field">
@@ -168,7 +168,7 @@ $elements = get_table_options('Element', null, array(
         </div>
         <div class="inputs five columns omega">
             <?php echo $this->formCheckbox('universalviewer_append_items_browse', true,
-                array('checked' => (boolean) get_option('universalviewer_append_items_browse'))); ?>
+                array('checked' => (bool) get_option('universalviewer_append_items_browse'))); ?>
         </div>
     </div>
     <p class="explanation">
@@ -250,7 +250,7 @@ $elements = get_table_options('Element', null, array(
         </div>
         <div class="inputs five columns omega">
             <?php echo $this->formCheckbox('universalviewer_force_strict_json', true,
-                array('checked' => (boolean) get_option('universalviewer_force_strict_json'))); ?>
+                array('checked' => (bool) get_option('universalviewer_force_strict_json'))); ?>
             <p class="explanation">
                 <?php echo __('With some servers, the json files (manifest and info) are badly formatted.'); ?>
                 <?php echo __('This option forces Omeka to follow strictly the json standard.'); ?>

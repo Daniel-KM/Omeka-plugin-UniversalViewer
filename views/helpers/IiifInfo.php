@@ -17,7 +17,7 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
         if (is_null($record)) {
             $record = get_current_record('file', false);
         } elseif (is_numeric($record)) {
-            $record = get_record_by_id('File', (integer) $record);
+            $record = get_record_by_id('File', (int) $record);
         }
 
         if (empty($record)) {
@@ -136,7 +136,7 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
         $squaleFactors = array();
         $maxSize = max($tileInfo['source']['width'], $tileInfo['source']['height']);
         $tileSize = $tileInfo['size'];
-        $total = (integer) ceil($maxSize / $tileSize);
+        $total = (int) ceil($maxSize / $tileSize);
         $factor = 1;
         while ($factor / 2 <= $total) {
             $squaleFactors[] = $factor;

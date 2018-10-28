@@ -925,7 +925,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $squaleFactors = array();
         $maxSize = max($tileInfo['source']['width'], $tileInfo['source']['height']);
         $tileSize = $tileInfo['size'];
-        $total = (integer) ceil($maxSize / $tileSize);
+        $total = (int) ceil($maxSize / $tileSize);
         $factor = 1;
         while ($factor / 2 <= $total) {
             $squaleFactors[] = $factor;

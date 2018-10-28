@@ -226,14 +226,14 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
                             // Use row, because Deepzoom and Zoomify tiles are
                             // square by default.
                             // TODO Manage the case where tiles are not square.
-                            $count = (integer) ceil(max($source['width'], $source['height']) / $region['height']);
+                            $count = (int) ceil(max($source['width'], $source['height']) / $region['height']);
                             $cellX = $region['x'] / $region['height'];
                             $cellY = $region['y'] / $region['height'];
                         }
                     }
                     // Normal column and normal region.
                     else {
-                        $count = (integer) ceil(max($source['width'], $source['height']) / $region['width']);
+                        $count = (int) ceil(max($source['width'], $source['height']) / $region['width']);
                         $cellX = $region['x'] / $region['width'];
                         $cellY = $region['y'] / $region['width'];
                     }
@@ -244,14 +244,14 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
                         // Normal column. The last cell is an exception.
                         if (!$isLastCell) {
                             // Use column, because tiles are square.
-                            $count = (integer) ceil(max($source['width'], $source['height']) / $region['width']);
+                            $count = (int) ceil(max($source['width'], $source['height']) / $region['width']);
                             $cellX = $region['x'] / $region['width'];
                             $cellY = $region['y'] / $region['width'];
                         }
                     }
                     // Normal row and normal region.
                     else {
-                        $count = (integer) ceil(max($source['width'], $source['height']) / $region['height']);
+                        $count = (int) ceil(max($source['width'], $source['height']) / $region['height']);
                         $cellX = $region['x'] / $region['height'];
                         $cellY = $region['y'] / $region['height'];
                     }
@@ -264,14 +264,14 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
                         // Normal row. The last cell is an exception.
                         if (!$isLastCell) {
                             // Use row, because tiles are square.
-                            $count = (integer) ceil(max($source['width'], $source['height']) / $region['height']);
+                            $count = (int) ceil(max($source['width'], $source['height']) / $region['height']);
                             $cellX = $region['x'] / $region['width'];
                             $cellY = $region['y'] / $region['height'];
                         }
                     }
                     // Normal column and normal region.
                     else {
-                        $count = (integer) ceil(max($source['width'], $source['height']) / $region['width']);
+                        $count = (int) ceil(max($source['width'], $source['height']) / $region['width']);
                         $cellX = $region['x'] / $region['width'];
                         $cellY = $region['y'] / $region['height'];
                     }
@@ -282,7 +282,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
                     // Normalize the size, but they can be cropped.
                     $size['width'] = $region['width'];
                     $size['height'] = $region['height'];
-                    $count = (integer) ceil(max($source['width'], $source['height']) / $region['width']);
+                    $count = (int) ceil(max($source['width'], $source['height']) / $region['width']);
                     $cellX = $region['x'] / $region['width'];
                     $cellY = $region['y'] / $region['height'];
                     break;
@@ -295,10 +295,10 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             $maxDimension = max([$source['width'], $source['height']]);
             $numLevels = $this->getNumLevels($maxDimension);
             // In IIIF, levels start at the tile size.
-            $numLevels -= (integer) log($cellSize, 2);
+            $numLevels -= (int) log($cellSize, 2);
             $squaleFactors = $this->getScaleFactors($numLevels);
             $maxSize = max($source['width'], $source['height']);
-            $total = (integer) ceil($maxSize / $tileInfo['size']);
+            $total = (int) ceil($maxSize / $tileInfo['size']);
             // If level is set, count is not set and useless.
             $level = isset($level) ? $level : 0;
             $count = isset($count) ? $count : 0;
@@ -319,8 +319,8 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
                 $isLevelFound = false;
                 foreach ($reversedSqualeFactors as $level => $reversedFactor) {
                     $tileFactor = $reversedFactor * $tileInfo['size'];
-                    $countX = (integer) ceil($source['width'] / $tileFactor);
-                    $countY = (integer) ceil($source['height'] / $tileFactor);
+                    $countX = (int) ceil($source['width'] / $tileFactor);
+                    $countY = (int) ceil($source['height'] / $tileFactor);
                     $lastRegionWidth = $source['width'] - (($countX - 1) * $tileFactor);
                     $lastRegionHeight = $source['height'] - (($countY - 1) * $tileFactor);
                     $lastRegionX = $source['width'] - $lastRegionWidth;
@@ -347,7 +347,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
         // TODO Check if the cell size is the required one (always true for image tiled here).
 
         if ($isOneBased) {
-            $level += (integer) log($cellSize, 2);
+            $level += (int) log($cellSize, 2);
         }
 
         return [
@@ -373,7 +373,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
      */
     protected function getNumLevels($maxDimension)
     {
-        $result = (integer) ceil(log($maxDimension, 2)) + 1;
+        $result = (int) ceil(log($maxDimension, 2)) + 1;
         return $result;
     }
 
@@ -459,7 +459,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             + $tile['row'] * $tierSizeInTiles[$tile['level']][0]
             + $tileCountUpToTier[$tile['level']];
         $tileGroup = ($tileIndex / $tile['size']) ?: 0;
-        return (integer) $tileGroup;
+        return (int) $tileGroup;
     }
 
     /**

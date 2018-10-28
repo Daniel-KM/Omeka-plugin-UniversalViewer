@@ -77,14 +77,14 @@ class UniversalViewer_PresentationController extends Omeka_Controller_AbstractAc
             $identifier = str_replace('-', '', $identifier);
             if (is_numeric($identifier)) {
                 $recordType = 'Item';
-                $recordId = (integer) $identifier;
+                $recordId = (int) $identifier;
             } else {
                 $recordType = substr($identifier, 0, 1);
                 if (!isset($map[$recordType])) {
                     continue;
                 }
                 $recordType = $map[$recordType];
-                $recordId = (integer) substr($identifier, 1);
+                $recordId = (int) substr($identifier, 1);
             }
             if ($recordId) {
                 $record = get_record_by_id($recordType, $recordId);
