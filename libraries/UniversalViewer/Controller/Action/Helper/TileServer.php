@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright 2015-2017 Daniel Berthereau
+ * Copyright 2015-2018 Daniel Berthereau
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software. You can use, modify and/or
@@ -297,8 +297,9 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             // In IIIF, levels start at the tile size.
             $numLevels -= (int) log($cellSize, 2);
             $squaleFactors = $this->getScaleFactors($numLevels);
-            $maxSize = max($source['width'], $source['height']);
-            $total = (int) ceil($maxSize / $tileInfo['size']);
+            // TODO Find why maxSize and total were needed.
+            // $maxSize = max($source['width'], $source['height']);
+            // $total = (int) ceil($maxSize / $tileInfo['size']);
             // If level is set, count is not set and useless.
             $level = isset($level) ? $level : 0;
             $count = isset($count) ? $count : 0;
@@ -397,7 +398,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
     /**
      * Return the tile group of a tile from level, position and size.
      *
-     * @link https://github.com/openlayers/ol3/blob/master/src/ol/source/zoomifysource.js
+     * @link https://github.com/openlayers/openlayers/blob/v4.0.0/src/ol/source/zoomify.js
      *
      * @param array $image
      * @param array $tile
@@ -418,10 +419,10 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             case 'default':
                 $tileSize = $tile['size'];
                 while ($image['width'] > $tileSize || $image['height'] > $tileSize) {
-                    $tierSizeInTiles[] = [
+                    $tierSizeInTiles[] = array(
                         ceil($image['width'] / $tileSize),
                         ceil($image['height'] / $tileSize),
-                    ];
+                    );
                     $tileSize += $tileSize;
                 }
                 break;
@@ -430,10 +431,10 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
                 $width = $image['width'];
                 $height = $image['height'];
                 while ($width > $tile['size'] || $height > $tile['size']) {
-                    $tierSizeInTiles[] = [
+                    $tierSizeInTiles[] = array(
                         ceil($width / $tile['size']),
                         ceil($height / $tile['size']),
-                    ];
+                    );
                     $width >>= 1;
                     $height >>= 1;
                 }
@@ -443,15 +444,13 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
                 return;
         }
 
-        $tierSizeInTiles[] = [1, 1];
+        $tierSizeInTiles[] = array(1, 1);
         $tierSizeInTiles = array_reverse($tierSizeInTiles);
 
-        $resolutions = [1];
-        $tileCountUpToTier = [0];
+        $tileCountUpToTier = array(0);
         for ($i = 1, $ii = count($tierSizeInTiles); $i < $ii; $i++) {
-            $resolutions[] = 1 << $i;
             $tileCountUpToTier[] =
-            $tierSizeInTiles[$i - 1][0] * $tierSizeInTiles[$i - 1][1]
+                $tierSizeInTiles[$i - 1][0] * $tierSizeInTiles[$i - 1][1]
                 + $tileCountUpToTier[$i - 1];
         }
 
@@ -477,7 +476,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             $tempname = tempnam(sys_get_temp_dir(), 'uv_');
             $result = file_put_contents($tempname, $filepath);
             if ($result !== false) {
-                list($width, $height, $type, $attr) = getimagesize($filepath);
+                list($width, $height) = getimagesize($filepath);
                 unlink($tempname);
                 return array(
                     'width' => $width,
@@ -485,16 +484,16 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
                 );
             }
         } elseif (file_exists($filepath)) {
-            list($width, $height, $type, $attr) = getimagesize($filepath);
-            return [
+            list($width, $height) = getimagesize($filepath);
+            return array(
                 'width' => $width,
                 'height' => $height,
-            ];
+            );
         }
 
-        return [
+        return array(
             'width' => null,
             'height' => null,
-        ];
+        );
     }
 }

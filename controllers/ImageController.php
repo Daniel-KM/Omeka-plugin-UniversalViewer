@@ -44,7 +44,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
     /**
      * Send "info.json" for the current file.
      *
-     * @internal The info is managed by the ImageControler because it indicates
+     * The info is managed by the ImageControler because it indicates
      * capabilities of the IIIF server for the request of a file.
      */
     public function infoAction()

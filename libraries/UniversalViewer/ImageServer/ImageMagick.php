@@ -203,6 +203,9 @@ class UniversalViewer_ImageServer_ImageMagick extends UniversalViewer_AbstractIm
             escapeshellarg($this->_supportedFormats[$args['format']['feature']] . ':' . $destination)
         );
 
+        $status = 0;
+        $output = '';
+        $errors = array();
         Omeka_File_Derivative_Strategy_ExternalImageMagick::executeCommand($command, $status, $output, $errors);
         $result = $status == 0;
 

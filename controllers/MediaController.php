@@ -42,7 +42,7 @@ class UniversalViewer_MediaController extends Omeka_Controller_AbstractActionCon
     /**
      * Send "info.json" for the current file.
      *
-     * @internal The info is managed by the MediaControler because it indicates
+     * The info is managed by the MediaControler because it indicates
      * capabilities of the IXIF server for the request of a file.
      */
     public function infoAction()
