@@ -80,7 +80,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         ));
 
         $metadata = array();
-        foreach ($elementTexts as $elementSetName => $elements) {
+        foreach ($elementTexts as $elements) {
             foreach ($elements as $elementName => $values) {
                 $metadata[] = (object) array(
                     'label' => __($elementName),
@@ -264,7 +264,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                     'return_type' => 'array',
                 ));
                 $fileMetadata = array();
-                foreach ($fileElementTexts as $elementSetName => $elements) {
+                foreach ($fileElementTexts as $elements) {
                     foreach ($elements as $elementName => $values) {
                         $fileMetadata[] = (object) array(
                             'label' => "$elementName (file)",
@@ -1005,7 +1005,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $tempname = tempnam(sys_get_temp_dir(), 'uv_');
             $result = file_put_contents($tempname, $filepath);
             if ($result !== false) {
-                list($width, $height, $type, $attr) = getimagesize($filepath);
+                list($width, $height) = getimagesize($filepath);
                 unlink($tempname);
                 return array(
                     'width' => (int) $width,
@@ -1013,7 +1013,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 );
             }
         } elseif (file_exists($filepath)) {
-            list($width, $height, $type, $attr) = getimagesize($filepath);
+            list($width, $height) = getimagesize($filepath);
             return array(
                 'width' => (int) $width,
                 'height' => (int) $height,

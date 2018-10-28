@@ -722,7 +722,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
             $tempname = tempnam(sys_get_temp_dir(), 'uv_');
             $result = file_put_contents($tempname, $filepath);
             if ($result !== false) {
-                list($width, $height, $type, $attr) = getimagesize($filepath);
+                list($width, $height) = getimagesize($filepath);
                 unlink($tempname);
                 return array(
                     'width' => $width,
@@ -730,7 +730,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 );
             }
         } elseif (file_exists($filepath)) {
-            list($width, $height, $type, $attr) = getimagesize($filepath);
+            list($width, $height) = getimagesize($filepath);
             return array(
                 'width' => $width,
                 'height' => $height,

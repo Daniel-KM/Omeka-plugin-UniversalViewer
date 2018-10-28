@@ -51,7 +51,7 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         ));
 
         $metadata = array();
-        foreach ($elementTexts as $elementSetName => $elements) {
+        foreach ($elementTexts as $elements) {
             foreach ($elements as $elementName => $values) {
                 $metadata[] = (object) array(
                     'label' => $elementName,
