@@ -2,11 +2,11 @@ Universal Viewer (plugin for Omeka)
 ===================================
 
 [Universal Viewer] is a plugin for [Omeka] that adds the [IIIF] specifications
-in order to serve images like a simple [IIP Image] server, and the [UniversalViewer],
-a unified online player for any file. It can display books, images, maps, audio,
-movies, pdf, 3D, and anything else as long as the appropriate extension is
-installed. Rotation, zoom, inside search, etc. may be managed too. Dynamic lists
-of records may be used, for example for browse pages.
+in order to serve images like a simple image server, similar to a basic [IIP Image],
+and the [UniversalViewer], a unified online player for any file. It can display
+books, images, maps, audio, movies, pdf, 3D, and anything else as long as the
+appropriate extension is installed. Rotation, zoom, inside search, etc. may be
+managed too. Dynamic lists of records may be used, for example for browse pages.
 
 The full specifications of the [International Image Interoperability Framework]
 standard are supported (level 2), so any widget that supports it can use it.
