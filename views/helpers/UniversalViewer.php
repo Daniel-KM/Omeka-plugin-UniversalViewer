@@ -29,7 +29,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
                  'id' => $identifier,
             ), $route);
             $urlManifest = $this->view->uvForceBaseUrlIfRequired($urlManifest);
-            return $this->_display($urlManifest, $options);
+            return $this->_display($urlManifest, $options, 'multiple');
         }
 
         // Prepare the url for the manifest of a record after additional checks.
@@ -44,7 +44,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         if ($manifestElement) {
             $urlManifest = metadata($record, json_decode($manifestElement, true));
             if ($urlManifest) {
-                return $this->_display($urlManifest, $options);
+                return $this->_display($urlManifest, $options, $recordClass);
             }
             // If manifest not provided in metadata, point to manifest created
             // from Omeka files.
@@ -74,7 +74,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         ), $route);
         $urlManifest = $this->view->uvForceBaseUrlIfRequired($urlManifest);
 
-        return $this->_display($urlManifest, $options);
+        return $this->_display($urlManifest, $options, $recordClass);
     }
 
     /**
@@ -123,9 +123,10 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
      *
      * @param string $urlManifest
      * @param array $options
+     * @param string $recordClass
      * @return string
      */
-    protected function _display($urlManifest, $options = array())
+    protected function _display($urlManifest, $options = array(), $recordClass = null)
     {
         $class = isset($options['class'])
             ? $options['class']
