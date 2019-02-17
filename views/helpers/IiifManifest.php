@@ -571,7 +571,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     {
         $canvas = array();
 
-        $titleFile = metadata($file, array('Dublin Core', 'Title'));
+        $titleFile = version_compare(OMEKA_VERSION, '2.5', '<')
+            ? (metadata($file, array('Dublin Core', 'Title')) ?: __('[Untitled]'))
+            : metadata($file, 'display_title');
         $canvasUrl = $this->_baseUrl . '/canvas/p' . $index;
 
         $canvas['@id'] = $canvasUrl;
