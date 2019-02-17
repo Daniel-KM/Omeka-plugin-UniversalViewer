@@ -61,6 +61,27 @@ class UniversalViewer_View_Helper_IiifCollectionList extends Zend_View_Helper_Ab
 
         $manifest['logo'] = get_option('universalviewer_manifest_logo_default');
 
+        /*
+        // Omeka api is a service, but not referenced in https://iiif.io/api/annex/services.
+        // Anyway, there is no true service for Omeka Classic.
+        $metadata['service'] = array(
+            '@context' =>'http://example.org/ns/jsonld/context.json',
+            '@id' => 'http://example.org/service/example',
+            'profile' => 'http://example.org/docs/example-service.html',
+        );
+         */
+
+        /*
+        $manifest['related'] = array(
+            '@id' => $this->view->uvForceBaseUrlIfRequired(record_url($query, 'browse', true)),
+            'format' => 'text/html',
+        );
+
+        // There is no true service for Omeka Classic, and it’s disabled by default.
+        $manifest['seeAlso'] = array(
+        );
+         */
+
         // List of the manifest of each record. IIIF v2.0 separates collections
         // and items, so the global order is not kept for them.
         $collections = array();

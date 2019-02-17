@@ -89,9 +89,28 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         $manifest['logo'] = get_option('universalviewer_manifest_logo_default');
 
         // $manifest['thumbnail'] = $thumbnail;
-        // $manifest['service'] = $service;
-        // TODO To parameter or to extract from metadata (Dublin Core Relation).
-        // $manifest['seeAlso'] = $seeAlso;
+
+        /*
+        // Omeka api is a service, but not referenced in https://iiif.io/api/annex/services.
+        // Anyway, there is no true service for Omeka Classic.
+        $metadata['service'] = array(
+            '@context' =>'http://example.org/ns/jsonld/context.json',
+            '@id' => 'http://example.org/service/example',
+            'profile' => 'http://example.org/docs/example-service.html',
+        );
+        */
+
+        $manifest['related'] = array(
+            '@id' => $this->view->uvForceBaseUrlIfRequired(record_url($collection, 'show', true)),
+            'format' => 'text/html',
+        );
+
+        /*
+        // There is no true service for Omeka Classic, and it’s disabled by default.
+        $manifest['seeAlso'] = array(
+        );
+         */
+
         // TODO Use within with collection tree.
         // $manifest['within'] = $within;
 
