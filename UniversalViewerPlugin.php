@@ -185,6 +185,11 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             }
             delete_option('universalviewer_force_https');
         }
+
+        if (version_compare($oldVersion, '2.5.8', '<')) {
+            set_option('universalviewer_manifest_media_metadata',
+                $this->_options['universalviewer_manifest_media_metadata']);
+        }
     }
 
     /**
