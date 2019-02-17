@@ -5,15 +5,11 @@
 class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstract
 {
     /**
-     * Get the specified UniversalViewer.
+     * Get the Universal Viewer for the provided record.
      *
      * @param Omeka_Record_AbstractRecord $record
-     * @param array $options Associative array of optional values:
-     *   - (string) class
-     *   - (string) locale
-     *   - (string) style
-     *   - (string) config
-     * @return string. The html string corresponding to the UniversalViewer.
+     * @param array $options
+     * @return string Html string corresponding to the viewer.
      */
     public function universalViewer($record, $options = array())
     {
@@ -128,31 +124,9 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
      */
     protected function _display($urlManifest, $options = array(), $recordClass = null)
     {
-        $class = isset($options['class'])
-            ? $options['class']
-            : get_option('universalviewer_class');
+        static $id = 0;
 
-        $locale = isset($options['locale'])
-            ? $options['locale']
-            : get_option('universalviewer_locale');
-
-        $style = isset($options['style'])
-            ? $options['style']
-            : get_option('universalviewer_style');
-
-        // Default configuration file.
-        $config = empty($options['config'])
-            ? src('config', 'universal-viewer', 'json')
-            : $options['config'];
-
-        $html = common('helper/universal-viewer', array(
-            'root' => substr(src('uv', 'javascripts/uv', 'js'), 0, -5),
-            'urlManifest' => $urlManifest,
-            'class' => $class,
-            'style' => $style,
-            'locale' => $locale,
-            'config' => $config,
-        ));
+        $html = '';
 
         // Unlike Omeka S, the head() is already executed.
         $urlCss = src('uv', 'javascripts/uv', 'css');
@@ -172,6 +146,30 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         //     ->appendFile(src('lib/offline', 'javascripts/uv', 'js'), 'application/javascript')
         //     ->appendFile(src('helpers', 'javascripts/uv', 'js'), 'application/javascript')
         //     ->appendFile(src('uv', 'javascripts/uv', 'js'), 'application/javascript');
+
+        // Default configuration file.
+        $configUri = empty($options['config'])
+            ? src('config', 'universal-viewer', 'json')
+            : $options['config'];
+
+        $config = array(
+            'id' => 'uv-' . ++$id,
+            'root' => substr(src('uv', 'javascripts/uv', 'js'), 0, -5),
+            'iiifResourceUri' => $urlManifest,
+            'configUri' => $configUri,
+            'embedded' => true,
+        );
+
+        $config['locales'] = array(
+            ['name' => 'en-GB', 'label' => 'English'],
+        );
+
+        $config += $options;
+
+        $html .= common('helper/universal-viewer', array(
+            'config' => $config,
+        ));
+
         return $html;
     }
 }

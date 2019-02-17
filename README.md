@@ -94,19 +94,26 @@ See below the notes for more info.
 Since version 2.2.1, the distribution release of the javascript library [UniversalViewer]
 is included in the folder `views/shared/javascripts/uv/`.
 
-If you want a more recent release, clone the last [distribution] in the same
-directory. "nodejs", other packages and any other files are not needed, because
-only the viewer is used: the IIIF server is provided directly by the plugin
-itself. Or in command line, from the root of the module, the first time:
+Before version 2.6.0 of the plugin, that embeds version 3.0 of the viewer,
+"nodejs" was necessary to prepare the viewer. Nevertheless, "nodejs" itself,
+other packages and any other files were not needed in production, because only
+the viewer is used: the IIIF server is provided directly by the plugin itself.
+
+Until version 2.6.0, these commands were needed to install and update the plugin
+from git, from the root of the plugin:
+
+```
+    npm install
+    # The next times:
+    # npm update
+    gulp
+```
+
+Since version 2.6.0, composer is used, so there is nodejs is not needed any
+more, even in development:
 
 ```
     composer install
-```
-
-The next times:
-
-```
-    composer update
 ```
 
 * Processing of images
@@ -206,11 +213,9 @@ of your theme or anywhere else.
     echo $this->universalViewer($collection);
 
     // Display the viewer with the specified item and specified options.
-    echo $this->universalViewer($item, array(
-        'class' => 'my-class',
-        'style' => 'width: 40%; height: 400px;',
-        'config' => 'https://example.com/my/specific/config.json',
-    ));
+    // The options for UV are directly passed to the partial, so they are
+    // available in the theme and set for the viewer.
+    echo $this->universalViewer($item, $options);
 ```
 
 * Shortcode

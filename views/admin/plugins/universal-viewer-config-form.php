@@ -1,4 +1,9 @@
 <?php
+/**
+ * @var Omeka_View $this
+ * @var array $element_ids
+ */
+
 $elements = get_table_options('Element', null, array(
     'record_types' => array(null, 'All'),
     'sort' => 'alphaBySet',
@@ -143,6 +148,8 @@ $elements = get_table_options('Element', null, array(
     <p class="explanation">
         <?php echo __('If checked, the viewer will be automatically appended to the collections or items pages.'); ?>
         <?php echo __('Else, the viewer can be added via the helper in the theme or the shortcode in any page.'); ?>
+        <?php echo __('The viewer itself can be configured via the file "config.json" and the helper.'); ?>
+    </p>
     </p>
     <div class="field">
         <div class="two columns alpha">
@@ -182,44 +189,6 @@ $elements = get_table_options('Element', null, array(
         <div class="inputs five columns omega">
             <?php echo $this->formCheckbox('universalviewer_append_items_browse', true,
                 array('checked' => (bool) get_option('universalviewer_append_items_browse'))); ?>
-        </div>
-    </div>
-    <p class="explanation">
-        <?php echo __('These values allows to parameter the integration of the viewer in Omeka pages.'); ?>
-        <?php echo __('The viewer itself can be configured via the file "config.json" and the helper.'); ?>
-    </p>
-    <div class="field">
-        <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_class',
-                __('Class of main div')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_class', get_option('universalviewer_class'), null); ?>
-            <p class="explanation">
-                <?php echo __('Class to add to the main div.'); ?>
-            </p>
-        </div>
-    </div>
-    <div class="field">
-        <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_style',
-                __('Inline Style')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_style', get_option('universalviewer_style'), null); ?>
-            <p class="explanation">
-                <?php echo __('If any, this style will be added to the main div of the Universal Viewer.'); ?>
-                <?php echo __('The height may be required.'); ?>
-            </p>
-        </div>
-    </div>
-    <div class="field">
-        <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_locale',
-                __('Locales of the viewer')); ?>
-        </div>
-        <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_locale', get_option('universalviewer_locale'), null); ?>
         </div>
     </div>
 </fieldset>

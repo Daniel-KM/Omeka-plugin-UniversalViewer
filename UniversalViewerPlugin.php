@@ -64,9 +64,6 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_append_items_show' => true,
         'universalviewer_append_collections_browse' => false,
         'universalviewer_append_items_browse' => false,
-        'universalviewer_class' => '',
-        'universalviewer_style' => 'background-color: #000; height: 600px;',
-        'universalviewer_locale' => 'en-GB:English (GB),fr:French',
         'universalviewer_iiif_creator' => 'Auto',
         'universalviewer_max_dynamic_size' => 10000000,
     );
@@ -188,6 +185,12 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         if (version_compare($oldVersion, '2.5.8', '<')) {
             set_option('universalviewer_manifest_media_metadata',
                 $this->_options['universalviewer_manifest_media_metadata']);
+        }
+
+        if (version_compare($oldVersion, '2.6.0-alpha', '<')) {
+            delete_option('universalviewer_class');
+            delete_option('universalviewer_style');
+            delete_option('universalviewer_locale');
         }
     }
 
