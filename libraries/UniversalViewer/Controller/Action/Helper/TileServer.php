@@ -464,8 +464,6 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
     /**
      * Helper to get width and height of an image.
      *
-     * @see \IiifServer\View\Helper\IiifInfo::getWidthAndHeight()
-     *
      * @param string $filepath This should be an image (no check here).
      * @return array Associative array of width and height of the image file.
      * If the file is not an image, the width and the height will be null.
@@ -476,24 +474,29 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             $tempname = tempnam(sys_get_temp_dir(), 'uv_');
             $result = file_put_contents($tempname, $filepath);
             if ($result !== false) {
-                list($width, $height) = getimagesize($filepath);
+                $result = getimagesize($filepath);
+                if ($result) {
+                    list($width, $height) = $result;
+                }
                 unlink($tempname);
-                return array(
-                    'width' => $width,
-                    'height' => $height,
-                );
             }
         } elseif (file_exists($filepath)) {
             list($width, $height) = getimagesize($filepath);
+            if ($result) {
+                list($width, $height) = $result;
+            }
+        }
+
+        if (empty($width) || empty($height)) {
             return array(
-                'width' => $width,
-                'height' => $height,
+                'width' => null,
+                'height' => null,
             );
         }
 
         return array(
-            'width' => null,
-            'height' => null,
+            'width' => $width,
+            'height' => $height,
         );
     }
 }

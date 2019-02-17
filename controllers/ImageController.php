@@ -264,7 +264,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         $transform['source']['filepath'] = $this->_getImagePath($file, 'original');
         $transform['source']['media_type'] = $file->mime_type;
 
-        list($sourceWidth, $sourceHeight) = array_values($this->_getImageSize($file, 'original'));
+        $helper = new UniversalViewer_Controller_Action_Helper_ImageSize();
+        list($sourceWidth, $sourceHeight) = array_values($helper->imageSize($file, 'original'));
         $transform['source']['width'] = $sourceWidth;
         $transform['source']['height'] = $sourceHeight;
 
@@ -417,7 +418,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                     foreach ($availableTypes as $imageType) {
                         $filepath = $this->_getImagePath($file, $imageType);
                         if ($filepath) {
-                            list($testWidth, $testHeight) = array_values($this->_getImageSize($file, $imageType));
+                            $helper = new UniversalViewer_Controller_Action_Helper_ImageSize();
+                            list($testWidth, $testHeight) = array_values($helper->imageSize($file, $imageType));
                             if ($destinationWidth == $testWidth && $destinationHeight == $testHeight) {
                                 $transform['size']['feature'] = 'full';
                                 // Change the source file to avoid a transformation.
@@ -551,7 +553,8 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
 
         // Currently, the check is done only on fullsize.
         $derivativeType = 'fullsize';
-        list($derivativeWidth, $derivativeHeight) = array_values($this->_getImageSize($file, $derivativeType));
+        $helper = new UniversalViewer_Controller_Action_Helper_ImageSize();
+        list($derivativeWidth, $derivativeHeight) = array_values($helper->imageSize($file, $derivativeType));
         switch ($transform['size']['feature']) {
             case 'sizeByW':
             case 'sizeByH':
@@ -639,49 +642,6 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
     }
 
     /**
-     * Get an array of the width and height of the image file.
-     *
-     * @param File $file
-     * @param string $imageType
-     * @return array Associative array of width and height of the image file.
-     * If the file is not an image, the width and the height will be null.
-     *
-     * @see UniversalViewer_View_Helper_IiifManifest::_getImageSize()
-     * @see UniversalViewer_View_Helper_IiifInfo::_getImageSize()
-     * @see UniversalViewer_ImageController::_getImageSize()
-     * @todo Refactorize.
-     */
-    protected function _getImageSize(File $file, $imageType = 'original')
-    {
-        // Check if this is an image.
-        if (empty($file) || strpos($file->mime_type, 'image/') === false) {
-            return array(
-                'width' => null,
-                'height' => null,
-            );
-        }
-
-        // Get the resolution directly, because sometime the resolution is not
-        // stored and because the size may be lower than the derivative
-        // constraint, in particular when the original image size is lower than
-        // the derivative constraint, or when the constraint changed.
-
-        // The storage adapter should be checked for external storage.
-        $storageAdapter = $file->getStorage()->getAdapter();
-        $filepath = get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem'
-            ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($imageType)
-            : $file->getWebPath($imageType);
-        $result = $this->_getWidthAndHeight($filepath);
-
-        if (empty($result['width']) || empty($result['height'])) {
-            $msg = __('Failed to get resolution of image #%d ("%s").', $file->id, $filepath);
-            throw new Exception($msg);
-        }
-
-        return $result;
-    }
-
-    /**
      * Get the path to an original or derivative file for an image.
      *
      * @param File $file
@@ -706,40 +666,5 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
                 return $filepath;
             }
         }
-    }
-
-    /**
-     * Helper to get width and height of an image.
-     *
-     * @param string $filepath This should be an image (no check here).
-     * @return array Associative array of width and height of the image file.
-     * If the file is not an image, the width and the height will be null.
-     * @see UniversalViewer_View_Helper_IiifInfo::_getWidthAndHeight()
-     */
-    protected function _getWidthAndHeight($filepath)
-    {
-        if (strpos($filepath, 'https://') === 0 || strpos($filepath, 'http://') === 0) {
-            $tempname = tempnam(sys_get_temp_dir(), 'uv_');
-            $result = file_put_contents($tempname, $filepath);
-            if ($result !== false) {
-                list($width, $height) = getimagesize($filepath);
-                unlink($tempname);
-                return array(
-                    'width' => $width,
-                    'height' => $height,
-                );
-            }
-        } elseif (file_exists($filepath)) {
-            list($width, $height) = getimagesize($filepath);
-            return array(
-                'width' => $width,
-                'height' => $height,
-            );
-        }
-
-        return array(
-            'width' => null,
-            'height' => null,
-        );
     }
 }

@@ -431,7 +431,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
      */
     protected function _iiifThumbnail(File $file = null)
     {
-        $imageSize = $this->_getImageSize($file, 'thumbnail');
+        $imageSize = $this->view->imageSize($file, 'thumbnail');
         list($width, $height) = array_values($imageSize);
         if (empty($width) || empty($height)) {
             return;
@@ -483,8 +483,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         }
 
         if (empty($width) || empty($height)) {
-            $sizeFile = $this->_getImageSize($file, 'original');
-            list($width, $height) = array_values($sizeFile);
+            $imageSize = $this->view->imageSize($file, 'original');
+            list($width, $height) = $imageSize ? array_values($imageSize) : array(null, null);
         }
 
         $image = array();
@@ -501,16 +501,16 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         // This is a tiled image.
         if ($iiifTileInfo) {
-            $fullsize = $this->_getImageSize($file, 'fullsize');
+            $fullsize = $this->view->imageSize($file, 'fullsize');
             list($widthFullsize, $heightFullsize) = array_values($fullsize);
             $imageUrl = absolute_url(array(
-                    'id' => $file->id,
-                    'region' => 'full',
-                    'size' => $widthFullsize . ',' . $heightFullsize,
-                    'rotation' => 0,
-                    'quality' => 'default',
-                    'format' => 'jpg',
-                ), 'universalviewer_image_url');
+                'id' => $file->id,
+                'region' => 'full',
+                'size' => $widthFullsize . ',' . $heightFullsize,
+                'rotation' => 0,
+                'quality' => 'default',
+                'format' => 'jpg',
+            ), 'universalviewer_image_url');
             $imageUrl = $this->view->uvForceBaseUrlIfRequired($imageUrl);
 
             $imageResource['@id'] = $imageUrl;
@@ -594,7 +594,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         // Size of canvas should be the double of small images (< 1200 px), but
         // only when more than image is used by a canvas.
-        list($width, $height) = array_values($this->_getImageSize($file, 'original'));
+        list($width, $height) = array_values($this->view->imageSize($file, 'original'));
         $canvas['width'] = $width;
         $canvas['height'] = $height;
 
@@ -941,63 +941,11 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     }
 
     /**
-     * Get an array of the width and height of the image file.
-     *
-     * @param File $file
-     * @param string $imageType
-     * @return array Associative array of width and height of the image file.
-     * If the file is not an image, the width and the height will be null.
-     *
-     * @see UniversalViewer_View_Helper_IiifManifest::_getImageSize()
-     * @see UniversalViewer_View_Helper_IiifInfo::_getImageSize()
-     * @see UniversalViewer_ImageController::_getImageSize()
-     * @todo Refactorize.
-     */
-    protected function _getImageSize(File $file, $imageType = 'original')
-    {
-        // Check if this is an image.
-        if (empty($file)) {
-            return array(
-                'width' => null,
-                'height' => null,
-            );
-        }
-
-        $mediaType = $file->mime_type;
-        if (empty($mediaType) || strpos($mediaType, 'image/') !== 0) {
-            return array(
-                'width' => null,
-                'height' => null,
-            );
-        }
-
-        // Get the resolution directly, because sometime the resolution is not
-        // stored and because the size may be lower than the derivative
-        // constraint, in particular when the original image size is lower than
-        // the derivative constraint, or when the constraint changed.
-
-        // The storage adapter should be checked for external storage.
-        $storageAdapter = $file->getStorage()->getAdapter();
-        $filepath = get_class($storageAdapter) == 'Omeka_Storage_Adapter_Filesystem'
-            ? FILES_DIR . DIRECTORY_SEPARATOR . $file->getStoragePath($imageType)
-            : $file->getWebPath($imageType);
-        $result = $this->_getWidthAndHeight($filepath);
-
-        if (empty($result['width']) || empty($result['height'])) {
-            $msg = __('Failed to get resolution of image #%d ("%s").', $file->id, $filepath);
-            throw new Exception($msg);
-        }
-
-        return $result;
-    }
-
-    /**
      * Helper to get width and height of an image.
      *
      * @param string $filepath This should be an image (no check here).
-     * @return array Associative array of width and height of the image file.
-     * If the file is not an image, the width and the height will be null.
-     * @see UniversalViewer_ImageController::_getWidthAndHeight()
+     * @return array|null Associative array of width and height of the image
+     * file, else null.
      */
     protected function _getWidthAndHeight($filepath)
     {
@@ -1005,24 +953,26 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             $tempname = tempnam(sys_get_temp_dir(), 'uv_');
             $result = file_put_contents($tempname, $filepath);
             if ($result !== false) {
-                list($width, $height) = getimagesize($filepath);
+                $result = getimagesize($filepath);
+                if ($result) {
+                    list($width, $height) = $result;
+                }
                 unlink($tempname);
-                return array(
-                    'width' => (int) $width,
-                    'height' => (int) $height,
-                );
             }
         } elseif (file_exists($filepath)) {
             list($width, $height) = getimagesize($filepath);
-            return array(
-                'width' => (int) $width,
-                'height' => (int) $height,
-            );
+            if ($result) {
+                list($width, $height) = $result;
+            }
+        }
+
+        if (empty($width) || empty($height)) {
+            return null;
         }
 
         return array(
-            'width' => null,
-            'height' => null,
+            'width' => $width,
+            'height' => $height,
         );
     }
 }
