@@ -35,7 +35,7 @@ Installation
 
 PHP should be installed with the extension `exif` in order to get the size of
 images. This is the case for all major distributions and providers. At least one
-of the php extensions `[GD]` or `[Imagick]` are recommended. They are installed
+of the php extensions [`GD`] or [`Imagick`] are recommended. They are installed
 by default in most servers. If not, the image server will use the command line
 [ImageMagick] tool `convert`.
 
@@ -57,7 +57,7 @@ systemctl restart apache2
 ```
 
 Then, you have to add the following rules, adapted to your needs, to the file
-`.htaccess` at the root of Omeka S or in the main config of the server:
+`.htaccess` at the root of Omeka Classic or in the main config of the server:
 
 ```
 # CORS access for some files.
@@ -406,6 +406,9 @@ First version of this plugin has been built for [Mines ParisTech].
 [online]: http://universalviewer.io/examples/
 [IIIF specifications]: http://iiif.io/api/
 [official release]: https://github.com/UniversalViewer/universalviewer/releases
+[`GD`]: https://secure.php.net/manual/en/book.image.php
+[`Imagick`]: https://php.net/manual/en/book.imagick.php
+[ImageMagick]: https://www.imagemagick.org/
 [distribution]: https://github.com/UniversalViewer/universalviewer/tree/master/dist
 [OpenLayers Zoom]: https://github.com/Daniel-KM/Omeka-plugin-OpenLayersZoom
 [Ark & Noid]: https://github.com/Daniel-KM/Omeka-plugin-ArkAndNoid
