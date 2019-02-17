@@ -71,31 +71,12 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         // The base url for some other ids.
         $this->_baseUrl = dirname($url);
 
-        // Prepare the metadata of the record.
-        // TODO Manage filter and escape or use $item->getAllElementTexts()?
-        $elementTexts = $this->view->allElementTexts($item, array(
-            'show_empty_elements' => false,
-            // 'show_element_sets' => array('Dublin Core'),
-            'return_type' => 'array',
-        ));
-
-        $metadata = array();
-        foreach ($elementTexts as $elements) {
-            foreach ($elements as $elementName => $values) {
-                $metadata[] = (object) array(
-                    'label' => __($elementName),
-                    'value' => count($values) > 1
-                        ? $values
-                        : reset($values),
-                );
-            }
-        }
+        $metadata = $this->_iiifMetadata($item);
         $manifest['metadata'] = $metadata;
 
-        // "Display title" is available for items since Omeka 2.5 only.
-        $label = isset($elementTexts['Dublin Core']['Title'][0])
-            ? $elementTexts['Dublin Core']['Title'][0]
-            : __('[Untitled]');
+        $label = version_compare(OMEKA_VERSION, '2.5', '<')
+            ? (metadata($item, array('Dublin Core', 'Title')) ?: __('[Untitled]'))
+            : metadata($item, 'display_title');
         $manifest['label'] = $label;
 
         $description = '';
@@ -276,9 +257,9 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 }
 
                 $values = array(
-                    'label' => version_compare(OMEKA_VERSION, '2.5', '>=')
-                        ? metadata($file, 'display_title')
-                        : (metadata($file, array('Dublin Core', 'Title')) ?: __('[Untitled]')),
+                    'label' => version_compare(OMEKA_VERSION, '2.5', '<')
+                        ? (metadata($file, array('Dublin Core', 'Title')) ?: __('[Untitled]'))
+                        : metadata($file, 'display_title'),
                     'metadata' => $fileMetadata,
                 );
 
@@ -421,6 +402,36 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
 
         $manifest = (object) $manifest;
         return $manifest;
+    }
+
+    /**
+     * Prepare the metadata of a resource.
+     *
+     * @param Omeka_Record_AbstractRecord $record
+     * @return array
+     */
+    protected function _iiifMetadata(Omeka_Record_AbstractRecord $record)
+    {
+        // Prepare the metadata of the record.
+        // TODO Manage filter and escape or use $item->getAllElementTexts()?
+        $elementTexts = $this->view->allElementTexts($record, array(
+            'show_empty_elements' => false,
+            // 'show_element_sets' => array('Dublin Core'),
+            'return_type' => 'array',
+        ));
+
+        $metadata = array();
+        foreach ($elementTexts as $elements) {
+            foreach ($elements as $elementName => $values) {
+                $metadata[] = (object) array(
+                    'label' => __($elementName),
+                    'value' => count($values) > 1
+                        ? $values
+                        : reset($values),
+                );
+            }
+        }
+        return $metadata;
     }
 
     /**
@@ -603,6 +614,14 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $images = array();
         $images[] = $image;
         $canvas['images'] = $images;
+
+        $mediaMetadata = get_option('universalviewer_manifest_media_metadata');
+        if ($mediaMetadata) {
+            $metadata = $this->_iiifMetadata($file);
+            if ($metadata) {
+                $canvas['metadata'] = $metadata;
+            }
+        }
 
         $canvas = (object) $canvas;
 

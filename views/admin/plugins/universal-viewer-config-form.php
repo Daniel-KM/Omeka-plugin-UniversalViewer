@@ -99,6 +99,19 @@ $elements = get_table_options('Element', null, array(
     </div>
     <div class="field">
         <div class="two columns alpha">
+            <?php echo $this->formLabel('universalviewer_manifest_media_metadata',
+                __('Append media metadata')); ?>
+        </div>
+        <div class="inputs five columns omega">
+            <?php echo $this->formCheckbox('universalviewer_manifest_media_metadata', true,
+                array('checked' => (bool) get_option('universalviewer_manifest_media_metadata'))); ?>
+            <p class="explanation">
+                <?php echo __('Append descriptive metadata of the media, if any, for example details about each page of a book.'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="two columns alpha">
             <?php echo $this->formLabel('universalviewer_manifest_logo_default', __('Logo')); ?>
         </div>
         <div class="inputs five columns omega">

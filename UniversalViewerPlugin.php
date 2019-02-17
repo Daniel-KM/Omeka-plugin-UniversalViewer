@@ -54,6 +54,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         'universalviewer_manifest_attribution_default' => 'Provided by Example Organization',
         'universalviewer_manifest_license_element' => '["Dublin Core", "Rights"]',
         'universalviewer_manifest_license_default' => 'http://www.example.org/license.html',
+        'universalviewer_manifest_media_metadata' => true,
         'universalviewer_manifest_logo_default' => '',
         'universalviewer_manifest_force_url_from' => '',
         'universalviewer_manifest_force_url_to' => '',
