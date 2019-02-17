@@ -152,16 +152,22 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         $config = empty($options['config'])
             ? src('config', 'universal-viewer', 'json')
             : $options['config'];
-        $urlJs = src('embed', 'javascripts/uv/lib', 'js');
 
-        $html = sprintf('<div class="uv%s" data-config="%s" data-uri="%s"%s%s></div>',
+        $html = sprintf(
+            '<div class="uv%s" data-config="%s" data-uri="%s"%s%s></div>',
             $class,
             $config,
             $urlManifest,
             $locale,
-            $style);
+            $style
+        );
+        // Unlike Omeka S, the head() is already executed.
+        $urlJs = src('embed', 'javascripts/uv/lib', 'js');
         $html .= sprintf('<script type="text/javascript" id="embedUV" src="%s"></script>', $urlJs);
         $html .= '<script type="text/javascript">/* wordpress fix */</script>';
+        // $this->view->headScript()
+        //     ->appendFile(src('embed', 'javascripts/uv/lib', 'js'), 'application/javascript', ['id' => 'embedUV'])
+        //     ->appendScript('/* wordpress fix */', 'application/javascript');
         return $html;
     }
 }
