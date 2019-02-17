@@ -154,6 +154,8 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         ));
 
         // Unlike Omeka S, the head() is already executed.
+        $urlCss = css_src('universal-viewer');
+        $html .= sprintf('<link rel="stylesheet" property="stylesheet" href="%s">', $urlCss);
         $urlJs = src('embed', 'javascripts/uv/lib', 'js');
         $html .= sprintf('<script type="text/javascript" id="embedUV" src="%s"></script>', $urlJs);
         $html .= '<script type="text/javascript">/* wordpress fix */</script>';

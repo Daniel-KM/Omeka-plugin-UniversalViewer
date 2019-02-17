@@ -1,0 +1,56 @@
+/*
+ * Universal viewer custom and fixes for common Omeka themes
+ */
+
+@media screen {
+    .universal-viewer {
+        height: 600px;
+    }
+    .universal-viewer .headerPanel .centerOptions .mode label {
+        width: auto;
+        min-width: 31px;
+    }
+
+    /* Fix for theme Seasons and probably some other ones using id "#content". */
+    .show #primary .uv,
+    .show #primary > div.universal-viewer,
+    .show #content #sidebar > div.universal-viewer {
+        border: inherit;
+        padding: inherit;
+        margin-bottom: inherit;
+        box-shadow: inherit;
+    }
+    .universal-viewer #content {
+        background-color: inherit;
+        clear: both;
+        overflow: inherit;
+        padding: inherit;
+    }
+    .universal-viewer #content > div,
+    .universal-viewer #content #primary > div {
+        border-color: inherit;
+    }
+    .universal-viewer #content > div,
+    .universal-viewer #content section {
+        background-color: inherit;
+        border-style: inherit;
+        border-width: inherit;
+        overflow: hidden;
+        padding: inherit;
+        box-shadow: inherit;
+        box-sizing: border-box;
+        margin-bottom: inherit;
+    }
+    .universal-viewer .overlays ol.options {
+        display: inline-block;
+    }
+    .universal-viewer .uv .btn-primary {
+        color: #ffffff;
+        background-color: #14a4c3;
+        border-color: #14a4c3;
+    }
+    .universal-viewer #content > .attribution {
+        background: #343434;
+        background: rgba(52, 52, 52, 0.7);
+    }
+}
