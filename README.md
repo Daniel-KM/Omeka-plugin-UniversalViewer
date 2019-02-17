@@ -100,15 +100,13 @@ only the viewer is used: the IIIF server is provided directly by the plugin
 itself. Or in command line, from the root of the module, the first time:
 
 ```
-    npm install
-    gulp
+    composer install
 ```
 
 The next times:
 
 ```
-    npm update
-    gulp
+    composer update
 ```
 
 * Processing of images

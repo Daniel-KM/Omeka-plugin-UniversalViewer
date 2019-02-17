@@ -146,6 +146,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
             : $options['config'];
 
         $html = common('helper/universal-viewer', array(
+            'root' => substr(src('uv', 'javascripts/uv', 'js'), 0, -5),
             'urlManifest' => $urlManifest,
             'class' => $class,
             'style' => $style,
@@ -154,14 +155,23 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         ));
 
         // Unlike Omeka S, the head() is already executed.
+        $urlCss = src('uv', 'javascripts/uv', 'css');
+        $html .= sprintf('<link rel="stylesheet" property="stylesheet" href="%s">', $urlCss);
         $urlCss = css_src('universal-viewer');
         $html .= sprintf('<link rel="stylesheet" property="stylesheet" href="%s">', $urlCss);
-        $urlJs = src('embed', 'javascripts/uv/lib', 'js');
-        $html .= sprintf('<script type="text/javascript" id="embedUV" src="%s"></script>', $urlJs);
-        $html .= '<script type="text/javascript">/* wordpress fix */</script>';
+        $urlJs = src('lib/offline', 'javascripts/uv', 'js');
+        $html .= sprintf('<script type="text/javascript" src="%s"></script>', $urlJs);
+        $urlJs = src('helpers', 'javascripts/uv', 'js');
+        $html .= sprintf('<script type="text/javascript" src="%s"></script>', $urlJs);
+        $urlJs = src('uv', 'javascripts/uv', 'js');
+        $html .= sprintf('<script type="text/javascript" src="%s"></script>', $urlJs);
+        // $this->view->headLink()
+        //     ->appendStylesheet(src('uv.css', 'javascripts/uv', 'css'))
+        //     ->appendStylesheet(css_src('universal-viewer'));
         // $this->view->headScript()
-        //     ->appendFile(src('embed', 'javascripts/uv/lib', 'js'), 'application/javascript', ['id' => 'embedUV'])
-        //     ->appendScript('/* wordpress fix */', 'application/javascript');
+        //     ->appendFile(src('lib/offline', 'javascripts/uv', 'js'), 'application/javascript')
+        //     ->appendFile(src('helpers', 'javascripts/uv', 'js'), 'application/javascript')
+        //     ->appendFile(src('uv', 'javascripts/uv', 'js'), 'application/javascript');
         return $html;
     }
 }

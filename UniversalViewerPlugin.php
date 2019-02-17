@@ -90,8 +90,7 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             . DIRECTORY_SEPARATOR . 'shared'
             . DIRECTORY_SEPARATOR . 'javascripts'
             . DIRECTORY_SEPARATOR . 'uv'
-            . DIRECTORY_SEPARATOR . 'lib'
-            . DIRECTORY_SEPARATOR . 'embed.js';
+            . DIRECTORY_SEPARATOR . 'uv.js';
         if (!file_exists($js)) {
             throw new Omeka_Plugin_Installer_Exception(__('UniversalViewer library should be installed. See %sReadme%s.',
                 '<a href="https://github.com/Daniel-KM/Omeka-plugin-UniversalViewer#installation">', '</a>'));

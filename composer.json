@@ -1,0 +1,32 @@
+{
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "asset/uv",
+                "version": "3.0.33",
+                "dist": {
+                    "url": "https://github.com/Daniel-KM/UniversalViewer/releases/download/3.0.33/uv.zip",
+                    "type": "zip"
+                }
+            }
+        }
+    ],
+    "require": {
+        "slowprog/composer-copy-file": "~0.3",
+        "asset/uv": "*"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "SlowProg\\CopyFile\\ScriptHandler::copy"
+        ],
+        "post-update-cmd": [
+            "SlowProg\\CopyFile\\ScriptHandler::copy"
+        ]
+    },
+    "extra": {
+        "copy-file": {
+            "vendor/asset/uv/": "views/shared/javascripts/uv/"
+        }
+    }
+}
