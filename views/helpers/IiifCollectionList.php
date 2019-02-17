@@ -75,7 +75,12 @@ class UniversalViewer_View_Helper_IiifCollectionList extends Zend_View_Helper_Ab
         $manifest['collections'] = $collections;
         $manifest['manifests'] = $manifests;
 
-        $manifest = apply_filters('uv_manifest', $manifest, array('records' => $records));
+        $manifest = apply_filters('uv_manifest', $manifest, array(
+            // "records" is kept for compatibility with existing plugins.
+            'records' => $records,
+            'record' => $records,
+            'type' => 'collection_list',
+        ));
 
         // Remove all empty values (there is no "0" or "null" at first level).
         $manifest = array_filter($manifest);

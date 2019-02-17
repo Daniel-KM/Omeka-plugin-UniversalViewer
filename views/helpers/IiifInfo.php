@@ -111,13 +111,18 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
                 // WEB_ROOT . '/ld/ixif/0/context.json',
             );
             $fileUrl = absolute_url(array(
-                    'id' => $file->id,
-                ), 'universalviewer_media');
+                'id' => $file->id,
+            ), 'universalviewer_media');
             $fileUrl = $this->view->uvForceBaseUrlIfRequired($fileUrl);
             $info['@id'] = $fileUrl;
             // See MediaController::contextAction()
             $info['protocol'] = 'http://wellcomelibrary.org/ld/ixif';
         }
+
+        $info = apply_filters('uv_manifest', $info, array(
+            'record' => $record,
+            'type' => 'file',
+        ));
 
         $info = (object) $info;
         return $info;

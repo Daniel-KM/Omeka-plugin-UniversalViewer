@@ -63,8 +63,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         );
 
         $url = absolute_url(array(
-                'id' => $item->id,
-            ), 'universalviewer_presentation_item');
+            'id' => $item->id,
+        ), 'universalviewer_presentation_item');
         $url = $this->view->uvForceBaseUrlIfRequired($url);
         $manifest['@id'] = $url;
 
@@ -395,7 +395,10 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
             );
         }
 
-        $manifest = apply_filters('uv_manifest', $manifest, array('record' => $item));
+        $manifest = apply_filters('uv_manifest', $manifest, array(
+            'record' => $item,
+            'type' => 'item',
+        ));
 
         // Remove all empty values (there is no "0" or "null" at first level).
         $manifest = array_filter($manifest);

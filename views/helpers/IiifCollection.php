@@ -123,7 +123,10 @@ class UniversalViewer_View_Helper_IiifCollection extends Zend_View_Helper_Abstra
         }
         $manifest['manifests'] = $manifests;
 
-        $manifest = apply_filters('uv_manifest', $manifest, array('record' => $collection));
+        $manifest = apply_filters('uv_manifest', $manifest, array(
+            'record' => $collection,
+            'type' => 'collection',
+        ));
 
         // Remove all empty values (there is no "0" or "null" at first level).
         $manifest = array_filter($manifest);

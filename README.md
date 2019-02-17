@@ -147,12 +147,15 @@ in the specified element of a record. The viewer included on that record's
 display page will use that manifest URL to retrieve images and metadata for the
 viewer.
 
-* Filtering data of manifests
+* Customize data of manifests
 
-The plugin creates manifests with all the metadata of each record. The filter
-`uv_manifest` can be used to modify the exposed data of a manifest for items and
-collections. For example, it is possible to modify the citation, to remove some
-metadata or to change the thumbnail.
+The module creates manifests with all the metadata of each record. The filter
+`uv_manifest` can be used to modify the exposed data of a manifest for
+items, collections, collection lists (search results) and files (`info.json`).
+So, it is possible, for example, to modify the citation, to remove or to add
+some metadata or to change the thumbnail.
+
+Note: with a collection list, the parameter `record` is an array of records.
 
 
 IIIF Server
