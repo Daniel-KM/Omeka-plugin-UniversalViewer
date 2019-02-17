@@ -480,6 +480,8 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
     /**
      * Create an IIIF image object from an Omeka file.
      *
+     * @todo Use the IiifInfo (short version of info.json of the image).
+     *
      * @param File $file
      * @param int $index Used to set the standard name of the image.
      * @param string $canvasUrl Used to set the value for "on".
@@ -506,88 +508,50 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         // There is only one image (parallel is not managed currently).
         $imageResource = array();
 
+        // According to https://iiif.io/api/presentation/2.1/#image-resources,
+        // "the URL may be the complete URL to a particular size of the image
+        // content", so the large one here, and it's always a jpeg.
+        $imageSize = $this->view->imageSize($file, 'fullsize');
+        list($widthFullsize, $heightFullsize) = array_values($imageSize);
+        $imageUrl = absolute_url(array(
+            'id' => $file->id,
+            'region' => 'full',
+            'size' => $widthFullsize . ',' . $heightFullsize,
+            'rotation' => 0,
+            'quality' => 'default',
+            'format' => 'jpg',
+        ), 'universalviewer_image_url');
+        $imageUrl = $this->view->uvForceBaseUrlIfRequired($imageUrl);
+
+        $imageResource['@id'] = $imageUrl;
+        $imageResource['@type'] = 'dctypes:Image';
+        $imageResource['format'] = 'image/jpeg';
+        $imageResource['width'] = $width;
+        $imageResource['height'] = $height;
+
+        $imageUrlService = absolute_url(array(
+            'id' => $file->id,
+        ), 'universalviewer_image');
+        $imageUrlService = $this->view->uvForceBaseUrlIfRequired($imageUrlService);
+        $imageResourceService = array();
+        $imageResourceService['@context'] = 'http://iiif.io/api/image/2/context.json';
+        $imageResourceService['@id'] = $imageUrlService;
+        $imageResourceService['profile'] = 'http://iiif.io/api/image/2/level2.json';
+
         $helper = new UniversalViewer_Controller_Action_Helper_TileInfo();
         $tilingData = $helper->tileInfo($file);
         $iiifTileInfo = $tilingData ? $this->_iiifTileInfo($tilingData) : null;
-
-        // This is a tiled image.
         if ($iiifTileInfo) {
-            $fullsize = $this->view->imageSize($file, 'fullsize');
-            list($widthFullsize, $heightFullsize) = array_values($fullsize);
-            $imageUrl = absolute_url(array(
-                'id' => $file->id,
-                'region' => 'full',
-                'size' => $widthFullsize . ',' . $heightFullsize,
-                'rotation' => 0,
-                'quality' => 'default',
-                'format' => 'jpg',
-            ), 'universalviewer_image_url');
-            $imageUrl = $this->view->uvForceBaseUrlIfRequired($imageUrl);
-
-            $formats = array(
-                'image/jpeg' => 'image/jpeg',
-                'image/png' => 'image/png',
-                'image/gif' => 'image/gif',
-                'image/webp' => 'image/webp',
-                'jpg' => 'image/jpeg',
-                'jpeg' => 'image/jpeg',
-                'png' => 'image/png',
-                'gif' => 'image/gif',
-                'webp' => 'image/webp',
-            );
-
-            $imageResource['@id'] = $imageUrl;
-            $imageResource['@type'] = 'dctypes:Image';
-            $imageResource['format'] = isset($iiifTileInfo['format']) && isset($formats[strtolower($iiifTileInfo['format'])])
-                ? $formats[strtolower($iiifTileInfo['format'])]
-                : 'image/jpeg';
-            $imageResource['width'] = $width;
-            $imageResource['height'] = $height;
-
-            $imageUrl = absolute_url(array(
-                'id' => $file->id,
-            ), 'universalviewer_image');
-            $imageUrl = $this->view->uvForceBaseUrlIfRequired($imageUrl);
-
-            $imageResourceService = array();
-            $imageResourceService['@context'] = 'http://iiif.io/api/image/2/context.json';
-            $imageResourceService['@id'] = $imageUrl;
-            $imageResourceService['profile'] = 'http://iiif.io/api/image/2/level2.json';
-            $imageResourceService['width'] = $width;
-            $imageResourceService['height'] = $height;
-
             $tiles = array();
             $tiles[] = $iiifTileInfo;
             $imageResourceService['tiles'] = $tiles;
-
-            $imageResourceService = (object) $imageResourceService;
-
-            $imageResource['service'] = $imageResourceService;
-            $imageResource = (object) $imageResource;
+            $imageResourceService['width'] = $width;
+            $imageResourceService['height'] = $height;
         }
 
-        // Simple light image.
-        else {
-            $imageResource['@id'] = $file->getWebPath('original');
-            $imageResource['@type'] = 'dctypes:Image';
-            $imageResource['format'] = $file->mime_type;
-            $imageResource['width'] = $width;
-            $imageResource['height'] = $height;
-
-            $imageResourceService = array();
-            $imageResourceService['@context'] = 'http://iiif.io/api/image/2/context.json';
-
-            $imageUrl = absolute_url(array(
-                    'id' => $file->id,
-                ), 'universalviewer_image');
-            $imageUrl = $this->view->uvForceBaseUrlIfRequired($imageUrl);
-            $imageResourceService['@id'] = $imageUrl;
-            $imageResourceService['profile'] = 'http://iiif.io/api/image/2/level2.json';
-            $imageResourceService = (object) $imageResourceService;
-
-            $imageResource['service'] = $imageResourceService;
-            $imageResource = (object) $imageResource;
-        }
+        $imageResourceService = (object) $imageResourceService;
+        $imageResource['service'] = $imageResourceService;
+        $imageResource = (object) $imageResource;
 
         $image['resource'] = $imageResource;
         $image['on'] = $canvasUrl;
@@ -618,7 +582,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $canvas['thumbnail'] = $this->_iiifThumbnail($file);
 
         // Size of canvas should be the double of small images (< 1200 px), but
-        // only when more than image is used by a canvas.
+        // only when more than one image is used by a canvas.
         list($width, $height) = array_values($this->view->imageSize($file, 'original'));
         $canvas['width'] = $width;
         $canvas['height'] = $height;
