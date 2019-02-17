@@ -9,6 +9,8 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
      *
      * @todo Replace all data by standard classes.
      *
+     * @see https://iiif.io/api/image/2.1
+     *
      * @param Omeka_Record_AbstractRecord|int|null $record
      * @return Object|null
      */
@@ -97,8 +99,6 @@ class UniversalViewer_View_Helper_IiifInfo extends Zend_View_Helper_Abstract
                 $info['tiles'] = $tiles;
             }
             $info['profile'] = $profile;
-            // Useless currently.
-            // $info['service'] = $service;
         }
 
         // Else non-image file.

@@ -5,10 +5,10 @@
  * This plugin integrates the Universal Viewer, the open sourced viewer taht is
  * the successor of the Wellcome Viewer of Digirati, into Omeka.
  *
- * @copyright Daniel Berthereau, 2015
+ * @copyright 2015-2019 Daniel Berthereau
  * @license https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
  * @license https://github.com/UniversalViewer/universalviewer/blob/master/LICENSE.txt (viewer)
- *  */
+ */
 
 /**
  * The Universal Viewer plugin.

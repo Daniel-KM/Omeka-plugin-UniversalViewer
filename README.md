@@ -136,16 +136,16 @@ Details of the config options can be found on the [wiki] and tested [online].
 * Using externally supplied IIIF manifest and images
 
 If you are harvesting data (via OAI-PMH, for instance) from another system where
-images are hosted and exposed via IIIF, you can use a configurable metadata field
-to supply the manifest to the Universal Viewer. In this case, no images are hosted
-in the Omeka record, but one of the metadata fields has the URL of the manifest
-hosted on another server.
+images are hosted and exposed via IIIF, you can use a configurable metadata
+field to supply the manifest to the Universal Viewer. In this case, no images
+are hosted in the Omeka record, but one of the metadata fields has the URL of
+the manifest hosted on another server.
 
 For example, you could set the alternative manifest element to "Dublin Core:Has Format"
 in the plugin configuration, and then put a URL like "https://example.com/iiif/HI-SK20161207-0009/manifest"
-in the specified element of a record. The Universal Viewer included on that
-record's display page will use that manifest URL to retrieve images and metadata
-for the viewer.
+in the specified element of a record. The viewer included on that record's
+display page will use that manifest URL to retrieve images and metadata for the
+viewer.
 
 * Filtering data of manifests
 
@@ -360,16 +360,7 @@ altered, and that no provisions are either added or removed herefrom.
 
 The [UniversalViewer] is published under the [MIT licence].
 
-
-Contact
--------
-
 See documentation on the UniversalViewer and the IIIF on their respective site.
-
-Current maintainers of the plugin:
-* Daniel Berthereau (see [Daniel-KM])
-
-First version of this plugin has been built for [Mines ParisTech].
 
 
 Copyright
@@ -384,7 +375,9 @@ Widget [UniversalViewer]:
 
 Plugin Universal Viewer for Omeka:
 
-* Copyright Daniel Berthereau, 2015-2018
+* Copyright Daniel Berthereau, 2015-2019 (see [Daniel-KM])
+
+First version of this plugin has been built for [Mines ParisTech].
 
 
 [Universal Viewer]: https://github.com/Daniel-KM/Omeka-plugin-UniversalViewer
