@@ -85,8 +85,19 @@ class UniversalViewer_Controller_Action_Helper_TileInfo extends Zend_Controller_
         $url = get_option('openlayerszoom_tiles_web') ?: WEB_FILES . '/zoom_tiles';
         $this->tileBaseUrl = $url;
 
-        $tilingData = $this->getTilingData($file->filename);
+        $tilingData = $this->getTilingData($this->baseFilename($file->filename));
         return $tilingData;
+    }
+
+    /**
+     * Get a filepath without extension, i.e. "/path/file.ext" to "/path/file".
+     *
+     * @return string
+     */
+    protected function baseFilename($filepath)
+    {
+        $extension = pathinfo($filepath, PATHINFO_EXTENSION);
+        return strlen($extension) ? substr($filepath, 0, strrpos($filepath, '.')) : $filepath;
     }
 
     /**

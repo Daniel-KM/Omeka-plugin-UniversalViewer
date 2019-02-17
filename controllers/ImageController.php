@@ -624,7 +624,7 @@ class UniversalViewer_ImageController extends Omeka_Controller_AbstractActionCon
         $tileInfo = $helper->tileInfo($file);
         if ($tileInfo) {
             $helper = new UniversalViewer_Controller_Action_Helper_TileServer();
-            $tile = $this->tileServer($tileInfo, $transform);
+            $tile = $helper->tileServer($tileInfo, $transform);
             return $tile;
         }
     }
