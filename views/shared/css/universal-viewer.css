@@ -1,5 +1,7 @@
 /*
  * Universal viewer custom and fixes for common Omeka themes
+ *
+ * TODO More fixes for theme Seasons, or fix Seasons directly and remove these fixes.
  */
 
 @media screen {
@@ -52,5 +54,9 @@
     .universal-viewer #content > .attribution {
         background: #343434;
         background: rgba(52, 52, 52, 0.7);
+    }
+    .universal-viewer #content > .attribution .close {
+        padding: 4px 4px 4px 8px;
+        height: inherit;
     }
 }
