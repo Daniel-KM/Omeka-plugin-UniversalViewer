@@ -131,37 +131,28 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         $class = isset($options['class'])
             ? $options['class']
             : get_option('universalviewer_class');
-        if (!empty($class)) {
-            $class = ' ' . $class;
-        }
 
         $locale = isset($options['locale'])
             ? $options['locale']
             : get_option('universalviewer_locale');
-        if (!empty($locale)) {
-            $locale = ' data-locale="' . $locale . '"';
-        }
 
         $style = isset($options['style'])
             ? $options['style']
             : get_option('universalviewer_style');
-        if (!empty($style)) {
-            $style = ' style="' . $style . '"';
-        }
 
         // Default configuration file.
         $config = empty($options['config'])
             ? src('config', 'universal-viewer', 'json')
             : $options['config'];
 
-        $html = sprintf(
-            '<div class="uv%s" data-config="%s" data-uri="%s"%s%s></div>',
-            $class,
-            $config,
-            $urlManifest,
-            $locale,
-            $style
-        );
+        $html = common('helper/universal-viewer', array(
+            'urlManifest' => $urlManifest,
+            'class' => $class,
+            'style' => $style,
+            'locale' => $locale,
+            'config' => $config,
+        ));
+
         // Unlike Omeka S, the head() is already executed.
         $urlJs = src('embed', 'javascripts/uv/lib', 'js');
         $html .= sprintf('<script type="text/javascript" id="embedUV" src="%s"></script>', $urlJs);
