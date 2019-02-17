@@ -726,7 +726,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
         $mseRenderings = array();
         // Only one rendering currently: the file itself, but it
         // may be converted to multiple format: high and low
-        // resolution, webm...
+        // resolution, webm…
         $mseRendering = array();
         $mseRendering['@id'] = $file->getWebPath('original');
         $mseRendering['format'] = $file->mime_type;
