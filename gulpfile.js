@@ -38,7 +38,18 @@ const rename_uv = function(done) {
     done();
 };
 
-gulp.task('default', gulp.series('clean', 'sync', rename_uv));
+// Avoid a warning for unknown charset in a iframe.
+const hack_uv = function (done) {
+    gulp.src(['views/shared/javascripts/uv/app.html'])
+        .pipe(replace(
+            /^<head>$/gm,
+            '<head>' + "\n" + '    <meta charset="UTF-8">'
+        ))
+        .pipe(gulp.dest('views/shared/javascripts/uv/'))
+        .on('end', done);
+};
+
+gulp.task('default', gulp.series('clean', 'sync', rename_uv, hack_uv));
 
 gulp.task('install', gulp.task('default'));
 
