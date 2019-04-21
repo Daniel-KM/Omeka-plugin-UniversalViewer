@@ -139,7 +139,7 @@ $elements = get_table_options('Element', null, array(
                     $elements);
             ?>
             <p class="explanation">
-                <?php echo __('If any, the element/field supplying the alternative manifest URL for the viewer, for example "Dublin Core:Has Format".'); ?>
+                <?php echo __('If any, the element/field supplying the alternative manifest URL for the viewer, for example "Dublin Core:Has Format" or "Dublin Core:Is Format Of".'); ?>
             </p>
         </div>
     </div>
