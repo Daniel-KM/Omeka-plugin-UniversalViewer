@@ -21,9 +21,9 @@ function createUV(selector, data, dataProvider) {
         }
     }
 
-    window.onresize = function() {
+    window.addEventListener('resize', function() {
         resize();
-    }
+    });
 
     uv = new UV({
         target: $uv[0],
@@ -68,6 +68,10 @@ function createUV(selector, data, dataProvider) {
 
     uv.on('openseadragonExtension.currentViewUri', function(data) {
         //console.log('openseadragonExtension.currentViewUri', obj);
+    }, false);
+
+    uv.on('ebookExtension.cfiFragmentChanged', function(cfi) {
+        dataProvider.set('cfi', cfi);
     }, false);
 
     uv.on('reload', function(data) {
