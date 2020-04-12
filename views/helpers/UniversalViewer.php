@@ -161,7 +161,7 @@ class UniversalViewer_View_Helper_UniversalViewer extends Zend_View_Helper_Abstr
         );
 
         $config['locales'] = array(
-            ['name' => 'en-GB', 'label' => 'English'],
+            array('name' => 'en-GB', 'label' => 'English'),
         );
 
         $config += $options;

@@ -89,8 +89,11 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
             . DIRECTORY_SEPARATOR . 'uv'
             . DIRECTORY_SEPARATOR . 'uv.js';
         if (!file_exists($js)) {
-            throw new Omeka_Plugin_Installer_Exception(__('UniversalViewer library should be installed. See %sReadme%s.',
-                '<a href="https://github.com/Daniel-KM/Omeka-plugin-UniversalViewer#installation">', '</a>'));
+            throw new Omeka_Plugin_Installer_Exception(__(
+                'UniversalViewer library should be installed. See %sReadme%s.',
+                '<a href="https://github.com/Daniel-KM/Omeka-plugin-UniversalViewer#installation">',
+                '</a>'
+            ));
         }
 
         if (plugin_is_active('DublinCoreExtended')) {
@@ -117,11 +120,15 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
                 $element = '';
             }
             set_option('universalviewer_manifest_description_element', $element);
-            set_option('universalviewer_manifest_description_default',
-                $this->_options['universalviewer_manifest_description_default']);
+            set_option(
+                'universalviewer_manifest_description_default',
+                $this->_options['universalviewer_manifest_description_default']
+            );
 
-            set_option('universalviewer_manifest_attribution_element',
-                $this->_options['universalviewer_manifest_attribution_element']);
+            set_option(
+                'universalviewer_manifest_attribution_element',
+                $this->_options['universalviewer_manifest_attribution_element']
+            );
 
             $value = get_option('universalviewer_attribution');
             set_option('universalviewer_manifest_attribution_default', $value);
@@ -149,14 +156,20 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         }
 
         if (version_compare($oldVersion, '2.4.2', '<')) {
-            set_option('universalviewer_manifest_logo_default',
-                $this->_options['universalviewer_manifest_logo_default']);
+            set_option(
+                'universalviewer_manifest_logo_default',
+                $this->_options['universalviewer_manifest_logo_default']
+            );
 
-            set_option('universalviewer_append_items_browse',
-                $this->_options['universalviewer_append_items_browse']);
+            set_option(
+                'universalviewer_append_items_browse',
+                $this->_options['universalviewer_append_items_browse']
+            );
 
-            set_option('universalviewer_append_collections_browse',
-                $this->_options['universalviewer_append_collections_browse']);
+            set_option(
+                'universalviewer_append_collections_browse',
+                $this->_options['universalviewer_append_collections_browse']
+            );
 
             $style = $this->_options['universalviewer_style'];
             $width = get_option('universalviewer_width') ?: '';
@@ -183,8 +196,10 @@ class UniversalViewerPlugin extends Omeka_Plugin_AbstractPlugin
         }
 
         if (version_compare($oldVersion, '2.5.8', '<')) {
-            set_option('universalviewer_manifest_media_metadata',
-                $this->_options['universalviewer_manifest_media_metadata']);
+            set_option(
+                'universalviewer_manifest_media_metadata',
+                $this->_options['universalviewer_manifest_media_metadata']
+            );
         }
 
         if (version_compare($oldVersion, '2.6.0-alpha', '<')) {

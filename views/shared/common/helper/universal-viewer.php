@@ -5,7 +5,6 @@
  *
  * @link https://github.com/UniversalViewer/universalviewer/wiki/V3
  */
-
 $config['id'] = isset($config['id']) ? $config['id'] : 'uv';
 $configJson = json_encode($config, 448);
 

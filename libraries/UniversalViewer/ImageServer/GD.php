@@ -150,6 +150,7 @@ class UniversalViewer_ImageServer_GD extends UniversalViewer_AbstractImageServer
                         // GD uses counterclockwise rotation.
                         $degrees = $args['rotation']['degrees'] == 90 ? 270 : 90;
                         // Continues below.
+                        // no break
                     case 180:
                         $degrees = isset($degrees) ? $degrees : 180;
 

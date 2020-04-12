@@ -160,7 +160,7 @@ class UniversalViewer_Controller_Action_Helper_TileInfo extends Zend_Controller_
         $data = json_encode($xml);
         $data = json_decode($data, true);
 
-        $tilingData = [];
+        $tilingData = array();
         $tilingData['tile_type'] = 'deepzoom';
         $tilingData['metadata_path'] = $path;
         $tilingData['media_path'] = '';
@@ -189,7 +189,7 @@ class UniversalViewer_Controller_Action_Helper_TileInfo extends Zend_Controller_
         $data = json_decode($data, true);
         $data = $data['Image'];
 
-        $tilingData = [];
+        $tilingData = array();
         $tilingData['tile_type'] = 'deepzoom';
         $tilingData['metadata_path'] = '';
         $tilingData['media_path'] = '';
@@ -219,7 +219,7 @@ class UniversalViewer_Controller_Action_Helper_TileInfo extends Zend_Controller_
         $properties = $xml->attributes();
         $properties = reset($properties);
 
-        $tilingData = [];
+        $tilingData = array();
         $tilingData['tile_type'] = 'zoomify';
         $tilingData['metadata_path'] = '';
         $tilingData['media_path'] = '';

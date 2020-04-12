@@ -3,7 +3,6 @@
  * @var Omeka_View $this
  * @var array $element_ids
  */
-
 $elements = get_table_options('Element', null, array(
     'record_types' => array(null, 'All'),
     'sort' => 'alphaBySet',
@@ -39,8 +38,11 @@ $elements = get_table_options('Element', null, array(
             <?php echo $this->formLabel('universalviewer_manifest_description_default', __('Default Description')); ?>
         </div>
         <div class="inputs five columns omega">
-            <?php echo $this->formCheckbox('universalviewer_manifest_description_default', true,
-                array('checked' => (bool) get_option('universalviewer_manifest_description_default'))); ?>
+            <?php echo $this->formCheckbox(
+                'universalviewer_manifest_description_default',
+                true,
+                array('checked' => (bool) get_option('universalviewer_manifest_description_default'))
+            ); ?>
             <p class="explanation">
                 <?php echo __('If checked, and if there is no metadata for the element above, the Omeka citation will be added in all manifests and viewers as main description.'); ?>
             </p>
@@ -211,8 +213,10 @@ $elements = get_table_options('Element', null, array(
     </div>
     <div class="field">
         <div class="two columns alpha">
-            <?php echo $this->formLabel('universalviewer_max_dynamic_size',
-                __('Max dynamic size for images')); ?>
+            <?php echo $this->formLabel(
+                'universalviewer_max_dynamic_size',
+                __('Max dynamic size for images')
+            ); ?>
         </div>
         <div class="inputs five columns omega">
             <?php echo $this->formText('universalviewer_max_dynamic_size', get_option('universalviewer_max_dynamic_size'), null); ?>
@@ -244,8 +248,8 @@ $elements = get_table_options('Element', null, array(
             <?php echo $this->formLabel('universalviewer_manifest_force_url_from', __('Force base of url')); ?>
         </div>
         <div class="inputs five columns omega">
-            <?php echo $this->formText('universalviewer_manifest_force_url_from', get_option('universalviewer_manifest_force_url_from'), ['placeholder' => 'example: http:']); ?>
-            <?php echo $this->formText('universalviewer_manifest_force_url_to', get_option('universalviewer_manifest_force_url_to'), ['placeholder' => 'example: https:']); ?>
+            <?php echo $this->formText('universalviewer_manifest_force_url_from', get_option('universalviewer_manifest_force_url_from'), array('placeholder' => 'example: http:')); ?>
+            <?php echo $this->formText('universalviewer_manifest_force_url_to', get_option('universalviewer_manifest_force_url_to'), array('placeholder' => 'example: https:')); ?>
             <p class="explanation">
                 <?php echo __('When a proxy or a firewall is used, or when the config is specific, it may be needed to change the base url.'); ?>
                 <?php echo __('For example, when the server is secured, the "http:" urls may be replaced by "https:".'); ?>

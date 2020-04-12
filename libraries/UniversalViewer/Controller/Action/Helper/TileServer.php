@@ -61,8 +61,8 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
         }
 
         // Quick check of supported transformation of tiles.
-        if (!in_array($transform['region']['feature'], ['regionByPx', 'full'])
-            || !in_array($transform['size']['feature'], ['sizeByW', 'sizeByH', 'sizeByWh', 'sizeByWhListed', 'full'])
+        if (!in_array($transform['region']['feature'], array('regionByPx', 'full'))
+            || !in_array($transform['size']['feature'], array('sizeByW', 'sizeByH', 'sizeByWh', 'sizeByWhListed', 'full'))
         ) {
             return;
         }
@@ -104,10 +104,19 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
         }
 
         // To manage Windows, the same path cannot be used for url and local.
-        $relativeUrl = sprintf('%d/%d_%d.jpg',
-            $data['level'], $data['column'], $data['row']);
-        $relativePath = sprintf('%d%s%d_%d.jpg',
-            $data['level'], DIRECTORY_SEPARATOR, $data['column'], $data['row']);
+        $relativeUrl = sprintf(
+            '%d/%d_%d.jpg',
+            $data['level'],
+            $data['column'],
+            $data['row']
+        );
+        $relativePath = sprintf(
+            '%d%s%d_%d.jpg',
+            $data['level'],
+            DIRECTORY_SEPARATOR,
+            $data['column'],
+            $data['row']
+        );
 
         return $this->serveTiles($tileInfo, $data, $relativeUrl, $relativePath);
     }
@@ -132,20 +141,31 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             return;
         }
 
-        $imageSize = [
+        $imageSize = array(
             'width' => $transform['source']['width'],
             'height' => $transform['source']['height'],
-        ];
+        );
         $tileGroup = $this->getTileGroup($imageSize, $data);
         if (is_null($tileGroup)) {
             return;
         }
 
         // To manage Windows, the same path cannot be used for url and local.
-        $relativeUrl = sprintf('TileGroup%d/%d-%d-%d.jpg',
-            $tileGroup, $data['level'], $data['column'], $data['row']);
-        $relativePath = sprintf('TileGroup%d%s%d-%d-%d.jpg',
-            $tileGroup, DIRECTORY_SEPARATOR, $data['level'], $data['column'], $data['row']);
+        $relativeUrl = sprintf(
+            'TileGroup%d/%d-%d-%d.jpg',
+            $tileGroup,
+            $data['level'],
+            $data['column'],
+            $data['row']
+        );
+        $relativePath = sprintf(
+            'TileGroup%d%s%d-%d-%d.jpg',
+            $tileGroup,
+            DIRECTORY_SEPARATOR,
+            $data['level'],
+            $data['column'],
+            $data['row']
+        );
 
         return $this->serveTiles($tileInfo, $data, $relativeUrl, $relativePath);
     }
@@ -171,7 +191,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
 
         list($tileWidth, $tileHeight) = array_values($this->getWidthAndHeight($imagePath));
 
-        $result = [
+        $result = array(
             'fileurl' => $imageUrl,
             'filepath' => $imagePath,
             'derivativeType' => 'tile',
@@ -179,7 +199,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             'width' => $tileWidth,
             'height' => $tileHeight,
             'overlap' => $tileInfo['overlap'],
-        ];
+        );
         return $result + $cellData;
     }
 
@@ -292,7 +312,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             }
 
             // Get the list of squale factors.
-            $maxDimension = max([$source['width'], $source['height']]);
+            $maxDimension = max(array($source['width'], $source['height']));
             $numLevels = $this->getNumLevels($maxDimension);
             // In IIIF, levels start at the tile size.
             $numLevels -= (int) log($cellSize, 2);
@@ -351,7 +371,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             $level += (int) log($cellSize, 2);
         }
 
-        return [
+        return array(
             'level' => $level,
             'column' => $cellX,
             'row' => $cellY,
@@ -363,7 +383,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
             'isLastRow' => $isLastRow,
             'isLastCell' => $isLastCell,
             'isSingleCell' => $isSingleCell,
-        ];
+        );
     }
 
     /**
@@ -388,7 +408,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
      */
     protected function getScaleFactors($numLevels)
     {
-        $result = [];
+        $result = array();
         foreach (range(0, $numLevels - 1) as $level) {
             $result[] = pow(2, $level);
         }
@@ -413,7 +433,7 @@ class UniversalViewer_Controller_Action_Helper_TileServer extends Zend_Controlle
         $tierSizeCalculation = 'default';
         // $tierSizeCalculation = 'truncated';
 
-        $tierSizeInTiles = [];
+        $tierSizeInTiles = array();
 
         switch ($tierSizeCalculation) {
             case 'default':
