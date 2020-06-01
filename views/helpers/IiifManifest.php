@@ -966,7 +966,7 @@ class UniversalViewer_View_Helper_IiifManifest extends Zend_View_Helper_Abstract
                 unlink($tempname);
             }
         } elseif (file_exists($filepath)) {
-            list($width, $height) = getimagesize($filepath);
+            $result = getimagesize($filepath);
             if ($result) {
                 list($width, $height) = $result;
             }
